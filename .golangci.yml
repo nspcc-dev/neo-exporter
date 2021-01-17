@@ -1,0 +1,30 @@
+run:
+  timeout: 5m
+  tests: false
+
+output:
+  format: tab
+
+linters-settings:
+  exhaustive:
+    default-signifies-exhaustive: true
+  govet:
+    check-shadowing: false
+
+linters:
+  enable:
+    - govet
+    - golint
+
+    - errcheck
+    - gosimple
+    - ineffassign
+    - staticcheck
+    - typecheck
+
+    - exhaustive
+    - gofmt
+    - whitespace
+    - goimports
+  disable-all: true
+  fast: false
