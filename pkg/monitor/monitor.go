@@ -25,7 +25,7 @@ type (
 	}
 
 	NetmapFetcher interface {
-		Fetch() (morphchain.NetmapInfo, error)
+		FetchNetmap() (morphchain.NetmapInfo, error)
 	}
 
 	Monitor struct {
@@ -102,7 +102,7 @@ func (m *Monitor) Job(ctx context.Context) {
 	for {
 		log.Println("monitor: scraping data from side chain")
 
-		netmap, err := m.nmFetcher.Fetch()
+		netmap, err := m.nmFetcher.FetchNetmap()
 		if err != nil {
 			log.Printf("monitor: can't scrap network map info, %s", err.Error())
 		} else {

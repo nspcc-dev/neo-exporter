@@ -3,11 +3,14 @@ package morphchain
 import (
 	"context"
 	"crypto/ecdsa"
+	"crypto/elliptic"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
+	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	"github.com/nspcc-dev/neofs-node/pkg/morph/client"
 	morphNetmap "github.com/nspcc-dev/neofs-node/pkg/morph/client/netmap"
@@ -67,7 +70,7 @@ func NewNetmapFetcher(ctx context.Context, p NetmapFetcherArgs) (*NetmapFetcher,
 	}, nil
 }
 
-func (f *NetmapFetcher) Fetch() (NetmapInfo, error) {
+func (f *NetmapFetcher) FetchNetmap() (NetmapInfo, error) {
 	epoch, err := f.cli.Epoch()
 	if err != nil {
 		return NetmapInfo{}, fmt.Errorf("can't fetch epoch number: %w", err)
@@ -93,6 +96,27 @@ func (f *NetmapFetcher) Fetch() (NetmapInfo, error) {
 		Epoch:     epoch,
 		Addresses: addresses,
 	}, nil
+}
+
+func (f *NetmapFetcher) FetchInnerRingKeys() (keys.PublicKeys, error) {
+	rawPublicKeys, err := f.cli.InnerRingKeys()
+	if err != nil {
+		return nil, fmt.Errorf("can't fetch inner ring keys: %w", err)
+	}
+
+	result := make(keys.PublicKeys, 0, len(rawPublicKeys))
+
+	for _, rawPublicKey := range rawPublicKeys {
+		key, err := keys.NewPublicKeyFromBytes(rawPublicKey, elliptic.P256())
+		if err != nil {
+			return nil, fmt.Errorf("can't parse inner ring public key <%s>: %w",
+				hex.EncodeToString(rawPublicKey), err)
+		}
+
+		result = append(result, key)
+	}
+
+	return result, nil
 }
 
 func multiAddrToIPStringWithoutPort(multiaddr string) (string, error) {
