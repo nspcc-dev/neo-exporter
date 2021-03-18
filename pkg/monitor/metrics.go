@@ -37,4 +37,10 @@ var (
 		[]string{
 			"key",
 		})
+
+	proxyBalance = prometheus.NewGauge(prometheus.GaugeOpts{
+		Subsystem: "neofs_net_monitor",
+		Name:      "proxy_balance",
+		Help:      "Side chain GAS amount of proxy contract",
+	})
 )

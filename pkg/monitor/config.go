@@ -7,8 +7,9 @@ import (
 )
 
 const (
-	// netmap contract scripthash
+	// contracts scripthash
 	cfgNetmapContract = "contracts.netmap"
+	cfgProxyContract  = "contracts.proxy"
 
 	// private key to communicate with blockchain
 	cfgKey = "key"
@@ -29,6 +30,7 @@ const (
 
 func DefaultConfiguration(cfg *viper.Viper) {
 	cfg.SetDefault(cfgNetmapContract, "")
+	cfg.SetDefault(cfgProxyContract, "")
 
 	cfg.SetDefault(cfgKey, "")
 
