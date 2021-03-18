@@ -17,12 +17,16 @@ Successfully built 22b63620bc9d
 Successfully tagged neofs-net-monitor:0.1.0
 ```
 
-2. Specify neofs-net-monitor image version and `ipstack.com` access token in 
+2. (Optional) Specify neofs-net-monitor image version and `ipstack.com` access token in 
    `docker/docker-compose.yml`.
 
 ```yml
       - NEOFS_NET_MONITOR_GEOIP_ACCESS_KEY=deabeaf1234567890c0ffecafe080894
 ```
+
+If you skip this step, then geo-ip data won't be provided to prometheus and
+grafana, thus world map will be empty. Monitor app will produce plenty of
+errors in log as well, but it should work fine.
 
 3. Start environment.
 
@@ -44,6 +48,7 @@ dashboard.
 ```
 // Script hash of netmap contract in NeoFS sidechain.
 NEOFS_NET_MONITOR_CONTRACTS_NETMAP=7b383bc5a385859469f366b08b04b4fcd9a41f55 
+NEOFS_NET_MONITOR_CONTRACTS_PROXY=82b404558924457e46999475fe04fcf0e371532b
 
 // WIF for the NEO client. If not set, it is randomly generated at startup.
 NEOFS_NET_MONITOR_KEY=KyH4ASQ1tmm7q9eQKiSzCSH6kxNVbUe3B41EeLaJ15UoMwgZw3Zk 
@@ -62,4 +67,12 @@ NEOFS_NET_MONITOR_METRICS_INTERVAL=15m
 NEOFS_NET_MONITOR_GEOIP_ENDPOINT=http://api.ipstack.com
 NEOFS_NET_MONITOR_GEOIP_DIAL_TIMEOUT=5s
 NEOFS_NET_MONITOR_GEOIP_ACCESS_KEY=deabeaf1234567890c0ffecafe080894
-```
+``` 
+
+## Connect to neofs-dev-env
+
+After `Jebudo` release monitor can be attached to 
+[neofs-dev-env](https://github.com/nspcc-dev/neofs-dev-env). Go to 
+`docker/docker-compose.devenv.yml` file, make sure that contract script
+hashes are correct, specify image version for neofs-net-monitor and then
+run `make up-devenv` and `make down-devenv` commands.
