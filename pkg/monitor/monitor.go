@@ -36,9 +36,11 @@ type (
 
 	BalanceFetcher interface {
 		FetchGAS(keys.PublicKey) (int64, error)
+		FetchGASByScriptHash(uint160 util.Uint160) (int64, error)
 	}
 
 	Monitor struct {
+		proxy         util.Uint160
 		sleep         time.Duration
 		metricsServer http.Server
 		ipFetcher     GeoIPFetcher
@@ -63,7 +65,7 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 		return nil, fmt.Errorf("can't initialize geoip fetcher: %w", err)
 	}
 
-	contract, err := util.Uint160DecodeStringLE(cfg.GetString(cfgNetmapContract))
+	netmapContract, err := util.Uint160DecodeStringLE(cfg.GetString(cfgNetmapContract))
 	if err != nil {
 		return nil, fmt.Errorf("can't read netmap scripthash: %w", err)
 	}
@@ -72,7 +74,7 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 		Key:            key,
 		Endpoint:       cfg.GetString(cfgNeoRPCEndpoint),
 		DialTimeout:    cfg.GetDuration(cfgNeoRPCDialTimeout),
-		NetmapContract: contract,
+		NetmapContract: netmapContract,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("can't initialize netmap fetcher: %w", err)
@@ -86,7 +88,13 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 		return nil, fmt.Errorf("can't initialize balance fetcher: %w", err)
 	}
 
+	proxyContract, err := util.Uint160DecodeStringLE(cfg.GetString(cfgProxyContract))
+	if err != nil {
+		return nil, fmt.Errorf("can't read proxy scripthash: %w", err)
+	}
+
 	return &Monitor{
+		proxy: proxyContract,
 		sleep: cfg.GetDuration(cfgMetricsInterval),
 		metricsServer: http.Server{
 			Addr:    cfg.GetString(cfgMetricsEndpoint),
@@ -104,6 +112,7 @@ func (m *Monitor) Start(ctx context.Context) {
 	prometheus.MustRegister(epochNumber)
 	prometheus.MustRegister(storageNodeBalances)
 	prometheus.MustRegister(innerRingBalances)
+	prometheus.MustRegister(proxyBalance)
 
 	go func() {
 		err := m.metricsServer.ListenAndServe()
@@ -139,6 +148,8 @@ func (m *Monitor) Job(ctx context.Context) {
 		} else {
 			m.processInnerRing(innerRing)
 		}
+
+		m.processProxyContract()
 
 		select {
 		case <-time.After(m.sleep):
@@ -208,6 +219,16 @@ func (m *Monitor) processInnerRing(ir keys.PublicKeys) {
 	for k, v := range exportBalances {
 		innerRingBalances.WithLabelValues(k).Set(float64(v))
 	}
+}
+
+func (m *Monitor) processProxyContract() {
+	balance, err := m.blFetcher.FetchGASByScriptHash(m.proxy)
+	if err != nil {
+		log.Printf("monitor: can't fetch proxy contract balance, %s", err)
+		return
+	}
+
+	proxyBalance.Set(float64(balance))
 }
 
 func readKey(cfg *viper.Viper) (*ecdsa.PrivateKey, error) {
