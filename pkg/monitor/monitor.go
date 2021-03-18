@@ -165,11 +165,7 @@ func (m *Monitor) processNetworkMap(nm morphchain.NetmapInfo) {
 	exportCountries := make(map[string]int, len(nm.Addresses))
 	exportBalances := make(map[string]int64, len(nm.Addresses))
 
-	for i := 0; i < len(nm.Addresses); i++ {
-		addr := nm.Addresses[i]
-		key := nm.PublicKeys[i]
-		keyHex := hex.EncodeToString(key.Bytes())
-
+	for _, addr := range nm.Addresses {
 		info, err := m.ipFetcher.Fetch(addr)
 		if err != nil {
 			log.Printf("monitor: can't fetch %s info, %s", addr, err)
@@ -177,6 +173,10 @@ func (m *Monitor) processNetworkMap(nm morphchain.NetmapInfo) {
 		}
 
 		exportCountries[info.CountryCode]++
+	}
+
+	for _, key := range nm.PublicKeys {
+		keyHex := hex.EncodeToString(key.Bytes())
 
 		balance, err := m.blFetcher.FetchGAS(*key)
 		if err != nil {
