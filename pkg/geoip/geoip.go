@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"time"
 )
@@ -34,14 +35,13 @@ type (
 )
 
 var (
-	ErrNoAccessKey = errors.New("access key has not been provided")
-	ErrNoEndpoint  = errors.New("endpoint has not been provided")
+	ErrNoEndpoint = errors.New("endpoint has not been provided")
 )
 
 func NewFetcher(p FetcherArgs) (*Fetcher, error) {
 	switch {
 	case p.AccessKey == "":
-		return nil, ErrNoAccessKey
+		log.Print("access key has not been provided, geo-ip metrics won't be announced")
 	case p.Endpoint == "":
 		return nil, ErrNoEndpoint
 	}
