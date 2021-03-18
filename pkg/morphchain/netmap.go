@@ -88,19 +88,20 @@ func (f *NetmapFetcher) FetchNetmap() (NetmapInfo, error) {
 	for _, node := range nm.Nodes {
 		addr, err := multiAddrToIPStringWithoutPort(node.Address())
 		if err != nil {
-			log.Printf("morphchain: %s", err.Error())
+			log.Printf("morphchain: %s", err)
+		} else {
+			addresses = append(addresses, addr)
 		}
 
-		addresses = append(addresses, addr)
-
 		rawPublicKey := node.PublicKey()
+
 		publicKey, err := keys.NewPublicKeyFromBytes(rawPublicKey, elliptic.P256())
 		if err != nil {
 			return NetmapInfo{}, fmt.Errorf("can't parse storage node public key <%s>: %w",
 				hex.EncodeToString(rawPublicKey), err)
+		} else {
+			publicKeys = append(publicKeys, publicKey)
 		}
-
-		publicKeys = append(publicKeys, publicKey)
 	}
 
 	return NetmapInfo{
