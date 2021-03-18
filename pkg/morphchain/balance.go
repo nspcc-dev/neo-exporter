@@ -58,20 +58,24 @@ func NewBalanceFetcher(ctx context.Context, p BalanceFetcherArgs) (*BalanceFetch
 func (b BalanceFetcher) FetchGAS(key keys.PublicKey) (int64, error) {
 	scriptHash := hash.Hash160(key.GetVerificationScript())
 
+	return b.FetchGASByScriptHash(scriptHash)
+}
+
+func (b BalanceFetcher) FetchGASByScriptHash(sh util.Uint160) (int64, error) {
 	output, err := b.cli.InvokeFunction(b.gas, balanceMethod,
 		[]smartcontract.Parameter{
 			{
 				Type:  smartcontract.ByteArrayType,
-				Value: scriptHash.BytesBE(),
+				Value: sh.BytesBE(),
 			},
 		}, nil)
 	if err != nil {
-		return 0, fmt.Errorf("can't get balance of %s: %w", hex.EncodeToString(key.Bytes()), err)
+		return 0, fmt.Errorf("can't get balance of %s: %w", hex.EncodeToString(sh.BytesLE()), err)
 	}
 
 	if output.State != successState {
 		return 0, fmt.Errorf("can't get balance of %s, state <%s>, error <%s>",
-			hex.EncodeToString(key.Bytes()),
+			hex.EncodeToString(sh.BytesLE()),
 			output.State,
 			output.FaultException)
 	}
