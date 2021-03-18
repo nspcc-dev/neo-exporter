@@ -31,8 +31,9 @@ type (
 	}
 
 	NetmapInfo struct {
-		Epoch     uint64
-		Addresses []string
+		Epoch      uint64
+		Addresses  []string
+		PublicKeys keys.PublicKeys
 	}
 )
 
@@ -82,6 +83,7 @@ func (f *NetmapFetcher) FetchNetmap() (NetmapInfo, error) {
 	}
 
 	addresses := make([]string, 0, len(nm.Nodes))
+	publicKeys := make(keys.PublicKeys, 0, len(nm.Nodes))
 
 	for _, node := range nm.Nodes {
 		addr, err := multiAddrToIPStringWithoutPort(node.Address())
@@ -90,11 +92,21 @@ func (f *NetmapFetcher) FetchNetmap() (NetmapInfo, error) {
 		}
 
 		addresses = append(addresses, addr)
+
+		rawPublicKey := node.PublicKey()
+		publicKey, err := keys.NewPublicKeyFromBytes(rawPublicKey, elliptic.P256())
+		if err != nil {
+			return NetmapInfo{}, fmt.Errorf("can't parse storage node public key <%s>: %w",
+				hex.EncodeToString(rawPublicKey), err)
+		}
+
+		publicKeys = append(publicKeys, publicKey)
 	}
 
 	return NetmapInfo{
-		Epoch:     epoch,
-		Addresses: addresses,
+		Epoch:      epoch,
+		Addresses:  addresses,
+		PublicKeys: publicKeys,
 	}, nil
 }
 
