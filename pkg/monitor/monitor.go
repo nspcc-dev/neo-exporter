@@ -4,12 +4,14 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"time"
 
+	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	crypto "github.com/nspcc-dev/neofs-crypto"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/geoip"
@@ -28,11 +30,21 @@ type (
 		FetchNetmap() (morphchain.NetmapInfo, error)
 	}
 
+	InnerRingFetcher interface {
+		FetchInnerRingKeys() (keys.PublicKeys, error)
+	}
+
+	BalanceFetcher interface {
+		FetchGAS(keys.PublicKey) (int64, error)
+	}
+
 	Monitor struct {
 		sleep         time.Duration
 		metricsServer http.Server
 		ipFetcher     GeoIPFetcher
 		nmFetcher     NetmapFetcher
+		irFetcher     InnerRingFetcher
+		blFetcher     BalanceFetcher
 	}
 )
 
@@ -66,6 +78,14 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 		return nil, fmt.Errorf("can't initialize netmap fetcher: %w", err)
 	}
 
+	balanceFetcher, err := morphchain.NewBalanceFetcher(ctx, morphchain.BalanceFetcherArgs{
+		Endpoint:    cfg.GetString(cfgNeoRPCEndpoint),
+		DialTimeout: cfg.GetDuration(cfgNeoRPCDialTimeout),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("can't initialize balance fetcher: %w", err)
+	}
+
 	return &Monitor{
 		sleep: cfg.GetDuration(cfgMetricsInterval),
 		metricsServer: http.Server{
@@ -74,12 +94,16 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 		},
 		ipFetcher: ipFetcher,
 		nmFetcher: nmFetcher,
+		irFetcher: nmFetcher,
+		blFetcher: balanceFetcher,
 	}, nil
 }
 
 func (m *Monitor) Start(ctx context.Context) {
 	prometheus.MustRegister(countriesPresent)
 	prometheus.MustRegister(epochNumber)
+	prometheus.MustRegister(storageNodeBalances)
+	prometheus.MustRegister(innerRingBalances)
 
 	go func() {
 		err := m.metricsServer.ListenAndServe()
@@ -104,9 +128,16 @@ func (m *Monitor) Job(ctx context.Context) {
 
 		netmap, err := m.nmFetcher.FetchNetmap()
 		if err != nil {
-			log.Printf("monitor: can't scrap network map info, %s", err.Error())
+			log.Printf("monitor: can't scrap network map info, %s", err)
 		} else {
 			m.processNetworkMap(netmap)
+		}
+
+		innerRing, err := m.irFetcher.FetchInnerRingKeys()
+		if err != nil {
+			log.Printf("monitor: can't scrap inner ring info, %s", err)
+		} else {
+			m.processInnerRing(innerRing)
 		}
 
 		select {
@@ -120,21 +151,62 @@ func (m *Monitor) Job(ctx context.Context) {
 }
 
 func (m *Monitor) processNetworkMap(nm morphchain.NetmapInfo) {
-	exportData := make(map[string]int, len(nm.Addresses))
+	exportCountries := make(map[string]int, len(nm.Addresses))
+	exportBalances := make(map[string]int64, len(nm.Addresses))
 
-	for _, addr := range nm.Addresses {
+	for i := 0; i < len(nm.Addresses); i++ {
+		addr := nm.Addresses[i]
+		key := nm.PublicKeys[i]
+		keyHex := hex.EncodeToString(key.Bytes())
+
 		info, err := m.ipFetcher.Fetch(addr)
 		if err != nil {
 			log.Printf("monitor: can't fetch %s info, %s", addr, err)
+			continue
 		}
 
-		exportData[info.CountryCode]++
+		exportCountries[info.CountryCode]++
+
+		balance, err := m.blFetcher.FetchGAS(*key)
+		if err != nil {
+			log.Printf("monitor: can't fetch %s balance, %s", keyHex, err)
+			continue
+		}
+
+		exportBalances[keyHex] = balance
 	}
 
 	epochNumber.Set(float64(nm.Epoch))
+
 	countriesPresent.Reset()
-	for k, v := range exportData {
+	for k, v := range exportCountries {
 		countriesPresent.WithLabelValues(k).Set(float64(v))
+	}
+
+	storageNodeBalances.Reset()
+	for k, v := range exportBalances {
+		storageNodeBalances.WithLabelValues(k).Set(float64(v))
+	}
+}
+
+func (m *Monitor) processInnerRing(ir keys.PublicKeys) {
+	exportBalances := make(map[string]int64, len(ir))
+
+	for _, key := range ir {
+		keyHex := hex.EncodeToString(key.Bytes())
+
+		balance, err := m.blFetcher.FetchGAS(*key)
+		if err != nil {
+			log.Printf("monitor: can't fetch %s balance, %s", keyHex, err)
+			continue
+		}
+
+		exportBalances[keyHex] = balance
+	}
+
+	innerRingBalances.Reset()
+	for k, v := range exportBalances {
+		innerRingBalances.WithLabelValues(k).Set(float64(v))
 	}
 }
 
