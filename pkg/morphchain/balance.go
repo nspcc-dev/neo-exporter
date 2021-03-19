@@ -2,7 +2,6 @@ package morphchain
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -10,7 +9,6 @@ import (
 	"github.com/nspcc-dev/neo-go/pkg/crypto/hash"
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
 	"github.com/nspcc-dev/neo-go/pkg/rpc/client"
-	"github.com/nspcc-dev/neo-go/pkg/smartcontract"
 	"github.com/nspcc-dev/neo-go/pkg/util"
 )
 
@@ -62,35 +60,5 @@ func (b BalanceFetcher) FetchGAS(key keys.PublicKey) (int64, error) {
 }
 
 func (b BalanceFetcher) FetchGASByScriptHash(sh util.Uint160) (int64, error) {
-	output, err := b.cli.InvokeFunction(b.gas, balanceMethod,
-		[]smartcontract.Parameter{
-			{
-				Type:  smartcontract.ByteArrayType,
-				Value: sh.BytesBE(),
-			},
-		}, nil)
-	if err != nil {
-		return 0, fmt.Errorf("can't get balance of %s: %w", hex.EncodeToString(sh.BytesLE()), err)
-	}
-
-	if output.State != successState {
-		return 0, fmt.Errorf("can't get balance of %s, state <%s>, error <%s>",
-			hex.EncodeToString(sh.BytesLE()),
-			output.State,
-			output.FaultException)
-	}
-
-	stack := output.Stack
-	ln := len(stack)
-
-	if ln != 1 {
-		return 0, fmt.Errorf("can't parse gas balance, got %d items on stack", ln)
-	}
-
-	bigInt, err := stack[0].TryInteger()
-	if err != nil {
-		return 0, fmt.Errorf("can't parse gas balance: %w", err)
-	}
-
-	return bigInt.Int64(), nil
+	return b.cli.NEP17BalanceOf(b.gas, sh)
 }
