@@ -20,7 +20,8 @@ import (
 
 type (
 	NetmapFetcher struct {
-		cli *wrapNetmap.Wrapper
+		cli *client.Client
+		wrp *wrapNetmap.Wrapper
 	}
 
 	NetmapFetcherArgs struct {
@@ -67,17 +68,18 @@ func NewNetmapFetcher(ctx context.Context, p NetmapFetcherArgs) (*NetmapFetcher,
 	}
 
 	return &NetmapFetcher{
-		cli: wrapper,
+		cli: blockchainClient,
+		wrp: wrapper,
 	}, nil
 }
 
 func (f *NetmapFetcher) FetchNetmap() (NetmapInfo, error) {
-	epoch, err := f.cli.Epoch()
+	epoch, err := f.wrp.Epoch()
 	if err != nil {
 		return NetmapInfo{}, fmt.Errorf("can't fetch epoch number: %w", err)
 	}
 
-	nm, err := f.cli.GetNetMap(0)
+	nm, err := f.wrp.GetNetMap(0)
 	if err != nil {
 		return NetmapInfo{}, fmt.Errorf("can't fetch network map: %w", err)
 	}
@@ -112,24 +114,12 @@ func (f *NetmapFetcher) FetchNetmap() (NetmapInfo, error) {
 }
 
 func (f *NetmapFetcher) FetchInnerRingKeys() (keys.PublicKeys, error) {
-	rawPublicKeys, err := f.cli.InnerRingKeys()
+	publicKeys, err := f.cli.NeoFSAlphabetList()
 	if err != nil {
 		return nil, fmt.Errorf("can't fetch inner ring keys: %w", err)
 	}
 
-	result := make(keys.PublicKeys, 0, len(rawPublicKeys))
-
-	for _, rawPublicKey := range rawPublicKeys {
-		key, err := keys.NewPublicKeyFromBytes(rawPublicKey, elliptic.P256())
-		if err != nil {
-			return nil, fmt.Errorf("can't parse inner ring public key <%s>: %w",
-				hex.EncodeToString(rawPublicKey), err)
-		}
-
-		result = append(result, key)
-	}
-
-	return result, nil
+	return publicKeys, nil
 }
 
 func multiAddrToIPStringWithoutPort(multiaddr string) (string, error) {
