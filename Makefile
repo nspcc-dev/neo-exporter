@@ -5,6 +5,7 @@ REPO ?= $(shell go list -m)
 VERSION ?= $(shell git describe --tags --always)
 HUB_TAG ?= "$(shell echo ${VERSION} | sed 's/^v//')"
 
+REPO = nspccdev
 APP = neofs-net-monitor
 BINARY = ./bin/${APP}
 SRC = ./cmd/${APP}/
@@ -24,7 +25,7 @@ image:
 		--rm \
 		-f Dockerfile \
 		--build-arg VERSION=$(VERSION) \
-		-t ${APP}:$(HUB_TAG) .
+		-t ${REPO}/${APP}:$(HUB_TAG) .
 
 up:
 	$(shell docker-compose -f docker/docker-compose.yml up -d)

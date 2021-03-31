@@ -35,7 +35,7 @@ services:
     restart: on-failure
 
   neofs-net-monitor:
-    image: neofs-net-monitor:0.1.0
+    image: nspccdev/neofs-net-monitor:0.2.0
     container_name: neofs-net-monitor
     depends_on:
       - prometheus
