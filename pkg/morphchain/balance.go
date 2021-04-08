@@ -24,11 +24,6 @@ type (
 	}
 )
 
-const (
-	successState  = "HALT"
-	balanceMethod = "balanceOf"
-)
-
 func NewBalanceFetcher(ctx context.Context, p BalanceFetcherArgs) (*BalanceFetcher, error) {
 	cli, err := client.New(ctx, p.Endpoint, client.Options{
 		DialTimeout: p.DialTimeout,
