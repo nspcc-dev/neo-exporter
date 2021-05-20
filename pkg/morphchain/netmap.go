@@ -123,7 +123,7 @@ func (f *NetmapFetcher) FetchInnerRingKeys() (keys.PublicKeys, error) {
 }
 
 func multiAddrToIPStringWithoutPort(multiaddr string) (string, error) {
-	ipWithPort, err := network.IPAddrFromMultiaddr(multiaddr)
+	ipWithPort, err := network.HostAddrFromMultiaddr(multiaddr)
 	if err != nil {
 		return "", fmt.Errorf("can't transform multiaddr string to ip string: %w", err)
 	}
