@@ -35,14 +35,14 @@ services:
     restart: on-failure
 
   neofs-net-monitor:
-    image: nspccdev/neofs-net-monitor:0.2.0
+    image: nspccdev/neofs-net-monitor:0.3.0
     container_name: neofs-net-monitor
     depends_on:
       - prometheus
     environment:
-      - NEOFS_NET_MONITOR_CONTRACTS_NETMAP=7b383bc5a385859469f366b08b04b4fcd9a41f55
-      - NEOFS_NET_MONITOR_CONTRACTS_PROXY=82b404558924457e46999475fe04fcf0e371532b
-      - NEOFS_NET_MONITOR_RPC_ENDPOINT=http://rpc1-morph.preview4.nspcc.ru:24333
+      - NEOFS_NET_MONITOR_CONTRACTS_NETMAP=5283a843ee68f8fa9ee664df6b495054be5738d4
+      - NEOFS_NET_MONITOR_CONTRACTS_PROXY=60cf507792a07854c7c850ba204b3be7a66aa109
+      - NEOFS_NET_MONITOR_RPC_ENDPOINT=https://rpc1.morph.fs.neo.org:40341
       - NEOFS_NET_MONITOR_GEOIP_ACCESS_KEY=<ACCESS-TOKEN>
     networks:
       - monitor-net
