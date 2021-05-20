@@ -33,13 +33,13 @@ services:
     restart: on-failure
 
   neofs-net-monitor:
-    image: neofs-net-monitor:0.1.0
+    image: nspccdev/neofs-net-monitor:0.3.0
     container_name: neofs-net-monitor
     depends_on:
       - prometheus
     environment:
-      - NEOFS_NET_MONITOR_CONTRACTS_NETMAP=15105c7bbae4cfed65cbe2d5ddb26939d022e8a4
-      - NEOFS_NET_MONITOR_CONTRACTS_PROXY=dcc891f08c8126ac2910bad3fe50678a70d9cb82
+      - NEOFS_NET_MONITOR_CONTRACTS_NETMAP=f08bf0d63bebad4be0e07c94cdf6fcd783a69a3f
+      - NEOFS_NET_MONITOR_CONTRACTS_PROXY=6937e3edfd6801958a0bd7875dcdcc17c5a86af3
       - NEOFS_NET_MONITOR_RPC_ENDPOINT=http://192.168.130.90:30333
       - NEOFS_NET_MONITOR_METRICS_INTERVAL=15s
     networks:
