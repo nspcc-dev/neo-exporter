@@ -11,10 +11,10 @@ For internal usage.
 1. Build image of neofs-network-monitor app.
 
 ```
-$ make build
+$ make image
 ...
 Successfully built 22b63620bc9d
-Successfully tagged neofs-net-monitor:0.1.0
+Successfully tagged nspccdev/neofs-net-monitor:0.3.0
 ```
 
 2. (Optional) Specify neofs-net-monitor image version and `ipstack.com` access token in 
