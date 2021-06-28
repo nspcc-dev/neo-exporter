@@ -2,7 +2,6 @@ package morphchain
 
 import (
 	"context"
-	"crypto/ecdsa"
 	"crypto/elliptic"
 	"encoding/hex"
 	"fmt"
@@ -13,7 +12,6 @@ import (
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	"github.com/nspcc-dev/neofs-node/pkg/morph/client"
-	morphNetmap "github.com/nspcc-dev/neofs-node/pkg/morph/client/netmap"
 	wrapNetmap "github.com/nspcc-dev/neofs-node/pkg/morph/client/netmap/wrapper"
 	"github.com/nspcc-dev/neofs-node/pkg/network"
 )
@@ -25,7 +23,7 @@ type (
 	}
 
 	NetmapFetcherArgs struct {
-		Key            *ecdsa.PrivateKey
+		Key            *keys.PrivateKey
 		Endpoint       string
 		DialTimeout    time.Duration
 		NetmapContract util.Uint160
@@ -49,20 +47,11 @@ func NewNetmapFetcher(ctx context.Context, p NetmapFetcherArgs) (*NetmapFetcher,
 		return nil, fmt.Errorf("can't create blockchain client: %w", err)
 	}
 
-	staticClient, err := client.NewStatic(
+	wrapper, err := wrapNetmap.NewFromMorph(
 		blockchainClient,
 		p.NetmapContract,
-		0)
-	if err != nil {
-		return nil, fmt.Errorf("can't create netmap contract static client: %w", err)
-	}
-
-	enhancedNetmapClient, err := morphNetmap.New(staticClient)
-	if err != nil {
-		return nil, fmt.Errorf("can't create netmap morph client: %w", err)
-	}
-
-	wrapper, err := wrapNetmap.New(enhancedNetmapClient)
+		0,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("can't create netmap client wrapper: %w", err)
 	}
@@ -84,16 +73,28 @@ func (f *NetmapFetcher) FetchNetmap() (NetmapInfo, error) {
 		return NetmapInfo{}, fmt.Errorf("can't fetch network map: %w", err)
 	}
 
+	// TODO: define how to allocate slice
+	//  since `len(nm.Nodes)` is not enough
+	//  for all groups of addresses
 	addresses := make([]string, 0, len(nm.Nodes))
 	publicKeys := make(keys.PublicKeys, 0, len(nm.Nodes))
 
 	for _, node := range nm.Nodes {
-		addr, err := multiAddrToIPStringWithoutPort(node.Address())
-		if err != nil {
-			log.Printf("morphchain: %s", err)
-		} else {
-			addresses = append(addresses, addr)
-		}
+		node.IterateAddresses(
+			func(mAddr string) bool {
+				addr, err := multiAddrToIPStringWithoutPort(mAddr)
+				if err != nil {
+					log.Printf("morphchain: %s", err)
+				} else {
+					addresses = append(addresses, addr)
+				}
+
+				// TODO: define if monitor should show
+				//  all addresses of the node or only
+				//  one of them
+				return false
+			},
+		)
 
 		rawPublicKey := node.PublicKey()
 
@@ -123,10 +124,14 @@ func (f *NetmapFetcher) FetchInnerRingKeys() (keys.PublicKeys, error) {
 }
 
 func multiAddrToIPStringWithoutPort(multiaddr string) (string, error) {
-	ipWithPort, err := network.HostAddrFromMultiaddr(multiaddr)
+	var netAddress network.Address
+
+	err := netAddress.FromString(multiaddr)
 	if err != nil {
-		return "", fmt.Errorf("can't transform multiaddr string to ip string: %w", err)
+		return "", err
 	}
+
+	ipWithPort := netAddress.HostAddr()
 
 	return strings.Split(ipWithPort, ":")[0], nil
 }
