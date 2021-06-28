@@ -21,7 +21,6 @@ services:
       - monitor-net
     restart: on-failure
 
-
   prometheus:
     image: prom/prometheus:v2.24.0
     container_name: prometheus
