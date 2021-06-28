@@ -2,24 +2,24 @@ package monitor
 
 import (
 	"context"
-	"crypto/ecdsa"
-	"crypto/rand"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
 	"github.com/nspcc-dev/neo-go/pkg/util"
-	crypto "github.com/nspcc-dev/neofs-crypto"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/geoip"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/morphchain"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
 )
+
+var errUnknownKeyFormat = errors.New("could not parse private key: expected WIF, hex or path to binary key")
 
 type (
 	GeoIPFetcher interface {
@@ -231,20 +231,44 @@ func (m *Monitor) processProxyContract() {
 	proxyBalance.Set(float64(balance))
 }
 
-func readKey(cfg *viper.Viper) (*ecdsa.PrivateKey, error) {
-	key, err := crypto.LoadPrivateKey(cfg.GetString(cfgKey))
-	if err == nil {
-		log.Println("monitor: using private key from the config")
+func readKey(cfg *viper.Viper) (*keys.PrivateKey, error) {
+	var (
+		key *keys.PrivateKey
+		err error
+	)
+
+	keyFromCfg := cfg.GetString(cfgKey)
+
+	if keyFromCfg == "" {
+		log.Println("monitor: using random private key")
+
+		key, err = keys.NewPrivateKey()
+		if err != nil {
+			return nil, fmt.Errorf("monitor: can't generate private key: %w", err)
+		}
+
 		return key, nil
 	}
 
-	log.Println("monitor: using random private key")
-
-	buf := make([]byte, crypto.PrivateKeyCompressedSize)
-	_, err = rand.Read(buf)
-	if err != nil {
-		return nil, fmt.Errorf("can't generate private key: %w", err)
+	// WIF
+	if key, err = keys.NewPrivateKeyFromWIF(keyFromCfg); err == nil {
+		log.Println("monitor: using private key from WIF")
+		return key, nil
 	}
 
-	return crypto.UnmarshalPrivateKey(buf)
+	// hex
+	if key, err = keys.NewPrivateKeyFromHex(keyFromCfg); err == nil {
+		log.Println("monitor: using private key from hex")
+		return key, nil
+	}
+
+	var data []byte
+
+	// file
+	if data, err = os.ReadFile(keyFromCfg); err == nil {
+		log.Println("monitor: using private key from file")
+		return keys.NewPrivateKeyFromBytes(data)
+	}
+
+	return nil, errUnknownKeyFormat
 }

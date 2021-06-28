@@ -50,7 +50,7 @@ dashboard.
 NEOFS_NET_MONITOR_CONTRACTS_NETMAP=7b383bc5a385859469f366b08b04b4fcd9a41f55 
 NEOFS_NET_MONITOR_CONTRACTS_PROXY=82b404558924457e46999475fe04fcf0e371532b
 
-// WIF for the NEO client. If not set, it is randomly generated at startup.
+// WIF/hex/path to binary private key for the NEO client. If not set, it is randomly generated at startup.
 NEOFS_NET_MONITOR_KEY=KyH4ASQ1tmm7q9eQKiSzCSH6kxNVbUe3B41EeLaJ15UoMwgZw3Zk 
 
 // Sidechain NEO RPC related configuration.
