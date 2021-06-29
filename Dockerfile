@@ -14,5 +14,6 @@ FROM scratch AS neofs-net-monitor
 WORKDIR /
 
 COPY --from=builder /src/bin/neofs-net-monitor /bin/neofs-net-monitor
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 CMD ["neofs-net-monitor"]
