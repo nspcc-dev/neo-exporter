@@ -372,7 +372,8 @@
           "interval": "",
           "legendFormat": "",
           "queryType": "randomWalk",
-          "refId": "A"
+          "refId": "A",
+          "instant": true
         }
       ],
       "timeFrom": null,
