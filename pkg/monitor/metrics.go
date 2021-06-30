@@ -16,6 +16,22 @@ var (
 		},
 	)
 
+	droppedNodesCount = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Subsystem: "neofs_net_monitor",
+			Name:      "netmap_dropped",
+			Help:      "Amount of nodes that will be dropped from network in the next epoch",
+		},
+	)
+
+	newNodesCount = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Subsystem: "neofs_net_monitor",
+			Name:      "netmap_new",
+			Help:      "Amount of nodes that will be added to network in the next epoch",
+		},
+	)
+
 	epochNumber = prometheus.NewGauge(
 		prometheus.GaugeOpts{
 			Subsystem: "neofs_net_monitor",
