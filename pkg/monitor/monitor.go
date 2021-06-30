@@ -28,6 +28,7 @@ type (
 
 	NetmapFetcher interface {
 		FetchNetmap() (morphchain.NetmapInfo, error)
+		FetchCandidates() (morphchain.NetmapCandidatesInfo, error)
 	}
 
 	InnerRingFetcher interface {
@@ -109,6 +110,8 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 
 func (m *Monitor) Start(ctx context.Context) {
 	prometheus.MustRegister(countriesPresent)
+	//prometheus.MustRegister(droppedNodes)
+	//prometheus.MustRegister(newNodes)
 	prometheus.MustRegister(epochNumber)
 	prometheus.MustRegister(storageNodeBalances)
 	prometheus.MustRegister(innerRingBalances)
@@ -139,7 +142,12 @@ func (m *Monitor) Job(ctx context.Context) {
 		if err != nil {
 			log.Printf("monitor: can't scrap network map info, %s", err)
 		} else {
-			m.processNetworkMap(netmap)
+			candidatesNetmap, err := m.nmFetcher.FetchCandidates()
+			if err != nil {
+				log.Printf("monitor: can't scrap network map candidates info, %s", err)
+			} else {
+				m.processNetworkMap(netmap, candidatesNetmap)
+			}
 		}
 
 		innerRing, err := m.irFetcher.FetchInnerRingKeys()
@@ -161,30 +169,35 @@ func (m *Monitor) Job(ctx context.Context) {
 	}
 }
 
-func (m *Monitor) processNetworkMap(nm morphchain.NetmapInfo) {
-	exportCountries := make(map[string]int, len(nm.Addresses))
-	exportBalances := make(map[string]int64, len(nm.Addresses))
+type diffNode struct {
+	currEpoch *morphchain.Node
+	nextEpoch *morphchain.Node
+}
 
-	for _, addr := range nm.Addresses {
-		info, err := m.ipFetcher.Fetch(addr)
+func (m *Monitor) processNetworkMap(nm morphchain.NetmapInfo, candidates morphchain.NetmapCandidatesInfo) {
+	currentNetmapLen := len(nm.Nodes)
+
+	exportCountries := make(map[string]int, currentNetmapLen)
+	exportBalances := make(map[string]int64, currentNetmapLen)
+
+	_, _ = getDiff(nm, candidates)
+
+	for _, node := range nm.Nodes {
+		info, err := m.ipFetcher.Fetch(node.Address)
 		if err != nil {
-			log.Printf("monitor: can't fetch %s info, %s", addr, err)
-			continue
+			log.Printf("monitor: can't fetch %s info, %s", node.Address, err)
+		} else {
+			exportCountries[info.CountryCode]++
 		}
 
-		exportCountries[info.CountryCode]++
-	}
+		keyHex := hex.EncodeToString(node.PublicKey.Bytes())
 
-	for _, key := range nm.PublicKeys {
-		keyHex := hex.EncodeToString(key.Bytes())
-
-		balance, err := m.blFetcher.FetchGAS(*key)
+		balance, err := m.blFetcher.FetchGAS(*node.PublicKey)
 		if err != nil {
 			log.Printf("monitor: can't fetch %s balance, %s", keyHex, err)
-			continue
+		} else {
+			exportBalances[keyHex] = balance
 		}
-
-		exportBalances[keyHex] = balance
 	}
 
 	epochNumber.Set(float64(nm.Epoch))
@@ -198,6 +211,45 @@ func (m *Monitor) processNetworkMap(nm morphchain.NetmapInfo) {
 	for k, v := range exportBalances {
 		storageNodeBalances.WithLabelValues(k).Set(float64(v))
 	}
+}
+
+func getDiff(nm morphchain.NetmapInfo, cand morphchain.NetmapCandidatesInfo) ([]*morphchain.Node, []*morphchain.Node) {
+	currentNetmapLen := len(nm.Nodes)
+	candidatesLen := len(cand.Nodes)
+
+	diff := make(map[uint64]*diffNode, currentNetmapLen+candidatesLen)
+
+	for _, currEpochNode := range nm.Nodes {
+		diff[currEpochNode.ID] = &diffNode{currEpoch: currEpochNode}
+	}
+
+	var newCount int
+
+	for _, nextEpochNode := range cand.Nodes {
+		if _, exists := diff[nextEpochNode.ID]; exists {
+			diff[nextEpochNode.ID].nextEpoch = nextEpochNode
+		} else {
+			newCount++
+			diff[nextEpochNode.ID] = &diffNode{nextEpoch: nextEpochNode}
+		}
+	}
+
+	droppedCount := currentNetmapLen - (candidatesLen - newCount)
+
+	droppedNodes := make([]*morphchain.Node, 0, droppedCount)
+	newNodes := make([]*morphchain.Node, 0, newCount)
+
+	for _, node := range diff {
+		if node.nextEpoch == nil {
+			droppedNodes = append(droppedNodes, node.currEpoch)
+		}
+
+		if node.currEpoch == nil {
+			newNodes = append(newNodes, node.nextEpoch)
+		}
+	}
+
+	return newNodes, droppedNodes
 }
 
 func (m *Monitor) processInnerRing(ir keys.PublicKeys) {

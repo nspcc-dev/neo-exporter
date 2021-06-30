@@ -11,6 +11,7 @@ import (
 
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
 	"github.com/nspcc-dev/neo-go/pkg/util"
+	"github.com/nspcc-dev/neofs-api-go/pkg/netmap"
 	"github.com/nspcc-dev/neofs-node/pkg/morph/client"
 	wrapNetmap "github.com/nspcc-dev/neofs-node/pkg/morph/client/netmap/wrapper"
 	"github.com/nspcc-dev/neofs-node/pkg/network"
@@ -29,10 +30,19 @@ type (
 		NetmapContract util.Uint160
 	}
 
+	Node struct {
+		ID        uint64
+		Address   string
+		PublicKey *keys.PublicKey
+	}
+
 	NetmapInfo struct {
-		Epoch      uint64
-		Addresses  []string
-		PublicKeys keys.PublicKeys
+		Epoch uint64
+		Nodes []*Node
+	}
+
+	NetmapCandidatesInfo struct {
+		Nodes []*Node
 	}
 )
 
@@ -73,44 +83,44 @@ func (f *NetmapFetcher) FetchNetmap() (NetmapInfo, error) {
 		return NetmapInfo{}, fmt.Errorf("can't fetch network map: %w", err)
 	}
 
-	// TODO: define how to allocate slice
-	//  since `len(nm.Nodes)` is not enough
-	//  for all groups of addresses
-	addresses := make([]string, 0, len(nm.Nodes))
-	publicKeys := make(keys.PublicKeys, 0, len(nm.Nodes))
+	nodes := make([]*Node, 0, len(nm.Nodes))
+	var node *Node
 
-	for _, node := range nm.Nodes {
-		node.IterateAddresses(
-			func(mAddr string) bool {
-				addr, err := multiAddrToIPStringWithoutPort(mAddr)
-				if err != nil {
-					log.Printf("morphchain: %s", err)
-				} else {
-					addresses = append(addresses, addr)
-				}
-
-				// TODO: define if monitor should show
-				//  all addresses of the node or only
-				//  one of them
-				return false
-			},
-		)
-
-		rawPublicKey := node.PublicKey()
-
-		publicKey, err := keys.NewPublicKeyFromBytes(rawPublicKey, elliptic.P256())
+	for _, apiNode := range nm.Nodes {
+		node, err = processNode(apiNode)
 		if err != nil {
-			return NetmapInfo{}, fmt.Errorf("can't parse storage node public key <%s>: %w",
-				hex.EncodeToString(rawPublicKey), err)
-		} else {
-			publicKeys = append(publicKeys, publicKey)
+			return NetmapInfo{}, err
 		}
+
+		nodes = append(nodes, node)
 	}
 
 	return NetmapInfo{
-		Epoch:      epoch,
-		Addresses:  addresses,
-		PublicKeys: publicKeys,
+		Epoch: epoch,
+		Nodes: nodes,
+	}, nil
+}
+
+func (f *NetmapFetcher) FetchCandidates() (NetmapCandidatesInfo, error) {
+	candidatesNetmap, err := f.wrp.GetCandidates()
+	if err != nil {
+		return NetmapCandidatesInfo{}, fmt.Errorf("can't fetch netmap candidates: %w", err)
+	}
+
+	candidates := make([]*Node, 0, len(candidatesNetmap.Nodes))
+	var candidate *Node
+
+	for _, apiCandidate := range candidatesNetmap.Nodes {
+		candidate, err = processNode(apiCandidate)
+		if err != nil {
+			return NetmapCandidatesInfo{}, nil
+		}
+
+		candidates = append(candidates, candidate)
+	}
+
+	return NetmapCandidatesInfo{
+		Nodes: candidates,
 	}, nil
 }
 
@@ -134,4 +144,42 @@ func multiAddrToIPStringWithoutPort(multiaddr string) (string, error) {
 	ipWithPort := netAddress.HostAddr()
 
 	return strings.Split(ipWithPort, ":")[0], nil
+}
+
+func processNode(node *netmap.Node) (*Node, error) {
+	var address string
+
+	node.IterateAddresses(
+		func(mAddr string) bool {
+			addr, err := multiAddrToIPStringWithoutPort(mAddr)
+			if err != nil {
+				log.Printf("morphchain: %s", err)
+				return false
+			}
+
+			// TODO: define if monitor should show
+			//  all addresses of the node or only
+			//  one of them: #17.
+			address = addr
+
+			return true
+		},
+	)
+
+	rawPublicKey := node.PublicKey()
+
+	publicKey, err := keys.NewPublicKeyFromBytes(rawPublicKey, elliptic.P256())
+	if err != nil {
+		return nil, fmt.Errorf(
+			"can't parse storage node public key <%s>: %w",
+			hex.EncodeToString(rawPublicKey),
+			err,
+		)
+	}
+
+	return &Node{
+		ID:        node.ID,
+		Address:   address,
+		PublicKey: publicKey,
+	}, nil
 }
