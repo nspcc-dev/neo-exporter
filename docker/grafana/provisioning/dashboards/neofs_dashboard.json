@@ -47,7 +47,7 @@
       "fillGradient": 0,
       "gridPos": {
         "h": 8,
-        "w": 6,
+        "w": 8,
         "x": 0,
         "y": 0
       },
@@ -146,8 +146,8 @@
       "fillGradient": 0,
       "gridPos": {
         "h": 8,
-        "w": 9,
-        "x": 6,
+        "w": 8,
+        "x": 8,
         "y": 0
       },
       "hiddenSeries": false,
@@ -242,8 +242,8 @@
       "fillGradient": 0,
       "gridPos": {
         "h": 8,
-        "w": 6,
-        "x": 15,
+        "w": 8,
+        "x": 16,
         "y": 0
       },
       "hiddenSeries": false,
@@ -332,12 +332,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "dark-green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           }
@@ -346,9 +342,119 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 3,
-        "x": 21,
-        "y": 0
+        "w": 8,
+        "x": 0,
+        "y": 8
+      },
+      "id": 16,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.7",
+      "targets": [
+        {
+          "expr": "neofs_net_monitor_netmap_new",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Amount of new nodes in the next epoch",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 8
+      },
+      "id": 14,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.7",
+      "targets": [
+        {
+          "expr": "neofs_net_monitor_netmap_dropped",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Amount of dropped nodes in the next epoch",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "light-blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 8
       },
       "id": 6,
       "options": {
@@ -369,11 +475,11 @@
       "targets": [
         {
           "expr": "neofs_net_monitor_epoch",
+          "instant": true,
           "interval": "",
           "legendFormat": "",
           "queryType": "randomWalk",
-          "refId": "A",
-          "instant": true
+          "refId": "A"
         }
       ],
       "timeFrom": null,
@@ -402,7 +508,7 @@
         "h": 22,
         "w": 24,
         "x": 0,
-        "y": 8
+        "y": 16
       },
       "hideEmpty": false,
       "hideZero": false,
@@ -460,5 +566,5 @@
   "timezone": "",
   "title": "NeoFS Network Monitor",
   "uid": "w9pGNKfMz",
-  "version": 1
+  "version": 3
 }
