@@ -110,8 +110,8 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 
 func (m *Monitor) Start(ctx context.Context) {
 	prometheus.MustRegister(countriesPresent)
-	//prometheus.MustRegister(droppedNodes)
-	//prometheus.MustRegister(newNodes)
+	prometheus.MustRegister(droppedNodesCount)
+	prometheus.MustRegister(newNodesCount)
 	prometheus.MustRegister(epochNumber)
 	prometheus.MustRegister(storageNodeBalances)
 	prometheus.MustRegister(innerRingBalances)
@@ -180,7 +180,7 @@ func (m *Monitor) processNetworkMap(nm morphchain.NetmapInfo, candidates morphch
 	exportCountries := make(map[string]int, currentNetmapLen)
 	exportBalances := make(map[string]int64, currentNetmapLen)
 
-	_, _ = getDiff(nm, candidates)
+	newNodes, droppedNodes := getDiff(nm, candidates)
 
 	for _, node := range nm.Nodes {
 		info, err := m.ipFetcher.Fetch(node.Address)
@@ -201,6 +201,8 @@ func (m *Monitor) processNetworkMap(nm morphchain.NetmapInfo, candidates morphch
 	}
 
 	epochNumber.Set(float64(nm.Epoch))
+	droppedNodesCount.Set(float64(len(droppedNodes)))
+	newNodesCount.Set(float64(len(newNodes)))
 
 	countriesPresent.Reset()
 	for k, v := range exportCountries {
