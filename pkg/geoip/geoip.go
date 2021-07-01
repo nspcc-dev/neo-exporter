@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"time"
@@ -77,7 +77,7 @@ func (f *Fetcher) Fetch(ipAddr string) (Info, error) {
 		defer res.Body.Close()
 	}
 
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return result, fmt.Errorf("can't read geo ip response body: %w", err)
 	}
