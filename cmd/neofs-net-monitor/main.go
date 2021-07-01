@@ -29,7 +29,8 @@ func main() {
 		return
 	}
 
-	ctx := gracefulContext()
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+	defer cancel()
 
 	cfg, err := newConfig(*configFile)
 	if err != nil {
@@ -52,20 +53,6 @@ func main() {
 	neofsMonitor.Stop()
 
 	log.Println("application stopped")
-}
-
-func gracefulContext() context.Context {
-	ctx, cancel := context.WithCancel(context.Background())
-
-	go func() {
-		ch := make(chan os.Signal, 1)
-		signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
-		sig := <-ch
-		log.Printf("ctx: received signal %s, closing", sig.String())
-		cancel()
-	}()
-
-	return ctx
 }
 
 func newConfig(path string) (*viper.Viper, error) {
