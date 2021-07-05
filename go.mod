@@ -8,4 +8,5 @@ require (
 	github.com/nspcc-dev/neofs-node v0.22.1-0.20210629192923-a2b622d62ecc
 	github.com/prometheus/client_golang v1.11.0
 	github.com/spf13/viper v1.8.1
+	github.com/stretchr/testify v1.7.0
 )
