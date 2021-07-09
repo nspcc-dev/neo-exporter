@@ -365,7 +365,7 @@
       "targets": [
         {
           "expr": "neofs_net_monitor_netmap_new",
-          "instant": true,
+          "instant": false,
           "interval": "",
           "legendFormat": "",
           "queryType": "randomWalk",
@@ -420,7 +420,7 @@
       "targets": [
         {
           "expr": "neofs_net_monitor_netmap_dropped",
-          "instant": true,
+          "instant": false,
           "interval": "",
           "legendFormat": "",
           "queryType": "randomWalk",
@@ -475,7 +475,7 @@
       "targets": [
         {
           "expr": "neofs_net_monitor_epoch",
-          "instant": true,
+          "instant": false,
           "interval": "",
           "legendFormat": "",
           "queryType": "randomWalk",
@@ -566,5 +566,5 @@
   "timezone": "",
   "title": "NeoFS Network Monitor",
   "uid": "w9pGNKfMz",
-  "version": 3
+  "version": 1
 }
