@@ -22,7 +22,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "Prometheus",
+      "datasource": "$datasource",
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -135,7 +135,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "Prometheus",
+      "datasource": "$datasource",
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -231,7 +231,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "Prometheus",
+      "datasource": "$datasource",
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -323,7 +323,7 @@
       }
     },
     {
-      "datasource": "Prometheus",
+      "datasource": "$datasource",
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -378,7 +378,7 @@
       "type": "stat"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": "$datasource",
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -433,7 +433,7 @@
       "type": "stat"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": "$datasource",
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -495,7 +495,7 @@
         "rgba(237, 129, 40, 0.89)",
         "rgba(50, 172, 45, 0.97)"
       ],
-      "datasource": "Prometheus",
+      "datasource": "$datasource",
       "decimals": 0,
       "esMetric": "Count",
       "fieldConfig": {
@@ -556,7 +556,22 @@
   "style": "dark",
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "text": "Prometheus",
+          "value": "Prometheus"
+        },
+        "hide": 0,
+        "label": null,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "type": "datasource"
+      }
+    ]
   },
   "time": {
     "from": "now-5m",
