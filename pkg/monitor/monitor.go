@@ -41,7 +41,7 @@ type (
 	}
 
 	Monitor struct {
-		proxy         util.Uint160
+		proxy         *util.Uint160
 		sleep         time.Duration
 		metricsServer http.Server
 		ipFetcher     GeoIPFetcher
@@ -89,13 +89,17 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 		return nil, fmt.Errorf("can't initialize balance fetcher: %w", err)
 	}
 
+	var proxy *util.Uint160
+
 	proxyContract, err := util.Uint160DecodeStringLE(cfg.GetString(cfgProxyContract))
 	if err != nil {
-		return nil, fmt.Errorf("can't read proxy scripthash: %w", err)
+		log.Println("proxy disabled")
+	} else {
+		proxy = &proxyContract
 	}
 
 	return &Monitor{
-		proxy: proxyContract,
+		proxy: proxy,
 		sleep: cfg.GetDuration(cfgMetricsInterval),
 		metricsServer: http.Server{
 			Addr:    cfg.GetString(cfgMetricsEndpoint),
@@ -157,7 +161,9 @@ func (m *Monitor) Job(ctx context.Context) {
 			m.processInnerRing(innerRing)
 		}
 
-		m.processProxyContract()
+		if m.proxy != nil {
+			m.processProxyContract()
+		}
 
 		select {
 		case <-time.After(m.sleep):
@@ -276,7 +282,7 @@ func (m *Monitor) processInnerRing(ir keys.PublicKeys) {
 }
 
 func (m *Monitor) processProxyContract() {
-	balance, err := m.blFetcher.FetchGASByScriptHash(m.proxy)
+	balance, err := m.blFetcher.FetchGASByScriptHash(*m.proxy)
 	if err != nil {
 		log.Printf("monitor: can't fetch proxy contract balance, %s", err)
 		return
