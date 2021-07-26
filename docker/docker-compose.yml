@@ -39,9 +39,8 @@ services:
     depends_on:
       - prometheus
     environment:
-      - NEOFS_NET_MONITOR_CONTRACTS_NETMAP=5283a843ee68f8fa9ee664df6b495054be5738d4
-      - NEOFS_NET_MONITOR_CONTRACTS_PROXY=60cf507792a07854c7c850ba204b3be7a66aa109
-      - NEOFS_NET_MONITOR_RPC_ENDPOINT=https://rpc1.morph.fs.neo.org:40341
+      - NEOFS_NET_MONITOR_CONTRACTS_NETMAP=86f589459b0b0ae47d31f3b9b340d6d431358954
+      - NEOFS_NET_MONITOR_RPC_ENDPOINT=https://rpc01.morph.testnet.fs.neo.org:51331
       - NEOFS_NET_MONITOR_GEOIP_ACCESS_KEY=<ACCESS-TOKEN>
     networks:
       - monitor-net
