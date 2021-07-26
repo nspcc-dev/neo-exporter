@@ -19,8 +19,9 @@ import (
 
 type (
 	NetmapFetcher struct {
-		cli *client.Client
-		wrp *wrapNetmap.Wrapper
+		cli            *client.Client
+		notaryDisabled bool
+		wrp            *wrapNetmap.Wrapper
 	}
 
 	NetmapFetcherArgs struct {
@@ -67,8 +68,9 @@ func NewNetmapFetcher(ctx context.Context, p NetmapFetcherArgs) (*NetmapFetcher,
 	}
 
 	return &NetmapFetcher{
-		cli: blockchainClient,
-		wrp: wrapper,
+		cli:            blockchainClient,
+		notaryDisabled: !blockchainClient.ProbeNotary(),
+		wrp:            wrapper,
 	}, nil
 }
 
@@ -125,7 +127,17 @@ func (f *NetmapFetcher) FetchCandidates() (NetmapCandidatesInfo, error) {
 }
 
 func (f *NetmapFetcher) FetchInnerRingKeys() (keys.PublicKeys, error) {
-	publicKeys, err := f.cli.NeoFSAlphabetList()
+	var (
+		publicKeys keys.PublicKeys
+		err        error
+	)
+
+	if f.notaryDisabled {
+		publicKeys, err = f.wrp.GetInnerRingList()
+	} else {
+		publicKeys, err = f.cli.NeoFSAlphabetList()
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("can't fetch inner ring keys: %w", err)
 	}
