@@ -40,14 +40,20 @@ type (
 		FetchGASByScriptHash(uint160 util.Uint160) (int64, error)
 	}
 
+	AlphabetFetcher interface {
+		FetchAlphabet() (keys.PublicKeys, error)
+	}
+
 	Monitor struct {
 		proxy         *util.Uint160
 		sleep         time.Duration
 		metricsServer http.Server
 		ipFetcher     GeoIPFetcher
+		alpFetcher    AlphabetFetcher
 		nmFetcher     NetmapFetcher
 		irFetcher     InnerRingFetcher
-		blFetcher     BalanceFetcher
+		sideBlFetcher BalanceFetcher
+		mainBlFetcher BalanceFetcher
 	}
 )
 
@@ -71,22 +77,38 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 		return nil, fmt.Errorf("can't read netmap scripthash: %w", err)
 	}
 
+	sideChainEndpoint := cfg.GetString(sidePrefix + delimiter + cfgNeoRPCEndpoint)
+	sideChainTimeout := cfg.GetDuration(sidePrefix + delimiter + cfgNeoRPCDialTimeout)
+
 	nmFetcher, err := morphchain.NewNetmapFetcher(ctx, morphchain.NetmapFetcherArgs{
 		Key:            key,
-		Endpoint:       cfg.GetString(cfgNeoRPCEndpoint),
-		DialTimeout:    cfg.GetDuration(cfgNeoRPCDialTimeout),
+		Endpoint:       sideChainEndpoint,
+		DialTimeout:    sideChainTimeout,
 		NetmapContract: netmapContract,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("can't initialize netmap fetcher: %w", err)
 	}
 
-	balanceFetcher, err := morphchain.NewBalanceFetcher(ctx, morphchain.BalanceFetcherArgs{
-		Endpoint:    cfg.GetString(cfgNeoRPCEndpoint),
-		DialTimeout: cfg.GetDuration(cfgNeoRPCDialTimeout),
+	alphabetFetcher, err := morphchain.NewAlphabetFetcher(ctx, morphchain.AlphabetFetcherArgs{
+		Endpoint:    sideChainEndpoint,
+		DialTimeout: sideChainTimeout,
+	})
+
+	sideBalanceFetcher, err := morphchain.NewBalanceFetcher(ctx, morphchain.BalanceFetcherArgs{
+		Endpoint:    sideChainEndpoint,
+		DialTimeout: sideChainTimeout,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("can't initialize balance fetcher: %w", err)
+		return nil, fmt.Errorf("can't initialize side balance fetcher: %w", err)
+	}
+
+	mainBalanceFetcher, err := morphchain.NewBalanceFetcher(ctx, morphchain.BalanceFetcherArgs{
+		Endpoint:    cfg.GetString(mainPrefix + delimiter + cfgNeoRPCEndpoint),
+		DialTimeout: cfg.GetDuration(mainPrefix + delimiter + cfgNeoRPCDialTimeout),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("can't initialize main balance fetcher: %w", err)
 	}
 
 	var proxy *util.Uint160
@@ -105,10 +127,12 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 			Addr:    cfg.GetString(cfgMetricsEndpoint),
 			Handler: promhttp.Handler(),
 		},
-		ipFetcher: ipFetcher,
-		nmFetcher: nmFetcher,
-		irFetcher: nmFetcher,
-		blFetcher: balanceFetcher,
+		ipFetcher:     ipFetcher,
+		alpFetcher:    alphabetFetcher,
+		nmFetcher:     nmFetcher,
+		irFetcher:     nmFetcher,
+		sideBlFetcher: sideBalanceFetcher,
+		mainBlFetcher: mainBalanceFetcher,
 	}, nil
 }
 
@@ -165,6 +189,13 @@ func (m *Monitor) Job(ctx context.Context) {
 			m.processProxyContract()
 		}
 
+		alphabet, err := m.alpFetcher.FetchAlphabet()
+		if err != nil {
+			log.Printf("monitor: can't scrap alphabet info, %s", err)
+		} else {
+			m.processAlphabet(alphabet)
+		}
+
 		select {
 		case <-time.After(m.sleep):
 			// sleep for some time before next prometheus update
@@ -198,7 +229,7 @@ func (m *Monitor) processNetworkMap(nm morphchain.NetmapInfo, candidates morphch
 
 		keyHex := hex.EncodeToString(node.PublicKey.Bytes())
 
-		balance, err := m.blFetcher.FetchGAS(*node.PublicKey)
+		balance, err := m.sideBlFetcher.FetchGAS(*node.PublicKey)
 		if err != nil {
 			log.Printf("monitor: can't fetch %s balance, %s", keyHex, err)
 		} else {
@@ -266,7 +297,7 @@ func (m *Monitor) processInnerRing(ir keys.PublicKeys) {
 	for _, key := range ir {
 		keyHex := hex.EncodeToString(key.Bytes())
 
-		balance, err := m.blFetcher.FetchGAS(*key)
+		balance, err := m.sideBlFetcher.FetchGAS(*key)
 		if err != nil {
 			log.Printf("monitor: can't fetch %s balance, %s", keyHex, err)
 			continue
@@ -282,13 +313,35 @@ func (m *Monitor) processInnerRing(ir keys.PublicKeys) {
 }
 
 func (m *Monitor) processProxyContract() {
-	balance, err := m.blFetcher.FetchGASByScriptHash(*m.proxy)
+	balance, err := m.sideBlFetcher.FetchGASByScriptHash(*m.proxy)
 	if err != nil {
 		log.Printf("monitor: can't fetch proxy contract balance, %s", err)
 		return
 	}
 
 	proxyBalance.Set(float64(balance))
+}
+
+func (m *Monitor) processAlphabet(alphabet keys.PublicKeys) {
+	exportBalances := make(map[string]int64, len(alphabet))
+
+	for _, key := range alphabet {
+		keyHex := hex.EncodeToString(key.Bytes())
+
+		balance, err := m.mainBlFetcher.FetchGAS(*key)
+		if err != nil {
+			log.Printf("monitor: can't fetch %s balance, %s", keyHex, err)
+			continue
+		}
+
+		exportBalances[keyHex] = balance
+	}
+
+	//alphabetBalances.Reset()
+	for k, v := range exportBalances {
+		log.Printf("alphabet balance of %s: %d", k, v)
+		//alphabetBalances.WithLabelValues(k).Set(float64(v))
+	}
 }
 
 func readKey(cfg *viper.Viper) (*keys.PrivateKey, error) {

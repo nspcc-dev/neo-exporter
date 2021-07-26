@@ -7,6 +7,8 @@ import (
 )
 
 const (
+	delimiter = "."
+
 	// contracts scripthash
 	cfgNetmapContract = "contracts.netmap"
 	cfgProxyContract  = "contracts.proxy"
@@ -15,6 +17,9 @@ const (
 	cfgKey = "key"
 
 	// neo rpc node related config values
+	mainPrefix = "mainnet"
+	sidePrefix = "morph"
+
 	cfgNeoRPCEndpoint    = "rpc.endpoint"
 	cfgNeoRPCDialTimeout = "rpc.dial_timeout"
 
@@ -34,8 +39,11 @@ func DefaultConfiguration(cfg *viper.Viper) {
 
 	cfg.SetDefault(cfgKey, "")
 
-	cfg.SetDefault(cfgNeoRPCEndpoint, "")
-	cfg.SetDefault(cfgNeoRPCDialTimeout, 5*time.Second)
+	cfg.SetDefault(sidePrefix+delimiter+cfgNeoRPCEndpoint, "")
+	cfg.SetDefault(sidePrefix+delimiter+cfgNeoRPCDialTimeout, 5*time.Second)
+
+	cfg.SetDefault(mainPrefix+delimiter+cfgNeoRPCEndpoint, "")
+	cfg.SetDefault(mainPrefix+delimiter+cfgNeoRPCDialTimeout, 5*time.Second)
 
 	cfg.SetDefault(cfgMetricsEndpoint, ":16512")
 	cfg.SetDefault(cfgMetricsInterval, 15*time.Minute)
