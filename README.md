@@ -14,7 +14,7 @@ For internal usage.
 $ make image
 ...
 Successfully built 22b63620bc9d
-Successfully tagged nspccdev/neofs-net-monitor:0.3.0
+Successfully tagged nspccdev/neofs-net-monitor:0.4.0
 ```
 
 2. (Optional) Specify neofs-net-monitor image version and `ipstack.com` access token in 
@@ -46,7 +46,8 @@ dashboard.
 ## Available options
 
 ```
-// Script hash of netmap contract in NeoFS sidechain.
+// Script hashes of netmap and proxy(optional if notary is disabled)
+// contracts in NeoFS sidechain.
 NEOFS_NET_MONITOR_CONTRACTS_NETMAP=7b383bc5a385859469f366b08b04b4fcd9a41f55 
 NEOFS_NET_MONITOR_CONTRACTS_PROXY=82b404558924457e46999475fe04fcf0e371532b
 
@@ -54,8 +55,12 @@ NEOFS_NET_MONITOR_CONTRACTS_PROXY=82b404558924457e46999475fe04fcf0e371532b
 NEOFS_NET_MONITOR_KEY=KyH4ASQ1tmm7q9eQKiSzCSH6kxNVbUe3B41EeLaJ15UoMwgZw3Zk 
 
 // Sidechain NEO RPC related configuration.
-NEOFS_NET_MONITOR_RPC_ENDPOINT=http://rpc1-morph.preview4.nspcc.ru:24333
-NEOFS_NET_MONITOR_RPC_DIAL_TIMEOUT=5s
+NEOFS_NET_MONITOR_MORPH_RPC_ENDPOINT=https://rpc1-morph.preview4.nspcc.ru:24333
+NEOFS_NET_MONITOR_MORPH_RPC_DIAL_TIMEOUT=5s
+
+// Mainchain NEO RPC related configuration.
+NEOFS_NET_MONITOR_MAINNET_RPC_ENDPOINT=https://rpc1-main.preview4.nspcc.ru:24333
+NEOFS_NET_MONITOR_MAINNET_RPC_DIAL_TIMEOUT=5s
 
 // Prometheus metric endpoint.
 NEOFS_NET_MONITOR_METRICS_ENDPOINT=:16512
