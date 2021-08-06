@@ -10,7 +10,7 @@ APP = neofs-net-monitor
 BINARY = ./bin/${APP}
 SRC = ./cmd/${APP}/
 
-.PHONY: bin image up up-devenv down down-devenv clean
+.PHONY: bin image up up-testnet up-devenv down down-testnet down-devenv clean
 
 bin:
 	@echo "Build neofs-net-monitor binary"
@@ -30,11 +30,17 @@ image:
 up:
 	$(shell docker-compose -f docker/docker-compose.yml up -d)
 
+up-testnet:
+	$(shell docker-compose -f docker/docker-compose.testnet.yml up -d)
+
 up-devenv:
 	$(shell docker-compose -f docker/docker-compose.devenv.yml up -d)
 
 down:
 	$(shell docker-compose -f docker/docker-compose.yml down)
+
+down-testnet:
+	$(shell docker-compose -f docker/docker-compose.testnet.yml down)
 
 down-devenv:
 	$(shell docker-compose -f docker/docker-compose.devenv.yml down)
