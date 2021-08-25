@@ -612,11 +612,6 @@
   "templating": {
     "list": [
       {
-        "current": {
-          "selected": false,
-          "text": "Prometheus",
-          "value": "Prometheus"
-        },
         "description": null,
         "error": null,
         "hide": 0,
@@ -634,7 +629,7 @@
     ]
   },
   "time": {
-    "from": "now-5m",
+    "from": "now-1d",
     "to": "now"
   },
   "timepicker": {},
