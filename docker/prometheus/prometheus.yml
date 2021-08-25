@@ -10,3 +10,5 @@ scrape_configs:
     scrape_interval: 15s
     static_configs:
       - targets: ['neofs-net-monitor:16512']
+        labels:
+          net: 'monitor'
