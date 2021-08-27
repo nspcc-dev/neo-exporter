@@ -28,22 +28,22 @@ image:
 		-t ${REPO}/${APP}:$(HUB_TAG) .
 
 up:
-	$(shell docker-compose -f docker/docker-compose.yml up -d)
+	@docker-compose -f docker/docker-compose.yml up -d
 
 up-testnet:
-	$(shell docker-compose -f docker/docker-compose.testnet.yml up -d)
+	@docker-compose -f docker/docker-compose.testnet.yml up -d
 
 up-devenv:
-	$(shell docker-compose -f docker/docker-compose.devenv.yml up -d)
+	@docker-compose -f docker/docker-compose.devenv.yml up -d
 
 down:
-	$(shell docker-compose -f docker/docker-compose.yml down)
+	@docker-compose -f docker/docker-compose.yml down
 
 down-testnet:
-	$(shell docker-compose -f docker/docker-compose.testnet.yml down)
+	@docker-compose -f docker/docker-compose.testnet.yml down
 
 down-devenv:
-	$(shell docker-compose -f docker/docker-compose.devenv.yml down)
+	@docker-compose -f docker/docker-compose.devenv.yml down
 
 clean:
-	rm ${BINARY}
+	rm -f ${BINARY}
