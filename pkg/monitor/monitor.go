@@ -10,7 +10,9 @@ import (
 	"os"
 	"time"
 
+	nns "github.com/nspcc-dev/neo-go/examples/nft-nd-nns"
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
+	"github.com/nspcc-dev/neo-go/pkg/rpc/client"
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/geoip"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/morphchain"
@@ -72,13 +74,25 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 		return nil, fmt.Errorf("can't initialize geoip fetcher: %w", err)
 	}
 
-	netmapContract, err := util.Uint160DecodeStringLE(cfg.GetString(cfgNetmapContract))
+	sideChainEndpoint := cfg.GetString(sidePrefix + delimiter + cfgNeoRPCEndpoint)
+	sideChainTimeout := cfg.GetDuration(sidePrefix + delimiter + cfgNeoRPCDialTimeout)
+
+	neogoClient, err := client.New(ctx, sideChainEndpoint, client.Options{
+		DialTimeout: sideChainTimeout,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("can't create neo-go client: %w", err)
+	}
+
+	err = neogoClient.Init()
+	if err != nil {
+		return nil, fmt.Errorf("can't init neo-go client: %w", err)
+	}
+
+	netmapContract, err := getScriptHash(cfg, neogoClient, "netmap.neofs", cfgNetmapContract)
 	if err != nil {
 		return nil, fmt.Errorf("can't read netmap scripthash: %w", err)
 	}
-
-	sideChainEndpoint := cfg.GetString(sidePrefix + delimiter + cfgNeoRPCEndpoint)
-	sideChainTimeout := cfg.GetDuration(sidePrefix + delimiter + cfgNeoRPCDialTimeout)
 
 	nmFetcher, err := morphchain.NewNetmapFetcher(ctx, morphchain.NetmapFetcherArgs{
 		Key:            key,
@@ -90,9 +104,8 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 		return nil, fmt.Errorf("can't initialize netmap fetcher: %w", err)
 	}
 
-	alphabetFetcher, err := morphchain.NewAlphabetFetcher(ctx, morphchain.AlphabetFetcherArgs{
-		Endpoint:    sideChainEndpoint,
-		DialTimeout: sideChainTimeout,
+	alphabetFetcher, err := morphchain.NewAlphabetFetcher(morphchain.AlphabetFetcherArgs{
+		Committeer: neogoClient,
 	})
 
 	sideBalanceFetcher, err := morphchain.NewBalanceFetcher(ctx, morphchain.BalanceFetcherArgs{
@@ -113,7 +126,7 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 
 	var proxy *util.Uint160
 
-	proxyContract, err := util.Uint160DecodeStringLE(cfg.GetString(cfgProxyContract))
+	proxyContract, err := getScriptHash(cfg, neogoClient, "proxy.neofs", cfgProxyContract)
 	if err != nil {
 		log.Println("proxy disabled")
 	} else {
@@ -205,6 +218,30 @@ func (m *Monitor) Job(ctx context.Context) {
 			return
 		}
 	}
+}
+
+const nnsContractID = 1
+
+func getScriptHash(cfg *viper.Viper, cli *client.Client, nnsKey, configKey string) (sh util.Uint160, err error) {
+	cs, err := cli.GetContractStateByID(nnsContractID)
+	if err != nil {
+		return sh, fmt.Errorf("NNS contract state: %w", err)
+	}
+
+	hash := cfg.GetString(configKey)
+	if len(hash) == 0 {
+		hash, err = cli.NNSResolve(cs.Hash, nnsKey, nns.TXT)
+		if err != nil {
+			return sh, fmt.Errorf("NNS.resolve: %w", err)
+		}
+	}
+
+	sh, err = util.Uint160DecodeStringLE(hash)
+	if err != nil {
+		return sh, fmt.Errorf("NNS u160 decode: %w", err)
+	}
+
+	return sh, nil
 }
 
 type diffNode struct {

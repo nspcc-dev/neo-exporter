@@ -1,41 +1,29 @@
 package morphchain
 
 import (
-	"context"
-	"fmt"
-	"time"
-
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
-	"github.com/nspcc-dev/neo-go/pkg/rpc/client"
 )
+
+// Committeer must provide side chain committee
+// public keys.
+type Committeer interface {
+	GetCommittee() (keys.PublicKeys, error)
+}
 
 type (
 	AlphabetFetcher struct {
-		cli *client.Client
+		c Committeer
 	}
 
 	AlphabetFetcherArgs struct {
-		Endpoint    string
-		DialTimeout time.Duration
+		Committeer Committeer
 	}
 )
 
-func NewAlphabetFetcher(ctx context.Context, p AlphabetFetcherArgs) (*AlphabetFetcher, error) {
-	cli, err := client.New(ctx, p.Endpoint, client.Options{
-		DialTimeout: p.DialTimeout,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("can't create neo-go client: %w", err)
-	}
-
-	err = cli.Init()
-	if err != nil {
-		return nil, fmt.Errorf("can't init neo-go client: %w", err)
-	}
-
-	return &AlphabetFetcher{cli: cli}, nil
+func NewAlphabetFetcher(p AlphabetFetcherArgs) (*AlphabetFetcher, error) {
+	return &AlphabetFetcher{c: p.Committeer}, nil
 }
 
 func (a AlphabetFetcher) FetchAlphabet() (keys.PublicKeys, error) {
-	return a.cli.GetCommittee()
+	return a.c.GetCommittee()
 }
