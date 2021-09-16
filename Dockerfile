@@ -1,7 +1,4 @@
-FROM golang:1.16-alpine as basebuilder
-RUN apk add --update make bash
-
-FROM basebuilder as builder
+FROM golang:1.16 as builder
 ARG VERSION=dev
 WORKDIR /src
 COPY . /src
