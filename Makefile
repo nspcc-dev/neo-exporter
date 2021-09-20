@@ -2,7 +2,7 @@
 SHELL = bash
 
 REPO ?= $(shell go list -m)
-VERSION ?= $(shell git describe --tags --always)
+VERSION ?= $(shell git describe --tags --always 2>/dev/null || cat VERSION 2>/dev/null || echo "develop")
 HUB_TAG ?= "$(shell echo ${VERSION} | sed 's/^v//')"
 
 REPO = nspccdev
@@ -47,3 +47,6 @@ down-devenv:
 
 clean:
 	rm -f ${BINARY}
+
+version:
+	@echo ${VERSION}
