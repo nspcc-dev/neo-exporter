@@ -11,6 +11,7 @@ import (
 	"time"
 
 	nns "github.com/nspcc-dev/neo-go/examples/nft-nd-nns"
+	"github.com/nspcc-dev/neo-go/pkg/core/native/nativenames"
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
 	"github.com/nspcc-dev/neo-go/pkg/rpc/client"
 	"github.com/nspcc-dev/neo-go/pkg/util"
@@ -40,6 +41,8 @@ type (
 	BalanceFetcher interface {
 		FetchGAS(keys.PublicKey) (int64, error)
 		FetchGASByScriptHash(uint160 util.Uint160) (int64, error)
+		FetchNotary(keys.PublicKey) (int64, error)
+		FetchNotaryByScriptHash(uint160 util.Uint160) (int64, error)
 	}
 
 	AlphabetFetcher interface {
@@ -47,15 +50,16 @@ type (
 	}
 
 	Monitor struct {
-		proxy         *util.Uint160
-		sleep         time.Duration
-		metricsServer http.Server
-		ipFetcher     GeoIPFetcher
-		alpFetcher    AlphabetFetcher
-		nmFetcher     NetmapFetcher
-		irFetcher     InnerRingFetcher
-		sideBlFetcher BalanceFetcher
-		mainBlFetcher BalanceFetcher
+		proxy                  *util.Uint160
+		sleep                  time.Duration
+		metricsServer          http.Server
+		ipFetcher              GeoIPFetcher
+		alpFetcher             AlphabetFetcher
+		nmFetcher              NetmapFetcher
+		irFetcher              InnerRingFetcher
+		sideBlFetcher          BalanceFetcher
+		mainBlFetcher          BalanceFetcher
+		sideChainNotaryEnabled bool
 	}
 )
 
@@ -135,6 +139,9 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 		proxy = &proxyContract
 	}
 
+	_, err = sideNeogoClient.GetNativeContractHash(nativenames.Notary)
+	notaryEnabled := err == nil
+
 	return &Monitor{
 		proxy: proxy,
 		sleep: cfg.GetDuration(cfgMetricsInterval),
@@ -142,12 +149,13 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 			Addr:    cfg.GetString(cfgMetricsEndpoint),
 			Handler: promhttp.Handler(),
 		},
-		ipFetcher:     ipFetcher,
-		alpFetcher:    alphabetFetcher,
-		nmFetcher:     nmFetcher,
-		irFetcher:     nmFetcher,
-		sideBlFetcher: sideBalanceFetcher,
-		mainBlFetcher: mainBalanceFetcher,
+		ipFetcher:              ipFetcher,
+		alpFetcher:             alphabetFetcher,
+		nmFetcher:              nmFetcher,
+		irFetcher:              nmFetcher,
+		sideBlFetcher:          sideBalanceFetcher,
+		mainBlFetcher:          mainBalanceFetcher,
+		sideChainNotaryEnabled: notaryEnabled,
 	}, nil
 }
 
@@ -156,7 +164,8 @@ func (m *Monitor) Start(ctx context.Context) {
 	prometheus.MustRegister(droppedNodesCount)
 	prometheus.MustRegister(newNodesCount)
 	prometheus.MustRegister(epochNumber)
-	prometheus.MustRegister(storageNodeBalances)
+	prometheus.MustRegister(storageNodeGASBalances)
+	prometheus.MustRegister(storageNodeNotaryBalances)
 	prometheus.MustRegister(innerRingBalances)
 	prometheus.MustRegister(alphabetBalances)
 	prometheus.MustRegister(proxyBalance)
@@ -269,7 +278,8 @@ func (m *Monitor) processNetworkMap(nm morphchain.NetmapInfo, candidates morphch
 	currentNetmapLen := len(nm.Nodes)
 
 	exportCountries := make(map[string]int, currentNetmapLen)
-	exportBalances := make(map[string]int64, currentNetmapLen)
+	exportBalancesGAS := make(map[string]int64, currentNetmapLen)
+	exportBalancesNotary := make(map[string]int64, currentNetmapLen)
 
 	newNodes, droppedNodes := getDiff(nm, candidates)
 
@@ -283,11 +293,20 @@ func (m *Monitor) processNetworkMap(nm morphchain.NetmapInfo, candidates morphch
 
 		keyHex := hex.EncodeToString(node.PublicKey.Bytes())
 
-		balance, err := m.sideBlFetcher.FetchGAS(*node.PublicKey)
+		balanceGAS, err := m.sideBlFetcher.FetchGAS(*node.PublicKey)
 		if err != nil {
-			log.Printf("monitor: can't fetch %s balance, %s", keyHex, err)
+			log.Printf("monitor: can't fetch %s GAS balance, %s", keyHex, err)
 		} else {
-			exportBalances[keyHex] = balance
+			exportBalancesGAS[keyHex] = balanceGAS
+		}
+
+		if m.sideChainNotaryEnabled {
+			balanceNotary, err := m.sideBlFetcher.FetchNotary(*node.PublicKey)
+			if err != nil {
+				log.Printf("monitor: can't fetch %s notary balance, %s", keyHex, err)
+			} else {
+				exportBalancesNotary[keyHex] = balanceNotary
+			}
 		}
 	}
 
@@ -300,9 +319,14 @@ func (m *Monitor) processNetworkMap(nm morphchain.NetmapInfo, candidates morphch
 		countriesPresent.WithLabelValues(k).Set(float64(v))
 	}
 
-	storageNodeBalances.Reset()
-	for k, v := range exportBalances {
-		storageNodeBalances.WithLabelValues(k).Set(float64(v))
+	storageNodeGASBalances.Reset()
+	for k, v := range exportBalancesGAS {
+		storageNodeGASBalances.WithLabelValues(k).Set(float64(v))
+	}
+
+	storageNodeNotaryBalances.Reset()
+	for k, v := range exportBalancesNotary {
+		storageNodeNotaryBalances.WithLabelValues(k).Set(float64(v))
 	}
 }
 
