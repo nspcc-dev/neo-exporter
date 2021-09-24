@@ -12,8 +12,9 @@ import (
 
 type (
 	BalanceFetcher struct {
-		cli *client.Client
-		gas util.Uint160
+		cli    *client.Client
+		gas    util.Uint160
+		notary util.Uint160
 	}
 
 	BalanceFetcherArgs struct {
@@ -27,9 +28,12 @@ func NewBalanceFetcher(p BalanceFetcherArgs) (*BalanceFetcher, error) {
 		return nil, fmt.Errorf("can't get native GAS contract address: %w", err)
 	}
 
+	notary, _ := p.Cli.GetNativeContractHash(nativenames.Notary)
+
 	return &BalanceFetcher{
-		cli: p.Cli,
-		gas: gas,
+		cli:    p.Cli,
+		gas:    gas,
+		notary: notary,
 	}, nil
 }
 
@@ -39,6 +43,16 @@ func (b BalanceFetcher) FetchGAS(key keys.PublicKey) (int64, error) {
 	return b.FetchGASByScriptHash(scriptHash)
 }
 
+func (b BalanceFetcher) FetchNotary(key keys.PublicKey) (int64, error) {
+	scriptHash := hash.Hash160(key.GetVerificationScript())
+
+	return b.FetchNotaryByScriptHash(scriptHash)
+}
+
 func (b BalanceFetcher) FetchGASByScriptHash(sh util.Uint160) (int64, error) {
 	return b.cli.NEP17BalanceOf(b.gas, sh)
+}
+
+func (b BalanceFetcher) FetchNotaryByScriptHash(sh util.Uint160) (int64, error) {
+	return b.cli.NEP17BalanceOf(b.notary, sh)
 }
