@@ -62,11 +62,22 @@ var (
 		},
 	)
 
-	storageNodeBalances = prometheus.NewGaugeVec(
+	storageNodeGASBalances = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Subsystem: "neofs_net_monitor",
 			Name:      "sn_balance",
 			Help:      "Side chain GAS amount of storage nodes",
+		},
+		[]string{
+			"key",
+		},
+	)
+
+	storageNodeNotaryBalances = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Subsystem: "neofs_net_monitor",
+			Name:      "sn_balance_notary",
+			Help:      "Side chain notary balance of storage nodes",
 		},
 		[]string{
 			"key",
