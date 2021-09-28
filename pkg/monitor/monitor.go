@@ -77,27 +77,31 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 	sideChainEndpoint := cfg.GetString(sidePrefix + delimiter + cfgNeoRPCEndpoint)
 	sideChainTimeout := cfg.GetDuration(sidePrefix + delimiter + cfgNeoRPCDialTimeout)
 
-	neogoClient, err := client.New(ctx, sideChainEndpoint, client.Options{
+	mainChainEndpoint := cfg.GetString(mainPrefix + delimiter + cfgNeoRPCEndpoint)
+	mainChainTimeout := cfg.GetDuration(mainPrefix + delimiter + cfgNeoRPCDialTimeout)
+
+	sideNeogoClient, err := neoGoClient(ctx, sideChainEndpoint, client.Options{
 		DialTimeout: sideChainTimeout,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("can't create neo-go client: %w", err)
+		return nil, fmt.Errorf("can't create side chain neo-go client: %w", err)
 	}
 
-	err = neogoClient.Init()
+	mainNeogoClient, err := neoGoClient(ctx, mainChainEndpoint, client.Options{
+		DialTimeout: mainChainTimeout,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("can't init neo-go client: %w", err)
+		return nil, fmt.Errorf("can't create main chain neo-go client: %w", err)
 	}
 
-	netmapContract, err := getScriptHash(cfg, neogoClient, "netmap.neofs", cfgNetmapContract)
+	netmapContract, err := getScriptHash(cfg, sideNeogoClient, "netmap.neofs", cfgNetmapContract)
 	if err != nil {
 		return nil, fmt.Errorf("can't read netmap scripthash: %w", err)
 	}
 
-	nmFetcher, err := morphchain.NewNetmapFetcher(ctx, morphchain.NetmapFetcherArgs{
+	nmFetcher, err := morphchain.NewNetmapFetcher(morphchain.NetmapFetcherArgs{
+		Cli:            sideNeogoClient,
 		Key:            key,
-		Endpoint:       sideChainEndpoint,
-		DialTimeout:    sideChainTimeout,
 		NetmapContract: netmapContract,
 	})
 	if err != nil {
@@ -105,20 +109,18 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 	}
 
 	alphabetFetcher, err := morphchain.NewAlphabetFetcher(morphchain.AlphabetFetcherArgs{
-		Committeer: neogoClient,
+		Committeer: sideNeogoClient,
 	})
 
-	sideBalanceFetcher, err := morphchain.NewBalanceFetcher(ctx, morphchain.BalanceFetcherArgs{
-		Endpoint:    sideChainEndpoint,
-		DialTimeout: sideChainTimeout,
+	sideBalanceFetcher, err := morphchain.NewBalanceFetcher(morphchain.BalanceFetcherArgs{
+		Cli: sideNeogoClient,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("can't initialize side balance fetcher: %w", err)
 	}
 
-	mainBalanceFetcher, err := morphchain.NewBalanceFetcher(ctx, morphchain.BalanceFetcherArgs{
-		Endpoint:    cfg.GetString(mainPrefix + delimiter + cfgNeoRPCEndpoint),
-		DialTimeout: cfg.GetDuration(mainPrefix + delimiter + cfgNeoRPCDialTimeout),
+	mainBalanceFetcher, err := morphchain.NewBalanceFetcher(morphchain.BalanceFetcherArgs{
+		Cli: mainNeogoClient,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("can't initialize main balance fetcher: %w", err)
@@ -126,7 +128,7 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 
 	var proxy *util.Uint160
 
-	proxyContract, err := getScriptHash(cfg, neogoClient, "proxy.neofs", cfgProxyContract)
+	proxyContract, err := getScriptHash(cfg, sideNeogoClient, "proxy.neofs", cfgProxyContract)
 	if err != nil {
 		log.Println("proxy disabled")
 	} else {
@@ -218,6 +220,20 @@ func (m *Monitor) Job(ctx context.Context) {
 			return
 		}
 	}
+}
+
+func neoGoClient(ctx context.Context, endpoint string, opts client.Options) (*client.Client, error) {
+	cli, err := client.New(ctx, endpoint, opts)
+	if err != nil {
+		return nil, fmt.Errorf("can't create neo-go client: %w", err)
+	}
+
+	err = cli.Init()
+	if err != nil {
+		return nil, fmt.Errorf("can't init neo-go client: %w", err)
+	}
+
+	return cli, nil
 }
 
 const nnsContractID = 1
