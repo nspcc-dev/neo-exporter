@@ -1,9 +1,7 @@
 package morphchain
 
 import (
-	"context"
 	"fmt"
-	"time"
 
 	"github.com/nspcc-dev/neo-go/pkg/core/native/nativenames"
 	"github.com/nspcc-dev/neo-go/pkg/crypto/hash"
@@ -19,31 +17,18 @@ type (
 	}
 
 	BalanceFetcherArgs struct {
-		Endpoint    string
-		DialTimeout time.Duration
+		Cli *client.Client
 	}
 )
 
-func NewBalanceFetcher(ctx context.Context, p BalanceFetcherArgs) (*BalanceFetcher, error) {
-	cli, err := client.New(ctx, p.Endpoint, client.Options{
-		DialTimeout: p.DialTimeout,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("can't create neo-go client: %w", err)
-	}
-
-	err = cli.Init()
-	if err != nil {
-		return nil, fmt.Errorf("can't init neo-go client: %w", err)
-	}
-
-	gas, err := cli.GetNativeContractHash(nativenames.Gas)
+func NewBalanceFetcher(p BalanceFetcherArgs) (*BalanceFetcher, error) {
+	gas, err := p.Cli.GetNativeContractHash(nativenames.Gas)
 	if err != nil {
 		return nil, fmt.Errorf("can't get native GAS contract address: %w", err)
 	}
 
 	return &BalanceFetcher{
-		cli: cli,
+		cli: p.Cli,
 		gas: gas,
 	}, nil
 }
