@@ -1,33 +1,31 @@
 package morphchain
 
 import (
-	"context"
 	"crypto/elliptic"
 	"encoding/hex"
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
+	neogo "github.com/nspcc-dev/neo-go/pkg/rpc/client"
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	"github.com/nspcc-dev/neofs-api-go/pkg/netmap"
-	"github.com/nspcc-dev/neofs-node/pkg/morph/client"
+	morph "github.com/nspcc-dev/neofs-node/pkg/morph/client"
 	wrapNetmap "github.com/nspcc-dev/neofs-node/pkg/morph/client/netmap/wrapper"
 	"github.com/nspcc-dev/neofs-node/pkg/network"
 )
 
 type (
 	NetmapFetcher struct {
-		cli            *client.Client
+		cli            *morph.Client
 		notaryDisabled bool
 		wrp            *wrapNetmap.Wrapper
 	}
 
 	NetmapFetcherArgs struct {
+		Cli            *neogo.Client
 		Key            *keys.PrivateKey
-		Endpoint       string
-		DialTimeout    time.Duration
 		NetmapContract util.Uint160
 	}
 
@@ -47,12 +45,11 @@ type (
 	}
 )
 
-func NewNetmapFetcher(ctx context.Context, p NetmapFetcherArgs) (*NetmapFetcher, error) {
-	blockchainClient, err := client.New(
+func NewNetmapFetcher(p NetmapFetcherArgs) (*NetmapFetcher, error) {
+	blockchainClient, err := morph.New(
 		p.Key,
-		p.Endpoint,
-		client.WithContext(ctx),
-		client.WithDialTimeout(p.DialTimeout),
+		"", // endpoint is ignored due to single client instance
+		morph.WithSingleClient(p.Cli),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("can't create blockchain client: %w", err)
