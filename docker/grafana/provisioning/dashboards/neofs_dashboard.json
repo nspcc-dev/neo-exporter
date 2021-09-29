@@ -15,7 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1627316830573,
+  "iteration": 1633028695382,
   "links": [],
   "panels": [
     {
@@ -271,7 +271,7 @@
         "y": 8
       },
       "hiddenSeries": false,
-      "id": 12,
+      "id": 18,
       "legend": {
         "avg": false,
         "current": false,
@@ -298,9 +298,12 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "neofs_net_monitor_proxy_balance{net=\"$net\"}/100000000",
+          "exemplar": true,
+          "expr": "neofs_net_monitor_sn_balance_notary{net=\"$net\"}/100000000",
+          "format": "time_series",
+          "instant": false,
           "interval": "",
-          "legendFormat": "ProxyContract",
+          "legendFormat": "{{key}}",
           "queryType": "randomWalk",
           "refId": "A"
         }
@@ -309,12 +312,13 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Proxy contract GAS balance",
+      "title": "Storage nodes side chain Notary balances",
       "tooltip": {
-        "shared": true,
+        "shared": false,
         "sort": 0,
         "value_type": "individual"
       },
+      "transformations": [],
       "type": "graph",
       "xaxis": {
         "buckets": null,
@@ -548,6 +552,96 @@
       "type": "stat"
     },
     {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 15,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "hiddenSeries": false,
+      "id": 12,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "neofs_net_monitor_proxy_balance{net=\"$net\"}/100000000",
+          "interval": "",
+          "legendFormat": "ProxyContract",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Proxy contract GAS balance",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
       "circleMaxSize": 30,
       "circleMinSize": 2,
       "colors": [
@@ -562,7 +656,7 @@
         "h": 22,
         "w": 24,
         "x": 0,
-        "y": 16
+        "y": 31
       },
       "hideEmpty": false,
       "hideZero": false,
@@ -612,6 +706,11 @@
   "templating": {
     "list": [
       {
+        "current": {
+          "selected": false,
+          "text": "Prometheus",
+          "value": "Prometheus"
+        },
         "description": null,
         "error": null,
         "hide": 0,
@@ -627,14 +726,28 @@
         "type": "datasource"
       },
       {
+        "allValue": null,
+        "current": {
+          "selected": false,
+          "text": "monitor",
+          "value": "monitor"
+        },
         "datasource": "$datasource",
         "definition": "label_values(neofs_net_monitor_epoch,net)",
+        "description": null,
+        "error": null,
+        "hide": 0,
         "includeAll": false,
         "label": "Network",
         "multi": false,
         "name": "net",
-        "query": "label_values(neofs_net_monitor_epoch,net)",
+        "options": [],
+        "query": {
+          "query": "label_values(neofs_net_monitor_epoch,net)",
+          "refId": "Prometheus-net-Variable-Query"
+        },
         "refresh": 1,
+        "regex": "",
         "skipUrlSync": false,
         "sort": 0,
         "type": "query",
