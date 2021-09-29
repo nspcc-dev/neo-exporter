@@ -3,6 +3,10 @@ Changelog for NeoFS Monitor
 
 ## [Unreleased]
 
+### Upgrading from v0.4.0
+All `NEOFS_NET_MONITOR_CONTRACTS_*` envs now are optional if corresponding chain's NNS 
+contract contains corresponding contract script hashes.
+
 ## [0.4.0] - 2021-07-28
 
 ### Added
