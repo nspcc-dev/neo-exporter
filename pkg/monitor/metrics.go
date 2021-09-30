@@ -51,11 +51,22 @@ var (
 		},
 	)
 
-	alphabetBalances = prometheus.NewGaugeVec(
+	alphabetGASBalances = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Subsystem: "neofs_net_monitor",
 			Name:      "alphabet_balance",
 			Help:      "Main chain GAS amount of alphabet nodes",
+		},
+		[]string{
+			"key",
+		},
+	)
+
+	alphabetNotaryBalances = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Subsystem: "neofs_net_monitor",
+			Name:      "alphabet_balance_notary",
+			Help:      "Side chain notary balance of alphabet nodes",
 		},
 		[]string{
 			"key",

@@ -167,7 +167,8 @@ func (m *Monitor) Start(ctx context.Context) {
 	prometheus.MustRegister(storageNodeGASBalances)
 	prometheus.MustRegister(storageNodeNotaryBalances)
 	prometheus.MustRegister(innerRingBalances)
-	prometheus.MustRegister(alphabetBalances)
+	prometheus.MustRegister(alphabetGASBalances)
+	prometheus.MustRegister(alphabetNotaryBalances)
 	prometheus.MustRegister(proxyBalance)
 
 	go func() {
@@ -415,9 +416,9 @@ func (m *Monitor) processAlphabet(alphabet keys.PublicKeys) {
 		exportBalances[keyHex] = balance
 	}
 
-	alphabetBalances.Reset()
+	alphabetGASBalances.Reset()
 	for k, v := range exportBalances {
-		alphabetBalances.WithLabelValues(k).Set(float64(v))
+		alphabetGASBalances.WithLabelValues(k).Set(float64(v))
 	}
 }
 
