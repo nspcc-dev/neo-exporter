@@ -15,7 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1633028695382,
+  "iteration": 1633034591125,
   "links": [],
   "panels": [
     {
@@ -126,7 +126,7 @@
         "y": 0
       },
       "hiddenSeries": false,
-      "id": 10,
+      "id": 17,
       "legend": {
         "avg": false,
         "current": false,
@@ -153,7 +153,8 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "neofs_net_monitor_ir_balance{net=\"$net\"}/100000000",
+          "exemplar": true,
+          "expr": "neofs_net_monitor_alphabet_balance{net=\"$net\"}/100000000",
           "interval": "",
           "legendFormat": "{{key}}",
           "queryType": "randomWalk",
@@ -164,7 +165,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Inner ring side chain GAS balances",
+      "title": "Alphabet mainnet GAS balances",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -365,7 +366,7 @@
         "y": 8
       },
       "hiddenSeries": false,
-      "id": 17,
+      "id": 19,
       "legend": {
         "avg": false,
         "current": false,
@@ -393,7 +394,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "neofs_net_monitor_alphabet_balance{net=\"$net\"}/100000000",
+          "expr": "neofs_net_monitor_alphabet_balance_notary{net=\"$net\"}/100000000",
           "interval": "",
           "legendFormat": "{{key}}",
           "queryType": "randomWalk",
@@ -404,7 +405,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Alphabet mainnet GAS balances",
+      "title": "Alphabet side chain Notary balances",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -560,8 +561,8 @@
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
-        "h": 15,
-        "w": 24,
+        "h": 8,
+        "w": 12,
         "x": 0,
         "y": 16
       },
@@ -642,6 +643,96 @@
       }
     },
     {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "$datasource",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "hiddenSeries": false,
+      "id": 10,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "neofs_net_monitor_ir_balance{net=\"$net\"}/100000000",
+          "interval": "",
+          "legendFormat": "{{key}}",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Inner ring side chain GAS balances",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
       "circleMaxSize": 30,
       "circleMinSize": 2,
       "colors": [
@@ -656,7 +747,7 @@
         "h": 22,
         "w": 24,
         "x": 0,
-        "y": 31
+        "y": 24
       },
       "hideEmpty": false,
       "hideZero": false,
@@ -756,12 +847,12 @@
     ]
   },
   "time": {
-    "from": "now-1d",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "NeoFS Network Monitor",
   "uid": "w9pGNKfMz",
-  "version": 1
+  "version": 2
 }
