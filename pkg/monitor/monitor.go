@@ -402,23 +402,37 @@ func (m *Monitor) processProxyContract() {
 }
 
 func (m *Monitor) processAlphabet(alphabet keys.PublicKeys) {
-	exportBalances := make(map[string]int64, len(alphabet))
+	exportGasBalances := make(map[string]int64, len(alphabet))
+	exportNotaryBalances := make(map[string]int64, len(alphabet))
 
 	for _, key := range alphabet {
 		keyHex := hex.EncodeToString(key.Bytes())
 
-		balance, err := m.mainBlFetcher.FetchGAS(*key)
+		balanceGAS, err := m.mainBlFetcher.FetchGAS(*key)
 		if err != nil {
-			log.Printf("monitor: can't fetch %s balance, %s", keyHex, err)
-			continue
+			log.Printf("monitor: can't fetch %s gas balance, %s", keyHex, err)
+		} else {
+			exportGasBalances[keyHex] = balanceGAS
 		}
 
-		exportBalances[keyHex] = balance
+		if m.sideChainNotaryEnabled {
+			balanceNotary, err := m.sideBlFetcher.FetchNotary(*key)
+			if err != nil {
+				log.Printf("monitor: can't fetch %s notary balance, %s", keyHex, err)
+			} else {
+				exportNotaryBalances[keyHex] = balanceNotary
+			}
+		}
 	}
 
 	alphabetGASBalances.Reset()
-	for k, v := range exportBalances {
+	for k, v := range exportGasBalances {
 		alphabetGASBalances.WithLabelValues(k).Set(float64(v))
+	}
+
+	alphabetNotaryBalances.Reset()
+	for k, v := range exportNotaryBalances {
+		alphabetNotaryBalances.WithLabelValues(k).Set(float64(v))
 	}
 }
 
