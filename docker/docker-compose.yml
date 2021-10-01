@@ -41,7 +41,6 @@ services:
     environment:
       - NEOFS_NET_MONITOR_MAINNET_RPC_ENDPOINT=http://rpc10.n3.nspcc.ru:10332
       - NEOFS_NET_MONITOR_MORPH_RPC_ENDPOINT=https://rpc1.morph.fs.neo.org:40341
-      - NEOFS_NET_MONITOR_GEOIP_ACCESS_KEY=<ACCESS-TOKEN>
     networks:
       - monitor-net
     restart: on-failure

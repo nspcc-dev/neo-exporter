@@ -15,7 +15,6 @@ import (
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
 	"github.com/nspcc-dev/neo-go/pkg/rpc/client"
 	"github.com/nspcc-dev/neo-go/pkg/util"
-	"github.com/nspcc-dev/neofs-net-monitor/pkg/geoip"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/morphchain"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -25,10 +24,6 @@ import (
 var errUnknownKeyFormat = errors.New("could not parse private key: expected WIF, hex or path to binary key")
 
 type (
-	GeoIPFetcher interface {
-		Fetch(string) (geoip.Info, error)
-	}
-
 	NetmapFetcher interface {
 		FetchNetmap() (morphchain.NetmapInfo, error)
 		FetchCandidates() (morphchain.NetmapCandidatesInfo, error)
@@ -53,7 +48,6 @@ type (
 		proxy                  *util.Uint160
 		sleep                  time.Duration
 		metricsServer          http.Server
-		ipFetcher              GeoIPFetcher
 		alpFetcher             AlphabetFetcher
 		nmFetcher              NetmapFetcher
 		irFetcher              InnerRingFetcher
@@ -67,15 +61,6 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 	key, err := readKey(cfg)
 	if err != nil {
 		return nil, err
-	}
-
-	ipFetcher, err := geoip.NewCachedFetcher(geoip.FetcherArgs{
-		Timeout:   cfg.GetDuration(cfgGeoIPDialTimeout),
-		Endpoint:  cfg.GetString(cfgGeoIPEndpoint),
-		AccessKey: cfg.GetString(cfgGeoIPAccessKey),
-	})
-	if err != nil {
-		return nil, fmt.Errorf("can't initialize geoip fetcher: %w", err)
 	}
 
 	sideChainEndpoint := cfg.GetString(sidePrefix + delimiter + cfgNeoRPCEndpoint)
@@ -149,7 +134,6 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 			Addr:    cfg.GetString(cfgMetricsEndpoint),
 			Handler: promhttp.Handler(),
 		},
-		ipFetcher:              ipFetcher,
 		alpFetcher:             alphabetFetcher,
 		nmFetcher:              nmFetcher,
 		irFetcher:              nmFetcher,
@@ -285,13 +269,6 @@ func (m *Monitor) processNetworkMap(nm morphchain.NetmapInfo, candidates morphch
 	newNodes, droppedNodes := getDiff(nm, candidates)
 
 	for _, node := range nm.Nodes {
-		info, err := m.ipFetcher.Fetch(node.Address)
-		if err != nil {
-			log.Printf("monitor: can't fetch %s info, %s", node.Address, err)
-		} else {
-			exportCountries[info.CountryCode]++
-		}
-
 		keyHex := hex.EncodeToString(node.PublicKey.Bytes())
 
 		balanceGAS, err := m.sideBlFetcher.FetchGAS(*node.PublicKey)
