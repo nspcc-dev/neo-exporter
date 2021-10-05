@@ -4,15 +4,23 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+const (
+	location  = "location"
+	longitude = "longitude"
+	latitude  = "latitude"
+)
+
 var (
-	countriesPresent = prometheus.NewGaugeVec(
+	locationPresent = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Subsystem: "neofs_net_monitor",
 			Name:      "netmap",
-			Help:      "Countries where NeoFS storage nodes are located",
+			Help:      "Locations where NeoFS storage nodes are located",
 		},
 		[]string{
-			"country",
+			location,
+			longitude,
+			latitude,
 		},
 	)
 

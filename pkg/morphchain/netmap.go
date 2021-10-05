@@ -33,6 +33,7 @@ type (
 		ID        uint64
 		Address   string
 		PublicKey *keys.PublicKey
+		Locode    string
 	}
 
 	NetmapInfo struct {
@@ -190,5 +191,6 @@ func processNode(node *netmap.Node) (*Node, error) {
 		ID:        node.ID,
 		Address:   address,
 		PublicKey: publicKey,
+		Locode:    node.AttrMap[netmap.AttrUNLOCODE],
 	}, nil
 }
