@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	nns "github.com/nspcc-dev/neo-go/examples/nft-nd-nns"
@@ -15,6 +16,7 @@ import (
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
 	"github.com/nspcc-dev/neo-go/pkg/rpc/client"
 	"github.com/nspcc-dev/neo-go/pkg/util"
+	"github.com/nspcc-dev/neofs-net-monitor/pkg/locode"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/morphchain"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -48,6 +50,7 @@ type (
 		proxy                  *util.Uint160
 		sleep                  time.Duration
 		metricsServer          http.Server
+		geoFetcher             *locode.DB
 		alpFetcher             AlphabetFetcher
 		nmFetcher              NetmapFetcher
 		irFetcher              InnerRingFetcher
@@ -130,6 +133,12 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 	_, err = sideNeogoClient.GetNativeContractHash(nativenames.Notary)
 	notaryEnabled := err == nil
 
+	geoFetcher := locode.New(
+		locode.Prm{
+			Path: cfg.GetString(cfgLocodeDB),
+		},
+	)
+
 	return &Monitor{
 		proxy: proxy,
 		sleep: cfg.GetDuration(cfgMetricsInterval),
@@ -137,6 +146,7 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 			Addr:    cfg.GetString(cfgMetricsEndpoint),
 			Handler: promhttp.Handler(),
 		},
+		geoFetcher:             geoFetcher,
 		alpFetcher:             alphabetFetcher,
 		nmFetcher:              nmFetcher,
 		irFetcher:              nmFetcher,
@@ -147,7 +157,7 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 }
 
 func (m *Monitor) Start(ctx context.Context) {
-	prometheus.MustRegister(countriesPresent)
+	prometheus.MustRegister(locationPresent)
 	prometheus.MustRegister(droppedNodesCount)
 	prometheus.MustRegister(newNodesCount)
 	prometheus.MustRegister(epochNumber)
@@ -157,6 +167,10 @@ func (m *Monitor) Start(ctx context.Context) {
 	prometheus.MustRegister(alphabetGASBalances)
 	prometheus.MustRegister(alphabetNotaryBalances)
 	prometheus.MustRegister(proxyBalance)
+
+	if err := m.geoFetcher.Open(); err != nil {
+		log.Printf("monitor: geoposition fetching disabled: %s", err.Error())
+	}
 
 	go func() {
 		err := m.metricsServer.ListenAndServe()
@@ -173,6 +187,8 @@ func (m *Monitor) Stop() {
 	if err != nil {
 		log.Printf("monitor: stop metrics server error %s", err.Error())
 	}
+
+	_ = m.geoFetcher.Close()
 }
 
 func (m *Monitor) Job(ctx context.Context) {
@@ -262,10 +278,16 @@ type diffNode struct {
 	nextEpoch *morphchain.Node
 }
 
+type nodeLocation struct {
+	name string
+	long string
+	lat  string
+}
+
 func (m *Monitor) processNetworkMap(nm morphchain.NetmapInfo, candidates morphchain.NetmapCandidatesInfo) {
 	currentNetmapLen := len(nm.Nodes)
 
-	exportCountries := make(map[string]int, currentNetmapLen)
+	exportCountries := make(map[nodeLocation]int, currentNetmapLen)
 	exportBalancesGAS := make(map[string]int64, currentNetmapLen)
 	exportBalancesNotary := make(map[string]int64, currentNetmapLen)
 
@@ -279,6 +301,19 @@ func (m *Monitor) processNetworkMap(nm morphchain.NetmapInfo, candidates morphch
 			log.Printf("monitor: can't fetch %s GAS balance, %s", keyHex, err)
 		} else {
 			exportBalancesGAS[keyHex] = balanceGAS
+		}
+
+		pos, err := m.geoFetcher.Get(node)
+		if err != nil {
+			log.Printf("monitor: can't fetch %s geoposition, %s", keyHex, err)
+		} else {
+			nodeLoc := nodeLocation{
+				name: pos.Location(),
+				long: strconv.FormatFloat(pos.Longitude(), 'f', 4, 64),
+				lat:  strconv.FormatFloat(pos.Latitude(), 'f', 4, 64),
+			}
+
+			exportCountries[nodeLoc]++
 		}
 
 		if m.sideChainNotaryEnabled {
@@ -295,9 +330,13 @@ func (m *Monitor) processNetworkMap(nm morphchain.NetmapInfo, candidates morphch
 	droppedNodesCount.Set(float64(len(droppedNodes)))
 	newNodesCount.Set(float64(len(newNodes)))
 
-	countriesPresent.Reset()
+	locationPresent.Reset()
 	for k, v := range exportCountries {
-		countriesPresent.WithLabelValues(k).Set(float64(v))
+		locationPresent.With(prometheus.Labels{
+			location:  k.name,
+			longitude: k.long,
+			latitude:  k.lat,
+		}).Set(float64(v))
 	}
 
 	storageNodeGASBalances.Reset()
