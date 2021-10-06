@@ -6,7 +6,7 @@ networks:
 
 services:
   grafana:
-    image: grafana/grafana:8.0.6
+    image: grafana/grafana:8.1.7
     container_name: grafana
     depends_on:
       - prometheus
@@ -41,6 +41,9 @@ services:
     environment:
       - NEOFS_NET_MONITOR_MAINNET_RPC_ENDPOINT=https://rpc01.testnet.n3.nspcc.ru:21331
       - NEOFS_NET_MONITOR_MORPH_RPC_ENDPOINT=https://rpc01.morph.testnet.fs.neo.org:51331
+      - NEOFS_NET_MONITOR_LOCODE_DB_PATH=locode/db
+    volumes:
+      - ./../locode/locode_db:/locode/db
     networks:
       - monitor-net
     restart: on-failure
