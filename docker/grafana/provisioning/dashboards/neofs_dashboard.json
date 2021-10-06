@@ -8,6 +8,12 @@
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
         "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
         "type": "dashboard"
       }
     ]
@@ -15,7 +21,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1633034591125,
+  "iteration": 1633620104846,
   "links": [],
   "panels": [
     {
@@ -50,7 +56,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.0.6",
+      "pluginVersion": "8.1.7",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -143,7 +149,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.0.6",
+      "pluginVersion": "8.1.7",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -241,7 +247,7 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.0.6",
+      "pluginVersion": "8.1.7",
       "targets": [
         {
           "expr": "neofs_net_monitor_epoch{net=\"$net\"}",
@@ -289,7 +295,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.0.6",
+      "pluginVersion": "8.1.7",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -383,7 +389,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.0.6",
+      "pluginVersion": "8.1.7",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -481,7 +487,7 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.0.6",
+      "pluginVersion": "8.1.7",
       "targets": [
         {
           "expr": "neofs_net_monitor_netmap_dropped{net=\"$net\"}",
@@ -536,7 +542,7 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.0.6",
+      "pluginVersion": "8.1.7",
       "targets": [
         {
           "expr": "neofs_net_monitor_netmap_new{net=\"$net\"}",
@@ -584,7 +590,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.0.6",
+      "pluginVersion": "8.1.7",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -594,6 +600,7 @@
       "steppedLine": false,
       "targets": [
         {
+          "exemplar": true,
           "expr": "neofs_net_monitor_proxy_balance{net=\"$net\"}/100000000",
           "interval": "",
           "legendFormat": "ProxyContract",
@@ -674,7 +681,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.0.6",
+      "pluginVersion": "8.1.7",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -733,15 +740,15 @@
       }
     },
     {
-      "circleMaxSize": 30,
-      "circleMinSize": 2,
+      "circleMaxSize": "10",
+      "circleMinSize": "10",
       "colors": [
-        "rgba(245, 54, 54, 0.9)",
-        "rgba(237, 129, 40, 0.89)",
-        "rgba(50, 172, 45, 0.97)"
+        "#FF7383",
+        "#FFB357",
+        "#96D98D"
       ],
       "datasource": "$datasource",
-      "decimals": 0,
+      "decimals": 10,
       "esMetric": "Count",
       "gridPos": {
         "h": 22,
@@ -753,41 +760,45 @@
       "hideZero": false,
       "id": 2,
       "initialZoom": 1,
-      "locationData": "countries",
+      "locationData": "table",
       "mapCenter": "(0°, 0°)",
       "mapCenterLatitude": 0,
       "mapCenterLongitude": 0,
       "maxDataPoints": 1,
-      "mouseWheelZoom": false,
+      "mouseWheelZoom": true,
       "pluginVersion": "7.3.7",
       "showLegend": true,
       "stickyLabels": false,
       "tableQueryOptions": {
         "geohashField": "geohash",
+        "labelField": "location",
         "latitudeField": "latitude",
         "longitudeField": "longitude",
-        "metricField": "metric",
-        "queryType": "geohash"
+        "metricField": "Value",
+        "queryType": "coordinates"
       },
       "targets": [
         {
+          "exemplar": true,
           "expr": "neofs_net_monitor_netmap{net=\"$net\"}",
+          "format": "table",
+          "hide": false,
           "instant": true,
-          "interval": "3",
-          "intervalFactor": 1,
-          "legendFormat": "{{country}}",
-          "queryType": "randomWalk",
+          "interval": "",
+          "legendFormat": "",
           "refId": "A"
         }
       ],
-      "thresholds": "0,10",
+      "thresholds": "2,10",
       "timeFrom": null,
       "timeShift": null,
       "title": "Storage node map",
+      "transformations": [],
       "type": "grafana-worldmap-panel",
-      "unitPlural": "",
+      "unitPlural": "Nodes",
       "unitSingle": "",
-      "valueName": "total"
+      "unitSingular": "Node",
+      "valueName": "current"
     }
   ],
   "refresh": "5m",
@@ -798,7 +809,7 @@
     "list": [
       {
         "current": {
-          "selected": false,
+          "selected": true,
           "text": "Prometheus",
           "value": "Prometheus"
         },
@@ -811,6 +822,7 @@
         "name": "datasource",
         "options": [],
         "query": "prometheus",
+        "queryValue": "",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
@@ -819,7 +831,7 @@
       {
         "allValue": null,
         "current": {
-          "selected": false,
+          "selected": true,
           "text": "monitor",
           "value": "monitor"
         },
@@ -854,5 +866,5 @@
   "timezone": "",
   "title": "NeoFS Network Monitor",
   "uid": "w9pGNKfMz",
-  "version": 2
+  "version": 1
 }
