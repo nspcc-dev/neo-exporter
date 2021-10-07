@@ -53,6 +53,10 @@ NEOFS_NET_MONITOR_METRICS_ENDPOINT=:16512
 
 // Interval between NeoFS metric scrapping.
 NEOFS_NET_MONITOR_METRICS_INTERVAL=15m
+
+// Optional path to NeoFS locode database.
+// Visit https://github.com/nspcc-dev/neofs-locode-db for more information.
+NEOFS_NET_MONITOR_LOCODE_DB_PATH=path/to/database
 ``` 
 
 ## Connect to neofs-dev-env
