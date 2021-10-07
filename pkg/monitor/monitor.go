@@ -115,6 +115,9 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 	alphabetFetcher, err := morphchain.NewAlphabetFetcher(morphchain.AlphabetFetcherArgs{
 		Committeer: sideNeogoClient,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("can't initialize alphabet fetcher: %w", err)
+	}
 
 	sideBalanceFetcher, err := morphchain.NewBalanceFetcher(morphchain.BalanceFetcherArgs{
 		Cli: sideNeogoClient,
