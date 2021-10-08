@@ -3,14 +3,24 @@ Changelog for NeoFS Monitor
 
 ## [Unreleased]
 
+## [0.5.0] - 2021-10-08
+
 ### Added
 - Geo position is retrieved from NeoFS locode database (#17)
+- Prometheus labels that distinguish different networks (#31)
+- `VERSION` file for builds without `git` (#37)
+- Contract script-hashes auto negotiation (#33)
+- Reusing `neo-go` client (#3)
+- Notary balances of SN and IR (#36)
+
+## Fixed
+- Failing on initial startup (#32)
 
 ### Removed
 - Fetching geo position from external sources (#17)
 
 ### Upgrading from v0.4.0
-All `NEOFS_NET_MONITOR_CONTRACTS_*` envs now are optional if corresponding chain's NNS 
+All `NEOFS_NET_MONITOR_CONTRACTS_*` envs now are optional if corresponding chain's NNS
 contract contains corresponding contract script hashes.
 `NEOFS_NET_MONITOR_GEOIP_ACCESS_KEY` env and external geoIP service are not used
 anymore.
@@ -41,5 +51,6 @@ to establish connection to the RC4 main chain and `NEOFS_NET_MONITOR_MORPH_RPC_E
 `NEOFS_NET_MONITOR_MORPH_RPC_DIAL_TIMEOUT` for the side chain instead.
 `NEOFS_NET_MONITOR_CONTRACTS_PROXY` env is now optional for notary disabled environments.
 
-[Unreleased]: https://github.com/nspcc-dev/neofs-net-monitor/compare/v0.4.0...master
+[Unreleased]: https://github.com/nspcc-dev/neofs-net-monitor/compare/v0.5.0...master
+[0.5.0]: https://github.com/nspcc-dev/neofs-net-monitor/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/nspcc-dev/neofs-net-monitor/compare/v0.3.0...v0.4.0
