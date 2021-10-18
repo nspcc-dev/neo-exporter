@@ -22,8 +22,8 @@ Changelog for NeoFS Monitor
 ### Upgrading from v0.4.0
 All `NEOFS_NET_MONITOR_CONTRACTS_*` envs now are optional if corresponding chain's NNS
 contract contains corresponding contract script hashes.
-`NEOFS_NET_MONITOR_GEOIP_ACCESS_KEY` env and external geoIP service are not used
-anymore.
+External geoIP service support is dropped and `NEOFS_NET_MONITOR_GEOIP_*` envs are not
+used anymore.
 `NEOFS_NET_MONITOR_LOCODE_DB_PATH` env has been added. It is path to NeoFS locode
 [database](https://github.com/nspcc-dev/neofs-locode-db). Optional.
 
