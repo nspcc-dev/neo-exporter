@@ -41,7 +41,9 @@ services:
     environment:
       - NEOFS_NET_MONITOR_MAINNET_RPC_ENDPOINT=https://rpc01.testnet.n3.nspcc.ru:21331
       - NEOFS_NET_MONITOR_MORPH_RPC_ENDPOINT=https://rpc01.morph.testnet.fs.neo.org:51331
+      - NEOFS_NET_MONITOR_METRICS_INTERVAL=15s
       - NEOFS_NET_MONITOR_LOCODE_DB_PATH=locode/db
+      - NEOFS_NET_MONITOR_CONTRACTS_NEOFS=b65d8243ac63983206d17e5221af0653a7266fa1
     volumes:
       - ./../locode/locode_db:/locode/db
     networks:
