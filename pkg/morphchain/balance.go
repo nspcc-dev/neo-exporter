@@ -56,3 +56,7 @@ func (b BalanceFetcher) FetchGASByScriptHash(sh util.Uint160) (int64, error) {
 func (b BalanceFetcher) FetchNotaryByScriptHash(sh util.Uint160) (int64, error) {
 	return b.cli.NEP17BalanceOf(b.notary, sh)
 }
+
+func (b BalanceFetcher) FetchNEP17TotalSupply(tokenHash util.Uint160) (int64, error) {
+	return b.cli.NEP17TotalSupply(tokenHash)
+}

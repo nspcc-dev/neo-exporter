@@ -53,6 +53,9 @@ NEOFS_NET_MONITOR_METRICS_ENDPOINT=:16512
 
 // Interval between NeoFS metric scrapping.
 NEOFS_NET_MONITOR_METRICS_INTERVAL=15m
+
+// NeoFS contract from main chain. Required for asset supply metric.
+NEOFS_NET_MONITOR_CONTRACTS_NEOFS=b65d8243ac63983206d17e5221af0653a7266fa1
 ```
 
 To download actual LOCODE database run `$ make locode`.

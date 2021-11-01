@@ -43,6 +43,7 @@ type (
 		FetchGASByScriptHash(uint160 util.Uint160) (int64, error)
 		FetchNotary(keys.PublicKey) (int64, error)
 		FetchNotaryByScriptHash(uint160 util.Uint160) (int64, error)
+		FetchNEP17TotalSupply(util.Uint160) (int64, error)
 	}
 
 	AlphabetFetcher interface {
@@ -50,7 +51,10 @@ type (
 	}
 
 	Monitor struct {
-		proxy                  *util.Uint160
+		balance util.Uint160
+		proxy   *util.Uint160
+		neofs   *util.Uint160
+
 		sleep                  time.Duration
 		metricsServer          http.Server
 		geoFetcher             *locode.DB
@@ -124,13 +128,33 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 		return nil, fmt.Errorf("can't initialize main balance fetcher: %w", err)
 	}
 
-	var proxy *util.Uint160
+	var (
+		balance util.Uint160
+		proxy   *util.Uint160
+		neofs   *util.Uint160
+	)
+
+	balance, err = getScriptHash(cfg, sideNeogoClient, "balance.neofs", cfgBalanceContract)
+	if err != nil {
+		return nil, fmt.Errorf("balance contract is not available: %w", err)
+	}
 
 	proxyContract, err := getScriptHash(cfg, sideNeogoClient, "proxy.neofs", cfgProxyContract)
 	if err != nil {
 		log.Println("proxy disabled")
 	} else {
 		proxy = &proxyContract
+	}
+
+	neofsContract := cfg.GetString(cfgNeoFSContract)
+	if len(neofsContract) != 0 {
+		sh, err := util.Uint160DecodeStringLE(neofsContract)
+		if err != nil {
+			return nil, fmt.Errorf("NNS u160 decode: %w", err)
+		}
+		neofs = &sh
+	} else {
+		log.Println("neofs contract ignored")
 	}
 
 	_, err = sideNeogoClient.GetNativeContractHash(nativenames.Notary)
@@ -143,8 +167,10 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 	)
 
 	return &Monitor{
-		proxy: proxy,
-		sleep: cfg.GetDuration(cfgMetricsInterval),
+		balance: balance,
+		proxy:   proxy,
+		neofs:   neofs,
+		sleep:   cfg.GetDuration(cfgMetricsInterval),
 		metricsServer: http.Server{
 			Addr:    cfg.GetString(cfgMetricsEndpoint),
 			Handler: promhttp.Handler(),
@@ -170,6 +196,8 @@ func (m *Monitor) Start(ctx context.Context) {
 	prometheus.MustRegister(alphabetGASBalances)
 	prometheus.MustRegister(alphabetNotaryBalances)
 	prometheus.MustRegister(proxyBalance)
+	prometheus.MustRegister(mainChainSupply)
+	prometheus.MustRegister(sideChainSupply)
 
 	if err := m.geoFetcher.Open(); err != nil {
 		log.Printf("monitor: geoposition fetching disabled: %s", err.Error())
@@ -219,6 +247,12 @@ func (m *Monitor) Job(ctx context.Context) {
 
 		if m.proxy != nil {
 			m.processProxyContract()
+		}
+
+		m.processSideChainSupply()
+
+		if m.neofs != nil {
+			m.processMainChainSupply()
 		}
 
 		alphabet, err := m.alpFetcher.FetchAlphabet()
@@ -494,6 +528,26 @@ func (m *Monitor) processAlphabet(alphabet keys.PublicKeys) {
 	for k, v := range exportNotaryBalances {
 		alphabetNotaryBalances.WithLabelValues(k).Set(float64(v))
 	}
+}
+
+func (m *Monitor) processMainChainSupply() {
+	balance, err := m.mainBlFetcher.FetchGASByScriptHash(*m.neofs)
+	if err != nil {
+		log.Printf("monitor: can't fetch neofs contract balance, %s", err)
+		return
+	}
+
+	mainChainSupply.Set(float64(balance))
+}
+
+func (m *Monitor) processSideChainSupply() {
+	balance, err := m.sideBlFetcher.FetchNEP17TotalSupply(m.balance)
+	if err != nil {
+		log.Printf("monitor: can't fetch balance contract total supply, %s", err)
+		return
+	}
+
+	sideChainSupply.Set(float64(balance))
 }
 
 func readKey(cfg *viper.Viper) (*keys.PrivateKey, error) {

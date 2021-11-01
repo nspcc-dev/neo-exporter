@@ -110,4 +110,20 @@ var (
 			Help:      "Side chain GAS amount of proxy contract",
 		},
 	)
+
+	mainChainSupply = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Subsystem: "neofs_net_monitor",
+			Name:      "main_chain_supply",
+			Help:      "Main chain GAS amount of neofs contract",
+		},
+	)
+
+	sideChainSupply = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Subsystem: "neofs_net_monitor",
+			Name:      "side_chain_supply",
+			Help:      "Side chain total supply of balance contract",
+		},
+	)
 )
