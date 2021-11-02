@@ -3,6 +3,19 @@ Changelog for NeoFS Monitor
 
 ## [Unreleased]
 
+## [0.6.0] - 2021-11-02
+
+### Fixed
+- Support updated NNS contract (#49)
+
+### Added
+- Description for `make locode` command (#44)
+- Asset supply metrics of main and side chain economy (#45)
+
+### Upgrading from v0.5.0
+Specify main chain NeoFS contract address in `NEOFS_NET_MONITOR_CONTRACTS_NEOFS`
+to enable main chain supply metric.
+
 ## [0.5.0] - 2021-10-08
 
 ### Added
@@ -13,7 +26,7 @@ Changelog for NeoFS Monitor
 - Reusing `neo-go` client (#3)
 - Notary balances of SN and IR (#36)
 
-## Fixed
+### Fixed
 - Failing on initial startup (#32)
 
 ### Removed
@@ -51,6 +64,7 @@ to establish connection to the RC4 main chain and `NEOFS_NET_MONITOR_MORPH_RPC_E
 `NEOFS_NET_MONITOR_MORPH_RPC_DIAL_TIMEOUT` for the side chain instead.
 `NEOFS_NET_MONITOR_CONTRACTS_PROXY` env is now optional for notary disabled environments.
 
-[Unreleased]: https://github.com/nspcc-dev/neofs-net-monitor/compare/v0.5.0...master
+[Unreleased]: https://github.com/nspcc-dev/neofs-net-monitor/compare/v0.6.0...master
+[0.6.0]: https://github.com/nspcc-dev/neofs-net-monitor/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/nspcc-dev/neofs-net-monitor/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/nspcc-dev/neofs-net-monitor/compare/v0.3.0...v0.4.0
