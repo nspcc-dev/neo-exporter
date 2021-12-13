@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -24,6 +23,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 var errUnknownKeyFormat = errors.New("could not parse private key: expected WIF, hex or path to binary key")
@@ -55,6 +55,7 @@ type (
 		proxy   *util.Uint160
 		neofs   *util.Uint160
 
+		logger                 *zap.Logger
 		sleep                  time.Duration
 		metricsServer          http.Server
 		geoFetcher             *locode.DB
@@ -68,7 +69,14 @@ type (
 )
 
 func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
-	key, err := readKey(cfg)
+	logConf := zap.NewProductionConfig()
+	logConf.Level = WithLevel(cfg.GetString(cfgLoggerLevel))
+	logger, err := logConf.Build()
+	if err != nil {
+		return nil, err
+	}
+
+	key, err := readKey(logger, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -102,6 +110,7 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 		Cli:            sideNeogoClient,
 		Key:            key,
 		NetmapContract: netmapContract,
+		Logger:         logger,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("can't initialize netmap fetcher: %w", err)
@@ -141,7 +150,7 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 
 	proxyContract, err := getScriptHash(cfg, sideNeogoClient, "proxy.neofs", cfgProxyContract)
 	if err != nil {
-		log.Println("proxy disabled")
+		logger.Info("proxy disabled")
 	} else {
 		proxy = &proxyContract
 	}
@@ -154,7 +163,7 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 		}
 		neofs = &sh
 	} else {
-		log.Println("neofs contract ignored")
+		logger.Info("neofs contract ignored")
 	}
 
 	_, err = sideNeogoClient.GetNativeContractHash(nativenames.Notary)
@@ -170,6 +179,7 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 		balance: balance,
 		proxy:   proxy,
 		neofs:   neofs,
+		logger:  logger,
 		sleep:   cfg.GetDuration(cfgMetricsInterval),
 		metricsServer: http.Server{
 			Addr:    cfg.GetString(cfgMetricsEndpoint),
@@ -200,13 +210,13 @@ func (m *Monitor) Start(ctx context.Context) {
 	prometheus.MustRegister(sideChainSupply)
 
 	if err := m.geoFetcher.Open(); err != nil {
-		log.Printf("monitor: geoposition fetching disabled: %s", err.Error())
+		m.logger.Warn("geoposition fetching disabled", zap.Error(err))
 	}
 
 	go func() {
 		err := m.metricsServer.ListenAndServe()
 		if !errors.Is(err, http.ErrServerClosed) {
-			log.Printf("monitor: strart metrics server error %s", err.Error())
+			m.logger.Error("start metrics server error", zap.Error(err))
 		}
 	}()
 
@@ -216,7 +226,7 @@ func (m *Monitor) Start(ctx context.Context) {
 func (m *Monitor) Stop() {
 	err := m.metricsServer.Close()
 	if err != nil {
-		log.Printf("monitor: stop metrics server error %s", err.Error())
+		m.logger.Error("stop metrics server error", zap.Error(err))
 	}
 
 	_ = m.geoFetcher.Close()
@@ -224,15 +234,15 @@ func (m *Monitor) Stop() {
 
 func (m *Monitor) Job(ctx context.Context) {
 	for {
-		log.Println("monitor: scraping data from side chain")
+		m.logger.Debug("scraping data from side chain")
 
 		netmap, err := m.nmFetcher.FetchNetmap()
 		if err != nil {
-			log.Printf("monitor: can't scrap network map info, %s", err)
+			m.logger.Warn("can't scrap network map info", zap.Error(err))
 		} else {
 			candidatesNetmap, err := m.nmFetcher.FetchCandidates()
 			if err != nil {
-				log.Printf("monitor: can't scrap network map candidates info, %s", err)
+				m.logger.Debug("can't scrap network map candidates info", zap.Error(err))
 			} else {
 				m.processNetworkMap(netmap, candidatesNetmap)
 			}
@@ -240,7 +250,7 @@ func (m *Monitor) Job(ctx context.Context) {
 
 		innerRing, err := m.irFetcher.FetchInnerRingKeys()
 		if err != nil {
-			log.Printf("monitor: can't scrap inner ring info, %s", err)
+			m.logger.Debug("can't scrap inner ring info", zap.Error(err))
 		} else {
 			m.processInnerRing(innerRing)
 		}
@@ -257,7 +267,7 @@ func (m *Monitor) Job(ctx context.Context) {
 
 		alphabet, err := m.alpFetcher.FetchAlphabet()
 		if err != nil {
-			log.Printf("monitor: can't scrap alphabet info, %s", err)
+			m.logger.Debug("can't scrap alphabet info", zap.Error(err))
 		} else {
 			m.processAlphabet(alphabet)
 		}
@@ -266,10 +276,14 @@ func (m *Monitor) Job(ctx context.Context) {
 		case <-time.After(m.sleep):
 			// sleep for some time before next prometheus update
 		case <-ctx.Done():
-			log.Println("monitor: context closed, stop monitor")
+			m.logger.Info("context closed, stop monitor")
 			return
 		}
 	}
+}
+
+func (m *Monitor) Logger() *zap.Logger {
+	return m.logger
 }
 
 func neoGoClient(ctx context.Context, endpoint string, opts client.Options) (*client.Client, error) {
@@ -373,14 +387,14 @@ func (m *Monitor) processNetworkMap(nm morphchain.NetmapInfo, candidates morphch
 
 		balanceGAS, err := m.sideBlFetcher.FetchGAS(*node.PublicKey)
 		if err != nil {
-			log.Printf("monitor: can't fetch %s GAS balance, %s", keyHex, err)
+			m.logger.Debug("can't fetch GAS balance", zap.String("key", keyHex), zap.Error(err))
 		} else {
 			exportBalancesGAS[keyHex] = balanceGAS
 		}
 
 		pos, err := m.geoFetcher.Get(node)
 		if err != nil {
-			log.Printf("monitor: can't fetch %s geoposition, %s", keyHex, err)
+			m.logger.Debug("can't fetch geoposition", zap.String("key", keyHex), zap.Error(err))
 		} else {
 			nodeLoc := nodeLocation{
 				name: pos.Location(),
@@ -394,12 +408,15 @@ func (m *Monitor) processNetworkMap(nm morphchain.NetmapInfo, candidates morphch
 		if m.sideChainNotaryEnabled {
 			balanceNotary, err := m.sideBlFetcher.FetchNotary(*node.PublicKey)
 			if err != nil {
-				log.Printf("monitor: can't fetch %s notary balance, %s", keyHex, err)
+				m.logger.Debug("can't fetch notary balance", zap.String("key", keyHex), zap.Error(err))
 			} else {
 				exportBalancesNotary[keyHex] = balanceNotary
 			}
 		}
 	}
+
+	m.logNodes("new node", newNodes)
+	m.logNodes("dropped node", droppedNodes)
 
 	epochNumber.Set(float64(nm.Epoch))
 	droppedNodesCount.Set(float64(len(droppedNodes)))
@@ -422,6 +439,13 @@ func (m *Monitor) processNetworkMap(nm morphchain.NetmapInfo, candidates morphch
 	storageNodeNotaryBalances.Reset()
 	for k, v := range exportBalancesNotary {
 		storageNodeNotaryBalances.WithLabelValues(k).Set(float64(v))
+	}
+}
+
+func (m *Monitor) logNodes(msg string, nodes []*morphchain.Node) {
+	for _, node := range nodes {
+		m.logger.Info(msg, zap.String("address", node.Address), zap.String("locode", node.Locode),
+			zap.Uint64("id", node.ID), zap.String("public key", node.PublicKey.String()))
 	}
 }
 
@@ -472,7 +496,7 @@ func (m *Monitor) processInnerRing(ir keys.PublicKeys) {
 
 		balance, err := m.sideBlFetcher.FetchGAS(*key)
 		if err != nil {
-			log.Printf("monitor: can't fetch %s balance, %s", keyHex, err)
+			m.logger.Debug("can't fetch balance", zap.String("key", keyHex), zap.Error(err))
 			continue
 		}
 
@@ -488,7 +512,7 @@ func (m *Monitor) processInnerRing(ir keys.PublicKeys) {
 func (m *Monitor) processProxyContract() {
 	balance, err := m.sideBlFetcher.FetchGASByScriptHash(*m.proxy)
 	if err != nil {
-		log.Printf("monitor: can't fetch proxy contract balance, %s", err)
+		m.logger.Debug("can't fetch proxy contract balance", zap.Error(err))
 		return
 	}
 
@@ -504,7 +528,7 @@ func (m *Monitor) processAlphabet(alphabet keys.PublicKeys) {
 
 		balanceGAS, err := m.mainBlFetcher.FetchGAS(*key)
 		if err != nil {
-			log.Printf("monitor: can't fetch %s gas balance, %s", keyHex, err)
+			m.logger.Debug("can't fetch gas balance", zap.String("key", keyHex), zap.Error(err))
 		} else {
 			exportGasBalances[keyHex] = balanceGAS
 		}
@@ -512,7 +536,7 @@ func (m *Monitor) processAlphabet(alphabet keys.PublicKeys) {
 		if m.sideChainNotaryEnabled {
 			balanceNotary, err := m.sideBlFetcher.FetchNotary(*key)
 			if err != nil {
-				log.Printf("monitor: can't fetch %s notary balance, %s", keyHex, err)
+				m.logger.Debug("can't fetch notary balance", zap.String("key", keyHex), zap.Error(err))
 			} else {
 				exportNotaryBalances[keyHex] = balanceNotary
 			}
@@ -533,7 +557,7 @@ func (m *Monitor) processAlphabet(alphabet keys.PublicKeys) {
 func (m *Monitor) processMainChainSupply() {
 	balance, err := m.mainBlFetcher.FetchGASByScriptHash(*m.neofs)
 	if err != nil {
-		log.Printf("monitor: can't fetch neofs contract balance, %s", err)
+		m.logger.Debug("can't fetch neofs contract balance", zap.Error(err))
 		return
 	}
 
@@ -543,14 +567,14 @@ func (m *Monitor) processMainChainSupply() {
 func (m *Monitor) processSideChainSupply() {
 	balance, err := m.sideBlFetcher.FetchNEP17TotalSupply(m.balance)
 	if err != nil {
-		log.Printf("monitor: can't fetch balance contract total supply, %s", err)
+		m.logger.Debug("can't fetch balance contract total supply", zap.Error(err))
 		return
 	}
 
 	sideChainSupply.Set(float64(balance))
 }
 
-func readKey(cfg *viper.Viper) (*keys.PrivateKey, error) {
+func readKey(logger *zap.Logger, cfg *viper.Viper) (*keys.PrivateKey, error) {
 	var (
 		key *keys.PrivateKey
 		err error
@@ -559,11 +583,11 @@ func readKey(cfg *viper.Viper) (*keys.PrivateKey, error) {
 	keyFromCfg := cfg.GetString(cfgKey)
 
 	if keyFromCfg == "" {
-		log.Println("monitor: using random private key")
+		logger.Debug("using random private key")
 
 		key, err = keys.NewPrivateKey()
 		if err != nil {
-			return nil, fmt.Errorf("monitor: can't generate private key: %w", err)
+			return nil, fmt.Errorf("can't generate private key: %w", err)
 		}
 
 		return key, nil
@@ -571,13 +595,13 @@ func readKey(cfg *viper.Viper) (*keys.PrivateKey, error) {
 
 	// WIF
 	if key, err = keys.NewPrivateKeyFromWIF(keyFromCfg); err == nil {
-		log.Println("monitor: using private key from WIF")
+		logger.Debug("using private key from WIF")
 		return key, nil
 	}
 
 	// hex
 	if key, err = keys.NewPrivateKeyFromHex(keyFromCfg); err == nil {
-		log.Println("monitor: using private key from hex")
+		logger.Debug("using private key from hex")
 		return key, nil
 	}
 
@@ -585,7 +609,7 @@ func readKey(cfg *viper.Viper) (*keys.PrivateKey, error) {
 
 	// file
 	if data, err = os.ReadFile(keyFromCfg); err == nil {
-		log.Println("monitor: using private key from file")
+		logger.Debug("using private key from file")
 		return keys.NewPrivateKeyFromBytes(data)
 	}
 

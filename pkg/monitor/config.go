@@ -1,9 +1,11 @@
 package monitor
 
 import (
+	"strings"
 	"time"
 
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 const (
@@ -31,6 +33,9 @@ const (
 
 	// path to the NeoFS locode database
 	cfgLocodeDB = "locode.db.path"
+
+	// level of logging
+	cfgLoggerLevel = "logger.level"
 )
 
 func DefaultConfiguration(cfg *viper.Viper) {
@@ -49,4 +54,27 @@ func DefaultConfiguration(cfg *viper.Viper) {
 	cfg.SetDefault(cfgMetricsInterval, 15*time.Minute)
 
 	cfg.SetDefault(cfgLocodeDB, "./locode/db")
+
+	cfg.SetDefault(cfgLoggerLevel, "info")
+}
+
+func WithLevel(level string) zap.AtomicLevel {
+	return safeLevel(level)
+}
+
+func safeLevel(lvl string) zap.AtomicLevel {
+	switch strings.ToLower(lvl) {
+	case "debug":
+		return zap.NewAtomicLevelAt(zap.DebugLevel)
+	case "warn":
+		return zap.NewAtomicLevelAt(zap.WarnLevel)
+	case "error":
+		return zap.NewAtomicLevelAt(zap.ErrorLevel)
+	case "fatal":
+		return zap.NewAtomicLevelAt(zap.FatalLevel)
+	case "panic":
+		return zap.NewAtomicLevelAt(zap.PanicLevel)
+	default:
+		return zap.NewAtomicLevelAt(zap.InfoLevel)
+	}
 }
