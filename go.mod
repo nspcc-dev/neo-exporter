@@ -10,4 +10,5 @@ require (
 	github.com/spf13/viper v1.8.1
 	github.com/stretchr/testify v1.7.0
 	go.etcd.io/bbolt v1.3.6
+	go.uber.org/zap v1.18.1
 )

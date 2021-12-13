@@ -12,6 +12,7 @@ import (
 
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/monitor"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 const envPrefix = "neofs_net_monitor"
@@ -46,13 +47,13 @@ func main() {
 
 	neofsMonitor.Start(ctx)
 
-	log.Println("application started")
+	neofsMonitor.Logger().Info("application started", zap.String("version", Version))
 
 	<-ctx.Done()
 
 	neofsMonitor.Stop()
 
-	log.Println("application stopped")
+	neofsMonitor.Logger().Info("application stopped", zap.String("version", Version))
 }
 
 func newConfig(path string) (*viper.Viper, error) {

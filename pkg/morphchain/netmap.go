@@ -4,7 +4,6 @@ import (
 	"crypto/elliptic"
 	"encoding/hex"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
@@ -14,6 +13,7 @@ import (
 	morph "github.com/nspcc-dev/neofs-node/pkg/morph/client"
 	wrapNetmap "github.com/nspcc-dev/neofs-node/pkg/morph/client/netmap/wrapper"
 	"github.com/nspcc-dev/neofs-node/pkg/network"
+	"go.uber.org/zap"
 )
 
 type (
@@ -21,12 +21,14 @@ type (
 		cli            *morph.Client
 		notaryDisabled bool
 		wrp            *wrapNetmap.Wrapper
+		logger         *zap.Logger
 	}
 
 	NetmapFetcherArgs struct {
 		Cli            *neogo.Client
 		Key            *keys.PrivateKey
 		NetmapContract util.Uint160
+		Logger         *zap.Logger
 	}
 
 	Node struct {
@@ -69,6 +71,7 @@ func NewNetmapFetcher(p NetmapFetcherArgs) (*NetmapFetcher, error) {
 		cli:            blockchainClient,
 		notaryDisabled: !blockchainClient.ProbeNotary(),
 		wrp:            wrapper,
+		logger:         p.Logger,
 	}, nil
 }
 
@@ -87,7 +90,7 @@ func (f *NetmapFetcher) FetchNetmap() (NetmapInfo, error) {
 	var node *Node
 
 	for _, apiNode := range nm.Nodes {
-		node, err = processNode(apiNode)
+		node, err = processNode(f.logger, apiNode)
 		if err != nil {
 			return NetmapInfo{}, err
 		}
@@ -111,7 +114,7 @@ func (f *NetmapFetcher) FetchCandidates() (NetmapCandidatesInfo, error) {
 	var candidate *Node
 
 	for _, apiCandidate := range candidatesNetmap.Nodes {
-		candidate, err = processNode(apiCandidate)
+		candidate, err = processNode(f.logger, apiCandidate)
 		if err != nil {
 			return NetmapCandidatesInfo{}, nil
 		}
@@ -156,14 +159,14 @@ func multiAddrToIPStringWithoutPort(multiaddr string) (string, error) {
 	return strings.Split(ipWithPort, ":")[0], nil
 }
 
-func processNode(node *netmap.Node) (*Node, error) {
+func processNode(logger *zap.Logger, node *netmap.Node) (*Node, error) {
 	var address string
 
 	node.IterateAddresses(
 		func(mAddr string) bool {
 			addr, err := multiAddrToIPStringWithoutPort(mAddr)
 			if err != nil {
-				log.Printf("morphchain: %s", err)
+				logger.Debug("morphchain", zap.Error(err))
 				return false
 			}
 
