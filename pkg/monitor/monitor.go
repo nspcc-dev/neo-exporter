@@ -242,7 +242,7 @@ func (m *Monitor) Job(ctx context.Context) {
 		} else {
 			candidatesNetmap, err := m.nmFetcher.FetchCandidates()
 			if err != nil {
-				m.logger.Debug("can't scrap network map candidates info", zap.Error(err))
+				m.logger.Warn("can't scrap network map candidates info", zap.Error(err))
 			} else {
 				m.processNetworkMap(netmap, candidatesNetmap)
 			}
@@ -250,7 +250,7 @@ func (m *Monitor) Job(ctx context.Context) {
 
 		innerRing, err := m.irFetcher.FetchInnerRingKeys()
 		if err != nil {
-			m.logger.Debug("can't scrap inner ring info", zap.Error(err))
+			m.logger.Warn("can't scrap inner ring info", zap.Error(err))
 		} else {
 			m.processInnerRing(innerRing)
 		}
@@ -267,7 +267,7 @@ func (m *Monitor) Job(ctx context.Context) {
 
 		alphabet, err := m.alpFetcher.FetchAlphabet()
 		if err != nil {
-			m.logger.Debug("can't scrap alphabet info", zap.Error(err))
+			m.logger.Warn("can't scrap alphabet info", zap.Error(err))
 		} else {
 			m.processAlphabet(alphabet)
 		}
@@ -444,8 +444,15 @@ func (m *Monitor) processNetworkMap(nm morphchain.NetmapInfo, candidates morphch
 
 func (m *Monitor) logNodes(msg string, nodes []*morphchain.Node) {
 	for _, node := range nodes {
-		m.logger.Info(msg, zap.String("address", node.Address), zap.String("locode", node.Locode),
-			zap.Uint64("id", node.ID), zap.String("public key", node.PublicKey.String()))
+		fields := []zap.Field{zap.Uint64("id", node.ID), zap.String("address", node.Address),
+			zap.String("public key", node.PublicKey.String()),
+		}
+
+		for key, val := range node.Attributes {
+			fields = append(fields, zap.String(key, val))
+		}
+
+		m.logger.Info(msg, fields...)
 	}
 }
 

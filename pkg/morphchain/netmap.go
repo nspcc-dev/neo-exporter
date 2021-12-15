@@ -32,10 +32,10 @@ type (
 	}
 
 	Node struct {
-		ID        uint64
-		Address   string
-		PublicKey *keys.PublicKey
-		Locode    string
+		ID         uint64
+		Address    string
+		PublicKey  *keys.PublicKey
+		Attributes map[string]string
 	}
 
 	NetmapInfo struct {
@@ -191,9 +191,9 @@ func processNode(logger *zap.Logger, node *netmap.Node) (*Node, error) {
 	}
 
 	return &Node{
-		ID:        node.ID,
-		Address:   address,
-		PublicKey: publicKey,
-		Locode:    node.AttrMap[netmap.AttrUNLOCODE],
+		ID:         node.ID,
+		Address:    address,
+		PublicKey:  publicKey,
+		Attributes: node.AttrMap,
 	}, nil
 }
