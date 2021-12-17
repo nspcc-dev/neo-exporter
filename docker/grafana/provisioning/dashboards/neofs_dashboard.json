@@ -740,7 +740,7 @@
       }
     },
     {
-      "datasource": "Prometheus",
+      "datasource": "$datasource",
       "fieldConfig": {
         "defaults": {
           "color": {
