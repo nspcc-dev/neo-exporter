@@ -871,7 +871,7 @@
         "labelField": "location",
         "latitudeField": "latitude",
         "longitudeField": "longitude",
-        "metricField": "Value",
+        "metricField": "Value #A",
         "queryType": "coordinates"
       },
       "targets": [
