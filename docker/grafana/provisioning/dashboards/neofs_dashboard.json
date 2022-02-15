@@ -66,7 +66,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "neofs_net_monitor_sn_balance{net=\"$net\"}/100000000",
+          "expr": "neofs_net_monitor_sn_balance{net=\"$net\", key=~\"$sn_key\"}/100000000",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -306,7 +306,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "neofs_net_monitor_sn_balance_notary{net=\"$net\"}/100000000",
+          "expr": "neofs_net_monitor_sn_balance_notary{net=\"$net\", key=~\"$sn_key\"}/100000000",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -952,6 +952,37 @@
         "sort": 0,
         "type": "query",
         "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "${datasource}",
+        "definition": "neofs_net_monitor_sn_balance{net=\"$net\"}",
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": "Storage node",
+        "multi": true,
+        "name": "sn_key",
+        "options": [],
+        "query": {
+          "query": "neofs_net_monitor_sn_balance{net=\"$net\"}",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 2,
+        "regex": "/.*key=\"([^\"]*).*/",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
       }
     ]
   },
