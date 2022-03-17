@@ -212,6 +212,8 @@ func (m *Monitor) Start(ctx context.Context) {
 	prometheus.MustRegister(mainChainSupply)
 	prometheus.MustRegister(sideChainSupply)
 	prometheus.MustRegister(alphabetDivergence)
+	prometheus.MustRegister(alphabetMainDivergence)
+	prometheus.MustRegister(alphabetSideDivergence)
 
 	if err := m.geoFetcher.Open(); err != nil {
 		m.logger.Warn("geoposition fetching disabled", zap.Error(err))
@@ -269,14 +271,12 @@ func (m *Monitor) Job(ctx context.Context) {
 			m.processMainChainSupply()
 		}
 
-		sideAlphabet, err := m.alpFetcher.FetchSideAlphabet()
-		if err != nil {
+		if sideAlphabet, err := m.alpFetcher.FetchSideAlphabet(); err != nil {
 			m.logger.Warn("can't scrap side alphabet info", zap.Error(err))
 		} else {
 			m.processAlphabet(sideAlphabet)
 
-			mainAlphabet, err := m.alpFetcher.FetchMainAlphabet()
-			if err != nil {
+			if mainAlphabet, err := m.alpFetcher.FetchMainAlphabet(); err != nil {
 				m.logger.Warn("can't scrap main alphabet info", zap.Error(err))
 			} else {
 				m.processAlphabetDivergence(mainAlphabet, sideAlphabet)
@@ -586,6 +586,15 @@ func (m *Monitor) processAlphabetDivergence(mainAlphabet, sideAlphabet keys.Publ
 	alphabetDivergence.Reset()
 	alphabetDivergence.WithLabelValues(mainChainDivergenceLabel).Set(float64(len(uniqueMain)))
 	alphabetDivergence.WithLabelValues(sideChainDivergenceLabel).Set(float64(len(uniqueSide)))
+
+	alphabetMainDivergence.Reset()
+	for _, key := range uniqueMain {
+		alphabetMainDivergence.WithLabelValues(key).Set(1)
+	}
+	alphabetSideDivergence.Reset()
+	for _, key := range uniqueSide {
+		alphabetSideDivergence.WithLabelValues(key).Set(1)
+	}
 }
 
 func computeUniqueAlphabets(sortedMain, sortedSide []string) ([]string, []string) {
@@ -619,12 +628,12 @@ func computeUniqueAlphabets(sortedMain, sortedSide []string) ([]string, []string
 }
 
 func sortedAlphabet(alphabet keys.PublicKeys) []string {
+	sort.Sort(alphabet)
 	sorted := make([]string, 0, len(alphabet))
 	for _, key := range alphabet {
 		keyHex := hex.EncodeToString(key.Bytes())
 		sorted = append(sorted, keyHex)
 	}
-	sort.Strings(sorted)
 	return sorted
 }
 
