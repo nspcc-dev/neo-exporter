@@ -21,7 +21,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "iteration": 1647438733655,
+  "iteration": 1647524625736,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -514,7 +514,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 4,
         "w": 6,
         "x": 18,
         "y": 10
@@ -547,6 +547,67 @@
         }
       ],
       "title": "Network epoch",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 14
+      },
+      "id": 26,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.4.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "exemplar": true,
+          "expr": "neofs_net_monitor_alphabet_divergence_count{net=\"$net\"}",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "{{chain}}chain",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "title": "Number of unique alphabet keys (divergence)",
       "type": "stat"
     },
     {
@@ -967,6 +1028,6 @@
   "timezone": "",
   "title": "NeoFS Network Monitor",
   "uid": "w9pGNKfMz",
-  "version": 1,
+  "version": 4,
   "weekStart": ""
 }
