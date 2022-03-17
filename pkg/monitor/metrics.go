@@ -126,4 +126,15 @@ var (
 			Help:      "Side chain total supply of balance contract",
 		},
 	)
+
+	alphabetDivergence = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Subsystem: "neofs_net_monitor",
+			Name:      "alphabet_divergence",
+			Help:      "Alphabet keys divergence between main chain and side chain",
+		},
+		[]string{
+			"chain",
+		},
+	)
 )
