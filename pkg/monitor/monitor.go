@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"sort"
 	"strconv"
 	"time"
 
@@ -47,7 +48,8 @@ type (
 	}
 
 	AlphabetFetcher interface {
-		FetchAlphabet() (keys.PublicKeys, error)
+		FetchSideAlphabet() (keys.PublicKeys, error)
+		FetchMainAlphabet() (keys.PublicKeys, error)
 	}
 
 	Monitor struct {
@@ -118,6 +120,7 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 
 	alphabetFetcher, err := morphchain.NewAlphabetFetcher(morphchain.AlphabetFetcherArgs{
 		Committeer: sideNeogoClient,
+		Designater: mainNeogoClient,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("can't initialize alphabet fetcher: %w", err)
@@ -208,6 +211,7 @@ func (m *Monitor) Start(ctx context.Context) {
 	prometheus.MustRegister(proxyBalance)
 	prometheus.MustRegister(mainChainSupply)
 	prometheus.MustRegister(sideChainSupply)
+	prometheus.MustRegister(alphabetDivergence)
 
 	if err := m.geoFetcher.Open(); err != nil {
 		m.logger.Warn("geoposition fetching disabled", zap.Error(err))
@@ -265,11 +269,18 @@ func (m *Monitor) Job(ctx context.Context) {
 			m.processMainChainSupply()
 		}
 
-		alphabet, err := m.alpFetcher.FetchAlphabet()
+		sideAlphabet, err := m.alpFetcher.FetchSideAlphabet()
 		if err != nil {
-			m.logger.Warn("can't scrap alphabet info", zap.Error(err))
+			m.logger.Warn("can't scrap side alphabet info", zap.Error(err))
 		} else {
-			m.processAlphabet(alphabet)
+			m.processAlphabet(sideAlphabet)
+
+			mainAlphabet, err := m.alpFetcher.FetchMainAlphabet()
+			if err != nil {
+				m.logger.Warn("can't scrap main alphabet info", zap.Error(err))
+			} else {
+				m.processAlphabetDivergence(mainAlphabet, sideAlphabet)
+			}
 		}
 
 		select {
@@ -559,6 +570,62 @@ func (m *Monitor) processAlphabet(alphabet keys.PublicKeys) {
 	for k, v := range exportNotaryBalances {
 		alphabetNotaryBalances.WithLabelValues(k).Set(float64(v))
 	}
+}
+
+const (
+	mainChainDivergenceLabel = "main"
+	sideChainDivergenceLabel = "side"
+)
+
+func (m *Monitor) processAlphabetDivergence(mainAlphabet, sideAlphabet keys.PublicKeys) {
+	sortedMain := sortedAlphabet(mainAlphabet)
+	sortedSide := sortedAlphabet(sideAlphabet)
+
+	uniqueMain, uniqueSide := computeUniqueAlphabets(sortedMain, sortedSide)
+
+	alphabetDivergence.Reset()
+	alphabetDivergence.WithLabelValues(mainChainDivergenceLabel).Set(float64(len(uniqueMain)))
+	alphabetDivergence.WithLabelValues(sideChainDivergenceLabel).Set(float64(len(uniqueSide)))
+}
+
+func computeUniqueAlphabets(sortedMain, sortedSide []string) ([]string, []string) {
+	var uniqueMain, uniqueSide []string
+
+	i, j := 0, 0
+	len1, len2 := len(sortedMain), len(sortedSide)
+	for i < len1 && j < len2 {
+		if sortedMain[i] == sortedSide[j] {
+			i++
+			j++
+			continue
+		}
+
+		if sortedMain[i] < sortedSide[j] {
+			uniqueMain = append(uniqueMain, sortedMain[i])
+			i++
+		} else {
+			uniqueSide = append(uniqueSide, sortedSide[j])
+			j++
+		}
+	}
+
+	if i == len1 {
+		uniqueSide = append(uniqueSide, sortedSide[j:]...)
+	} else if j == len2 {
+		uniqueMain = append(uniqueMain, sortedMain[i:]...)
+	}
+
+	return uniqueMain, uniqueSide
+}
+
+func sortedAlphabet(alphabet keys.PublicKeys) []string {
+	sorted := make([]string, 0, len(alphabet))
+	for _, key := range alphabet {
+		keyHex := hex.EncodeToString(key.Bytes())
+		sorted = append(sorted, keyHex)
+	}
+	sort.Strings(sorted)
+	return sorted
 }
 
 func (m *Monitor) processMainChainSupply() {
