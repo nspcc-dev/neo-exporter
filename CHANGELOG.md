@@ -3,6 +3,20 @@ Changelog for NeoFS Monitor
 
 ## [Unreleased]
 
+## [0.7.0] - 2022-03-22
+
+### Fixed
+- Use `$datasource` in grafana (#53)
+
+### Added
+- Log of storage node appearance in network map (#26)
+- Dropdown list to pick storage node public keys (#4)
+- Alphabet divergence metrics (#60)
+
+### Changed
+- Update grafana image to v8.4.2 (#59)
+- Update LOCODE db to v0.2.1
+
 ## [0.6.0] - 2021-11-02
 
 ### Fixed
@@ -64,7 +78,8 @@ to establish connection to the RC4 main chain and `NEOFS_NET_MONITOR_MORPH_RPC_E
 `NEOFS_NET_MONITOR_MORPH_RPC_DIAL_TIMEOUT` for the side chain instead.
 `NEOFS_NET_MONITOR_CONTRACTS_PROXY` env is now optional for notary disabled environments.
 
-[Unreleased]: https://github.com/nspcc-dev/neofs-net-monitor/compare/v0.6.0...master
+[Unreleased]: https://github.com/nspcc-dev/neofs-net-monitor/compare/v0.7.0...master
+[0.7.0]: https://github.com/nspcc-dev/neofs-net-monitor/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/nspcc-dev/neofs-net-monitor/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/nspcc-dev/neofs-net-monitor/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/nspcc-dev/neofs-net-monitor/compare/v0.3.0...v0.4.0
