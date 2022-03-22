@@ -12,7 +12,7 @@ SRC = ./cmd/${APP}/
 
 LOCODE_DIR = ./locode
 LOCODE_FILE = locode_db.gz
-LOCODE_DB_URL = https://github.com/nspcc-dev/neofs-locode-db/releases/download/v0.1.0/locode_db.gz
+LOCODE_DB_URL = https://github.com/nspcc-dev/neofs-locode-db/releases/download/v0.2.1/locode_db.gz
 
 .PHONY: bin image up up-testnet up-devenv down down-testnet down-devenv clean locode
 
