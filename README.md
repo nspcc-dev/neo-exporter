@@ -8,13 +8,10 @@ For internal usage.
 
 ## How to use 
 
-1. Build image of neofs-network-monitor app.
+1. (Optional) Build image of neofs-network-monitor app.
 
 ```
 $ make image
-...
-Successfully built 22b63620bc9d
-Successfully tagged nspccdev/neofs-net-monitor:0.4.0
 ```
 
 2. (Optional) Specify neofs-net-monitor image version in `docker/docker-compose.yml`.
@@ -23,16 +20,17 @@ Successfully tagged nspccdev/neofs-net-monitor:0.4.0
 
 ```
 $ make up
-Creating network "docker_monitor-net" with driver "bridge"
-Creating prometheus        ... done
-Creating grafana           ... done
-Creating neofs-net-monitor ... done
 ```
 
 To stop environment run `make down` command.
 
 4. In grafana at `http://127.0.0.1:3000` select `NeoFS Network Monitor`
 dashboard.
+
+Supported environments:
+- N3 Mainnet (`make up`)
+- N3 Testent (`make up-testnet`)
+- NeoFS Dev Env (`make up-devenv`)
    
 ## Available options
 
@@ -70,6 +68,5 @@ NEOFS_NET_MONITOR_LOCODE_DB_PATH=path/to/database
 
 After `Jebudo` release monitor can be attached to 
 [neofs-dev-env](https://github.com/nspcc-dev/neofs-dev-env). Go to 
-`docker/docker-compose.devenv.yml` file, make sure that contract script
-hashes are correct, specify image version for neofs-net-monitor and then
-run `make up-devenv` and `make down-devenv` commands.
+`docker/docker-compose.devenv.yml` file, make sure that NeoFS contract script
+hash is correct, and run `make up-devenv` command.
