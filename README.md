@@ -41,10 +41,12 @@ NEOFS_NET_MONITOR_KEY=KyH4ASQ1tmm7q9eQKiSzCSH6kxNVbUe3B41EeLaJ15UoMwgZw3Zk
 // Sidechain NEO RPC related configuration.
 NEOFS_NET_MONITOR_MORPH_RPC_ENDPOINT=https://rpc1-morph.preview4.nspcc.ru:24333
 NEOFS_NET_MONITOR_MORPH_RPC_DIAL_TIMEOUT=5s
+NEOFS_NET_MONITOR_MORPH_RPC_HEALTH_RECHECK_INTERVAL=5s
 
 // Mainchain NEO RPC related configuration.
 NEOFS_NET_MONITOR_MAINNET_RPC_ENDPOINT=https://rpc1-main.preview4.nspcc.ru:24333
 NEOFS_NET_MONITOR_MAINNET_RPC_DIAL_TIMEOUT=5s
+NEOFS_NET_MONITOR_MAINNET_RPC_HEALTH_RECHECK_INTERVAL=5s
 
 // Prometheus metric endpoint.
 NEOFS_NET_MONITOR_METRICS_ENDPOINT=:16512
@@ -54,6 +56,11 @@ NEOFS_NET_MONITOR_METRICS_INTERVAL=15m
 
 // NeoFS contract from main chain. Required for asset supply metric.
 NEOFS_NET_MONITOR_CONTRACTS_NEOFS=b65d8243ac63983206d17e5221af0653a7266fa1
+```
+
+**Note:** after `v0.7.1` you can specify more than one rpc endpoint:
+```
+NEOFS_NET_MONITOR_MORPH_RPC_ENDPOINT="https://rpc1-morph.preview4.nspcc.ru:24333 https://rpc2-morph.preview4.nspcc.ru:24333"
 ```
 
 To download actual LOCODE database run `$ make locode`.

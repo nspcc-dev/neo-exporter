@@ -7,28 +7,26 @@ import (
 	"strings"
 
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
-	neogo "github.com/nspcc-dev/neo-go/pkg/rpc/client"
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	"github.com/nspcc-dev/neofs-api-go/pkg/netmap"
-	morph "github.com/nspcc-dev/neofs-node/pkg/morph/client"
-	wrapNetmap "github.com/nspcc-dev/neofs-node/pkg/morph/client/netmap/wrapper"
+	"github.com/nspcc-dev/neofs-net-monitor/pkg/pool"
 	"github.com/nspcc-dev/neofs-node/pkg/network"
 	"go.uber.org/zap"
 )
 
 type (
 	NetmapFetcher struct {
-		cli            *morph.Client
+		cli            *pool.NetmapPool
 		notaryDisabled bool
-		wrp            *wrapNetmap.Wrapper
 		logger         *zap.Logger
 	}
 
 	NetmapFetcherArgs struct {
-		Cli            *neogo.Client
+		Cli            *pool.Pool
 		Key            *keys.PrivateKey
 		NetmapContract util.Uint160
 		Logger         *zap.Logger
+		NotaryEnabled  bool
 	}
 
 	Node struct {
@@ -49,39 +47,25 @@ type (
 )
 
 func NewNetmapFetcher(p NetmapFetcherArgs) (*NetmapFetcher, error) {
-	blockchainClient, err := morph.New(
-		p.Key,
-		"", // endpoint is ignored due to single client instance
-		morph.WithSingleClient(p.Cli),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("can't create blockchain client: %w", err)
-	}
-
-	wrapper, err := wrapNetmap.NewFromMorph(
-		blockchainClient,
-		p.NetmapContract,
-		0,
-	)
+	netmapPool, err := pool.NewNetmapPool(p.Cli, p.Key, p.NetmapContract)
 	if err != nil {
 		return nil, fmt.Errorf("can't create netmap client wrapper: %w", err)
 	}
 
 	return &NetmapFetcher{
-		cli:            blockchainClient,
-		notaryDisabled: !blockchainClient.ProbeNotary(),
-		wrp:            wrapper,
+		cli:            netmapPool,
+		notaryDisabled: !netmapPool.ProbeNotary(),
 		logger:         p.Logger,
 	}, nil
 }
 
 func (f *NetmapFetcher) FetchNetmap() (NetmapInfo, error) {
-	epoch, err := f.wrp.Epoch()
+	epoch, err := f.cli.Epoch()
 	if err != nil {
 		return NetmapInfo{}, fmt.Errorf("can't fetch epoch number: %w", err)
 	}
 
-	nm, err := f.wrp.GetNetMap(0)
+	nm, err := f.cli.GetNetMap()
 	if err != nil {
 		return NetmapInfo{}, fmt.Errorf("can't fetch network map: %w", err)
 	}
@@ -105,7 +89,7 @@ func (f *NetmapFetcher) FetchNetmap() (NetmapInfo, error) {
 }
 
 func (f *NetmapFetcher) FetchCandidates() (NetmapCandidatesInfo, error) {
-	candidatesNetmap, err := f.wrp.GetCandidates()
+	candidatesNetmap, err := f.cli.GetCandidates()
 	if err != nil {
 		return NetmapCandidatesInfo{}, fmt.Errorf("can't fetch netmap candidates: %w", err)
 	}
@@ -134,7 +118,7 @@ func (f *NetmapFetcher) FetchInnerRingKeys() (keys.PublicKeys, error) {
 	)
 
 	if f.notaryDisabled {
-		publicKeys, err = f.wrp.GetInnerRingList()
+		publicKeys, err = f.cli.GetInnerRingList()
 	} else {
 		publicKeys, err = f.cli.NeoFSAlphabetList()
 	}

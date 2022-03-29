@@ -14,13 +14,13 @@ import (
 	nns "github.com/nspcc-dev/neo-go/examples/nft-nd-nns"
 	"github.com/nspcc-dev/neo-go/pkg/core/native/nativenames"
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
-	"github.com/nspcc-dev/neo-go/pkg/rpc/client"
 	"github.com/nspcc-dev/neo-go/pkg/smartcontract"
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	"github.com/nspcc-dev/neo-go/pkg/vm"
 	"github.com/nspcc-dev/neo-go/pkg/vm/stackitem"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/locode"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/morphchain"
+	"github.com/nspcc-dev/neofs-net-monitor/pkg/pool"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
@@ -83,21 +83,27 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 		return nil, err
 	}
 
-	sideChainEndpoint := cfg.GetString(sidePrefix + delimiter + cfgNeoRPCEndpoint)
+	sideChainEndpoints := cfg.GetStringSlice(sidePrefix + delimiter + cfgNeoRPCEndpoint)
 	sideChainTimeout := cfg.GetDuration(sidePrefix + delimiter + cfgNeoRPCDialTimeout)
+	sideChainRecheck := cfg.GetDuration(sidePrefix + delimiter + cfgNeoRPCRecheckInterval)
 
-	mainChainEndpoint := cfg.GetString(mainPrefix + delimiter + cfgNeoRPCEndpoint)
+	mainChainEndpoints := cfg.GetStringSlice(mainPrefix + delimiter + cfgNeoRPCEndpoint)
 	mainChainTimeout := cfg.GetDuration(mainPrefix + delimiter + cfgNeoRPCDialTimeout)
+	mainChainRecheck := cfg.GetDuration(mainPrefix + delimiter + cfgNeoRPCRecheckInterval)
 
-	sideNeogoClient, err := neoGoClient(ctx, sideChainEndpoint, client.Options{
-		DialTimeout: sideChainTimeout,
+	sideNeogoClient, err := pool.NewPool(ctx, pool.PrmPool{
+		Endpoints:       sideChainEndpoints,
+		DialTimeout:     sideChainTimeout,
+		RecheckInterval: sideChainRecheck,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("can't create side chain neo-go client: %w", err)
 	}
 
-	mainNeogoClient, err := neoGoClient(ctx, mainChainEndpoint, client.Options{
-		DialTimeout: mainChainTimeout,
+	mainNeogoClient, err := pool.NewPool(ctx, pool.PrmPool{
+		Endpoints:       mainChainEndpoints,
+		DialTimeout:     mainChainTimeout,
+		RecheckInterval: mainChainRecheck,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("can't create main chain neo-go client: %w", err)
@@ -297,23 +303,9 @@ func (m *Monitor) Logger() *zap.Logger {
 	return m.logger
 }
 
-func neoGoClient(ctx context.Context, endpoint string, opts client.Options) (*client.Client, error) {
-	cli, err := client.New(ctx, endpoint, opts)
-	if err != nil {
-		return nil, fmt.Errorf("can't create neo-go client: %w", err)
-	}
-
-	err = cli.Init()
-	if err != nil {
-		return nil, fmt.Errorf("can't init neo-go client: %w", err)
-	}
-
-	return cli, nil
-}
-
 const nnsContractID = 1
 
-func getScriptHash(cfg *viper.Viper, cli *client.Client, nnsKey, configKey string) (sh util.Uint160, err error) {
+func getScriptHash(cfg *viper.Viper, cli *pool.Pool, nnsKey, configKey string) (sh util.Uint160, err error) {
 	cs, err := cli.GetContractStateByID(nnsContractID)
 	if err != nil {
 		return sh, fmt.Errorf("NNS contract state: %w", err)
@@ -335,7 +327,7 @@ func getScriptHash(cfg *viper.Viper, cli *client.Client, nnsKey, configKey strin
 	return sh, nil
 }
 
-func nnsResolve(c *client.Client, nnsHash util.Uint160, domain string) (util.Uint160, error) {
+func nnsResolve(c *pool.Pool, nnsHash util.Uint160, domain string) (util.Uint160, error) {
 	result, err := c.InvokeFunction(nnsHash, "resolve", []smartcontract.Parameter{
 		{
 			Type:  smartcontract.StringType,
