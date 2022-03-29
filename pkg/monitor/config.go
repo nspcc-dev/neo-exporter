@@ -24,8 +24,9 @@ const (
 	mainPrefix = "mainnet"
 	sidePrefix = "morph"
 
-	cfgNeoRPCEndpoint    = "rpc.endpoint"
-	cfgNeoRPCDialTimeout = "rpc.dial_timeout"
+	cfgNeoRPCEndpoint        = "rpc.endpoint"
+	cfgNeoRPCDialTimeout     = "rpc.dial_timeout"
+	cfgNeoRPCRecheckInterval = "rpc.health_recheck_interval"
 
 	// monitor prometheus expose config values
 	cfgMetricsEndpoint = "metrics.endpoint"

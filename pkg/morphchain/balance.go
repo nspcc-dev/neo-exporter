@@ -6,19 +6,19 @@ import (
 	"github.com/nspcc-dev/neo-go/pkg/core/native/nativenames"
 	"github.com/nspcc-dev/neo-go/pkg/crypto/hash"
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
-	"github.com/nspcc-dev/neo-go/pkg/rpc/client"
 	"github.com/nspcc-dev/neo-go/pkg/util"
+	"github.com/nspcc-dev/neofs-net-monitor/pkg/pool"
 )
 
 type (
 	BalanceFetcher struct {
-		cli    *client.Client
+		cli    *pool.Pool
 		gas    util.Uint160
 		notary util.Uint160
 	}
 
 	BalanceFetcherArgs struct {
-		Cli *client.Client
+		Cli *pool.Pool
 	}
 )
 
