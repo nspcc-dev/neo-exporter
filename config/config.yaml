@@ -1,0 +1,38 @@
+# WIF/hex/path to binary private key for the NEO client. If not set, it is randomly generated at startup.
+key: KyH4ASQ1tmm7q9eQKiSzCSH6kxNVbUe3B41EeLaJ15UoMwgZw3Zk
+
+# Mainchain NEO RPC related configuration.
+mainnet:
+  rpc:
+    dial_timeout: 5s
+    # stores the interval after which a current connection health check is performed.
+    health_recheck_interval: 5s
+    endpoint:
+      - https://rpc01.testnet.n3.nspcc.ru:21331
+      - https://rpc02.testnet.n3.nspcc.ru:21331
+
+# Sidechain NEO RPC related configuration.
+morph:
+  rpc:
+    dial_timeout: 5s
+    health_recheck_interval: 5s
+    endpoint:
+      - https://rpc01.morph.testnet.fs.neo.org:51331
+      - https://rpc02.morph.testnet.fs.neo.org:51331
+
+# Prometheus metric configuration.
+metrics:
+  # Interval between NeoFS metric scrapping.
+  interval: 15s
+  endpoint: ":16512"
+
+locode:
+  db:
+    path: locode/db
+
+contracts:
+  # NeoFS contract from main chain. Required for asset supply metric.
+  neofs: b65d8243ac63983206d17e5221af0653a7266fa1
+
+logger:
+  level: info
