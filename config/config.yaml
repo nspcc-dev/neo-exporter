@@ -26,6 +26,7 @@ metrics:
   interval: 15s
   endpoint: ":16512"
 
+# Optional path to NeoFS LOCODE database.
 locode:
   db:
     path: locode/db
