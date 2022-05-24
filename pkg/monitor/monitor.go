@@ -52,6 +52,10 @@ type (
 		FetchMainAlphabet() (keys.PublicKeys, error)
 	}
 
+	ContainerFetcher interface {
+		Total() (int, error)
+	}
+
 	Monitor struct {
 		balance util.Uint160
 		proxy   *util.Uint160
@@ -66,6 +70,7 @@ type (
 		irFetcher              InnerRingFetcher
 		sideBlFetcher          BalanceFetcher
 		mainBlFetcher          BalanceFetcher
+		cnrFetcher             ContainerFetcher
 		sideChainNotaryEnabled bool
 	}
 )
@@ -114,6 +119,11 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 		return nil, fmt.Errorf("can't read netmap scripthash: %w", err)
 	}
 
+	containerContract, err := getScriptHash(cfg, sideNeogoClient, "container.neofs", cfgContainerContract)
+	if err != nil {
+		return nil, fmt.Errorf("can't read container scripthash: %w", err)
+	}
+
 	nmFetcher, err := morphchain.NewNetmapFetcher(morphchain.NetmapFetcherArgs{
 		Cli:            sideNeogoClient,
 		Key:            key,
@@ -122,6 +132,16 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 	})
 	if err != nil {
 		return nil, fmt.Errorf("can't initialize netmap fetcher: %w", err)
+	}
+
+	cnrFetcher, err := morphchain.NewContainerFetcher(morphchain.ContainerFetcherArgs{
+		Cli:               sideNeogoClient,
+		Key:               key,
+		ContainerContract: containerContract,
+		Logger:            logger,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("can't initialize container fetcher: %w", err)
 	}
 
 	alphabetFetcher, err := morphchain.NewAlphabetFetcher(morphchain.AlphabetFetcherArgs{
@@ -200,6 +220,7 @@ func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
 		irFetcher:              nmFetcher,
 		sideBlFetcher:          sideBalanceFetcher,
 		mainBlFetcher:          mainBalanceFetcher,
+		cnrFetcher:             cnrFetcher,
 		sideChainNotaryEnabled: notaryEnabled,
 	}, nil
 }
@@ -220,6 +241,7 @@ func (m *Monitor) Start(ctx context.Context) {
 	prometheus.MustRegister(alphabetDivergence)
 	prometheus.MustRegister(alphabetMainDivergence)
 	prometheus.MustRegister(alphabetSideDivergence)
+	prometheus.MustRegister(containersNumber)
 
 	if err := m.geoFetcher.Open(); err != nil {
 		m.logger.Warn("geoposition fetching disabled", zap.Error(err))
@@ -288,6 +310,8 @@ func (m *Monitor) Job(ctx context.Context) {
 				m.processAlphabetDivergence(mainAlphabet, sideAlphabet)
 			}
 		}
+
+		m.processContainersNumber()
 
 		select {
 		case <-time.After(m.sleep):
@@ -647,6 +671,16 @@ func (m *Monitor) processSideChainSupply() {
 	}
 
 	sideChainSupply.Set(float64(balance))
+}
+
+func (m *Monitor) processContainersNumber() {
+	total, err := m.cnrFetcher.Total()
+	if err != nil {
+		m.logger.Warn("can't fetch number of available containers", zap.Error(err))
+		return
+	}
+
+	containersNumber.Set(float64(total))
 }
 
 func readKey(logger *zap.Logger, cfg *viper.Viper) (*keys.PrivateKey, error) {

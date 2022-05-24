@@ -159,4 +159,12 @@ var (
 			"key",
 		},
 	)
+
+	containersNumber = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Subsystem: "neofs_net_monitor",
+			Name:      "containers_number",
+			Help:      "Number of available containers",
+		},
+	)
 )

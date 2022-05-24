@@ -12,10 +12,11 @@ const (
 	delimiter = "."
 
 	// contracts scripthash
-	cfgNetmapContract  = "contracts.netmap"
-	cfgProxyContract   = "contracts.proxy"
-	cfgBalanceContract = "contracts.balance"
-	cfgNeoFSContract   = "contracts.neofs"
+	cfgNetmapContract    = "contracts.netmap"
+	cfgProxyContract     = "contracts.proxy"
+	cfgBalanceContract   = "contracts.balance"
+	cfgNeoFSContract     = "contracts.neofs"
+	cfgContainerContract = "contracts.container"
 
 	// private key to communicate with blockchain
 	cfgKey = "key"
