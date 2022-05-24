@@ -3,6 +3,11 @@ Changelog for NeoFS Monitor
 
 ## [Unreleased]
 
+## [0.8.0] - 2022-05-24
+
+### Added
+- `neofs_net_monitor_containers_number` metric.
+
 ## [0.7.1] - 2022-03-30
 
 ### Added
@@ -83,7 +88,8 @@ to establish connection to the RC4 main chain and `NEOFS_NET_MONITOR_MORPH_RPC_E
 `NEOFS_NET_MONITOR_MORPH_RPC_DIAL_TIMEOUT` for the side chain instead.
 `NEOFS_NET_MONITOR_CONTRACTS_PROXY` env is now optional for notary disabled environments.
 
-[Unreleased]: https://github.com/nspcc-dev/neofs-net-monitor/compare/v0.7.1...master
+[Unreleased]: https://github.com/nspcc-dev/neofs-net-monitor/compare/v0.8.0...master
+[0.8.0]: https://github.com/nspcc-dev/neofs-net-monitor/compare/v0.7.1...v0.8.0
 [0.7.1]: https://github.com/nspcc-dev/neofs-net-monitor/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/nspcc-dev/neofs-net-monitor/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/nspcc-dev/neofs-net-monitor/compare/v0.5.0...v0.6.0
