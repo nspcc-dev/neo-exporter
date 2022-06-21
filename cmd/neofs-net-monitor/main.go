@@ -10,7 +10,6 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/nspcc-dev/neofs-net-monitor/pkg/monitor"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
@@ -39,7 +38,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	neofsMonitor, err := monitor.New(ctx, cfg)
+	neofsMonitor, err := New(ctx, cfg)
 	if err != nil {
 		log.Printf("can't initialize netmap monitor: %s", err.Error())
 		os.Exit(1)
@@ -66,7 +65,7 @@ func newConfig(path string) (*viper.Viper, error) {
 	v.AutomaticEnv()
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
-	monitor.DefaultConfiguration(v)
+	DefaultConfiguration(v)
 
 	if path != "" {
 		v.SetConfigFile(path)

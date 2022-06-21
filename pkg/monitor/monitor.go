@@ -4,35 +4,24 @@ import (
 	"context"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"net/http"
-	"os"
 	"sort"
 	"strconv"
 	"time"
 
-	nns "github.com/nspcc-dev/neo-go/examples/nft-nd-nns"
-	"github.com/nspcc-dev/neo-go/pkg/core/native/nativenames"
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
-	"github.com/nspcc-dev/neo-go/pkg/smartcontract"
 	"github.com/nspcc-dev/neo-go/pkg/util"
-	"github.com/nspcc-dev/neo-go/pkg/vm"
-	"github.com/nspcc-dev/neo-go/pkg/vm/stackitem"
+	"github.com/nspcc-dev/neofs-api-go/pkg/netmap"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/locode"
-	"github.com/nspcc-dev/neofs-net-monitor/pkg/morphchain"
-	"github.com/nspcc-dev/neofs-net-monitor/pkg/pool"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
-var errUnknownKeyFormat = errors.New("could not parse private key: expected WIF, hex or path to binary key")
-
 type (
 	NetmapFetcher interface {
-		FetchNetmap() (morphchain.NetmapInfo, error)
-		FetchCandidates() (morphchain.NetmapCandidatesInfo, error)
+		FetchNetmap() (NetmapInfo, error)
+		FetchCandidates() (NetmapCandidatesInfo, error)
 	}
 
 	InnerRingFetcher interface {
@@ -53,7 +42,23 @@ type (
 	}
 
 	ContainerFetcher interface {
-		Total() (int, error)
+		Total() (int64, error)
+	}
+
+	Node struct {
+		ID         uint64
+		Address    string
+		PublicKey  *keys.PublicKey
+		Attributes map[string]string
+	}
+
+	NetmapInfo struct {
+		Epoch uint64
+		Nodes []*Node
+	}
+
+	NetmapCandidatesInfo struct {
+		Nodes []*Node
 	}
 
 	Monitor struct {
@@ -73,156 +78,45 @@ type (
 		cnrFetcher             ContainerFetcher
 		sideChainNotaryEnabled bool
 	}
+
+	Args struct {
+		Balance                util.Uint160
+		Proxy                  *util.Uint160
+		Neofs                  *util.Uint160
+		Logger                 *zap.Logger
+		Sleep                  time.Duration
+		MetricsAddress         string
+		GeoFetcher             *locode.DB
+		AlpFetcher             AlphabetFetcher
+		NmFetcher              NetmapFetcher
+		IRFetcher              InnerRingFetcher
+		SideBlFetcher          BalanceFetcher
+		MainBlFetcher          BalanceFetcher
+		CnrFetcher             ContainerFetcher
+		SideChainNotaryEnabled bool
+	}
 )
 
-func New(ctx context.Context, cfg *viper.Viper) (*Monitor, error) {
-	logConf := zap.NewProductionConfig()
-	logConf.Level = WithLevel(cfg.GetString(cfgLoggerLevel))
-	logger, err := logConf.Build()
-	if err != nil {
-		return nil, err
-	}
-
-	key, err := readKey(logger, cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	sideChainEndpoints := cfg.GetStringSlice(sidePrefix + delimiter + cfgNeoRPCEndpoint)
-	sideChainTimeout := cfg.GetDuration(sidePrefix + delimiter + cfgNeoRPCDialTimeout)
-	sideChainRecheck := cfg.GetDuration(sidePrefix + delimiter + cfgNeoRPCRecheckInterval)
-
-	mainChainEndpoints := cfg.GetStringSlice(mainPrefix + delimiter + cfgNeoRPCEndpoint)
-	mainChainTimeout := cfg.GetDuration(mainPrefix + delimiter + cfgNeoRPCDialTimeout)
-	mainChainRecheck := cfg.GetDuration(mainPrefix + delimiter + cfgNeoRPCRecheckInterval)
-
-	sideNeogoClient, err := pool.NewPool(ctx, pool.PrmPool{
-		Endpoints:       sideChainEndpoints,
-		DialTimeout:     sideChainTimeout,
-		RecheckInterval: sideChainRecheck,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("can't create side chain neo-go client: %w", err)
-	}
-
-	mainNeogoClient, err := pool.NewPool(ctx, pool.PrmPool{
-		Endpoints:       mainChainEndpoints,
-		DialTimeout:     mainChainTimeout,
-		RecheckInterval: mainChainRecheck,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("can't create main chain neo-go client: %w", err)
-	}
-
-	netmapContract, err := getScriptHash(cfg, sideNeogoClient, "netmap.neofs", cfgNetmapContract)
-	if err != nil {
-		return nil, fmt.Errorf("can't read netmap scripthash: %w", err)
-	}
-
-	containerContract, err := getScriptHash(cfg, sideNeogoClient, "container.neofs", cfgContainerContract)
-	if err != nil {
-		return nil, fmt.Errorf("can't read container scripthash: %w", err)
-	}
-
-	nmFetcher, err := morphchain.NewNetmapFetcher(morphchain.NetmapFetcherArgs{
-		Cli:            sideNeogoClient,
-		Key:            key,
-		NetmapContract: netmapContract,
-		Logger:         logger,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("can't initialize netmap fetcher: %w", err)
-	}
-
-	cnrFetcher, err := morphchain.NewContainerFetcher(morphchain.ContainerFetcherArgs{
-		Cli:               sideNeogoClient,
-		Key:               key,
-		ContainerContract: containerContract,
-		Logger:            logger,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("can't initialize container fetcher: %w", err)
-	}
-
-	alphabetFetcher, err := morphchain.NewAlphabetFetcher(morphchain.AlphabetFetcherArgs{
-		Committeer: sideNeogoClient,
-		Designater: mainNeogoClient,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("can't initialize alphabet fetcher: %w", err)
-	}
-
-	sideBalanceFetcher, err := morphchain.NewBalanceFetcher(morphchain.BalanceFetcherArgs{
-		Cli: sideNeogoClient,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("can't initialize side balance fetcher: %w", err)
-	}
-
-	mainBalanceFetcher, err := morphchain.NewBalanceFetcher(morphchain.BalanceFetcherArgs{
-		Cli: mainNeogoClient,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("can't initialize main balance fetcher: %w", err)
-	}
-
-	var (
-		balance util.Uint160
-		proxy   *util.Uint160
-		neofs   *util.Uint160
-	)
-
-	balance, err = getScriptHash(cfg, sideNeogoClient, "balance.neofs", cfgBalanceContract)
-	if err != nil {
-		return nil, fmt.Errorf("balance contract is not available: %w", err)
-	}
-
-	proxyContract, err := getScriptHash(cfg, sideNeogoClient, "proxy.neofs", cfgProxyContract)
-	if err != nil {
-		logger.Info("proxy disabled")
-	} else {
-		proxy = &proxyContract
-	}
-
-	neofsContract := cfg.GetString(cfgNeoFSContract)
-	if len(neofsContract) != 0 {
-		sh, err := util.Uint160DecodeStringLE(neofsContract)
-		if err != nil {
-			return nil, fmt.Errorf("NNS u160 decode: %w", err)
-		}
-		neofs = &sh
-	} else {
-		logger.Info("neofs contract ignored")
-	}
-
-	_, err = sideNeogoClient.GetNativeContractHash(nativenames.Notary)
-	notaryEnabled := err == nil
-
-	geoFetcher := locode.New(
-		locode.Prm{
-			Path: cfg.GetString(cfgLocodeDB),
-		},
-	)
-
+func New(p Args) *Monitor {
 	return &Monitor{
-		balance: balance,
-		proxy:   proxy,
-		neofs:   neofs,
-		logger:  logger,
-		sleep:   cfg.GetDuration(cfgMetricsInterval),
+		balance: p.Balance,
+		proxy:   p.Proxy,
+		neofs:   p.Neofs,
+		logger:  p.Logger,
+		sleep:   p.Sleep,
 		metricsServer: http.Server{
-			Addr:    cfg.GetString(cfgMetricsEndpoint),
+			Addr:    p.MetricsAddress,
 			Handler: promhttp.Handler(),
 		},
-		geoFetcher:             geoFetcher,
-		alpFetcher:             alphabetFetcher,
-		nmFetcher:              nmFetcher,
-		irFetcher:              nmFetcher,
-		sideBlFetcher:          sideBalanceFetcher,
-		mainBlFetcher:          mainBalanceFetcher,
-		cnrFetcher:             cnrFetcher,
-		sideChainNotaryEnabled: notaryEnabled,
-	}, nil
+		geoFetcher:             p.GeoFetcher,
+		alpFetcher:             p.AlpFetcher,
+		nmFetcher:              p.NmFetcher,
+		irFetcher:              p.IRFetcher,
+		sideBlFetcher:          p.SideBlFetcher,
+		mainBlFetcher:          p.MainBlFetcher,
+		cnrFetcher:             p.CnrFetcher,
+		sideChainNotaryEnabled: p.SideChainNotaryEnabled,
+	}
 }
 
 func (m *Monitor) Start(ctx context.Context) {
@@ -327,71 +221,9 @@ func (m *Monitor) Logger() *zap.Logger {
 	return m.logger
 }
 
-const nnsContractID = 1
-
-func getScriptHash(cfg *viper.Viper, cli *pool.Pool, nnsKey, configKey string) (sh util.Uint160, err error) {
-	cs, err := cli.GetContractStateByID(nnsContractID)
-	if err != nil {
-		return sh, fmt.Errorf("NNS contract state: %w", err)
-	}
-
-	hash := cfg.GetString(configKey)
-	if len(hash) == 0 {
-		sh, err = nnsResolve(cli, cs.Hash, nnsKey)
-		if err != nil {
-			return sh, fmt.Errorf("NNS.resolve: %w", err)
-		}
-	} else {
-		sh, err = util.Uint160DecodeStringLE(hash)
-		if err != nil {
-			return sh, fmt.Errorf("NNS u160 decode: %w", err)
-		}
-	}
-
-	return sh, nil
-}
-
-func nnsResolve(c *pool.Pool, nnsHash util.Uint160, domain string) (util.Uint160, error) {
-	result, err := c.InvokeFunction(nnsHash, "resolve", []smartcontract.Parameter{
-		{
-			Type:  smartcontract.StringType,
-			Value: domain,
-		},
-		{
-			Type:  smartcontract.IntegerType,
-			Value: int64(nns.TXT),
-		},
-	}, nil)
-	if err != nil {
-		return util.Uint160{}, err
-	}
-	if result.State != vm.HaltState.String() {
-		return util.Uint160{}, fmt.Errorf("invocation failed: %s", result.FaultException)
-	}
-	if len(result.Stack) == 0 {
-		return util.Uint160{}, errors.New("result stack is empty")
-	}
-
-	// Parse the result of resolving NNS record.
-	// It works with multiple formats (corresponding to multiple NNS versions).
-	// If array of hashes is provided, it returns only the first one.
-	res := result.Stack[0]
-	if arr, ok := res.Value().([]stackitem.Item); ok {
-		if len(arr) == 0 {
-			return util.Uint160{}, errors.New("NNS record is missing")
-		}
-		res = arr[0]
-	}
-	bs, err := res.TryBytes()
-	if err != nil {
-		return util.Uint160{}, fmt.Errorf("malformed response: %w", err)
-	}
-	return util.Uint160DecodeStringLE(string(bs))
-}
-
 type diffNode struct {
-	currEpoch *morphchain.Node
-	nextEpoch *morphchain.Node
+	currEpoch *Node
+	nextEpoch *Node
 }
 
 type nodeLocation struct {
@@ -400,7 +232,7 @@ type nodeLocation struct {
 	lat  string
 }
 
-func (m *Monitor) processNetworkMap(nm morphchain.NetmapInfo, candidates morphchain.NetmapCandidatesInfo) {
+func (m *Monitor) processNetworkMap(nm NetmapInfo, candidates NetmapCandidatesInfo) {
 	currentNetmapLen := len(nm.Nodes)
 
 	exportCountries := make(map[nodeLocation]int, currentNetmapLen)
@@ -419,7 +251,7 @@ func (m *Monitor) processNetworkMap(nm morphchain.NetmapInfo, candidates morphch
 			exportBalancesGAS[keyHex] = balanceGAS
 		}
 
-		pos, err := m.geoFetcher.Get(node)
+		pos, err := m.geoFetcher.Get(node.Attributes[netmap.AttrUNLOCODE])
 		if err != nil {
 			m.logger.Debug("can't fetch geoposition", zap.String("key", keyHex), zap.Error(err))
 		} else {
@@ -469,7 +301,7 @@ func (m *Monitor) processNetworkMap(nm morphchain.NetmapInfo, candidates morphch
 	}
 }
 
-func (m *Monitor) logNodes(msg string, nodes []*morphchain.Node) {
+func (m *Monitor) logNodes(msg string, nodes []*Node) {
 	for _, node := range nodes {
 		fields := []zap.Field{zap.Uint64("id", node.ID), zap.String("address", node.Address),
 			zap.String("public key", node.PublicKey.String()),
@@ -483,7 +315,7 @@ func (m *Monitor) logNodes(msg string, nodes []*morphchain.Node) {
 	}
 }
 
-func getDiff(nm morphchain.NetmapInfo, cand morphchain.NetmapCandidatesInfo) ([]*morphchain.Node, []*morphchain.Node) {
+func getDiff(nm NetmapInfo, cand NetmapCandidatesInfo) ([]*Node, []*Node) {
 	currentNetmapLen := len(nm.Nodes)
 	candidatesLen := len(cand.Nodes)
 
@@ -506,8 +338,8 @@ func getDiff(nm morphchain.NetmapInfo, cand morphchain.NetmapCandidatesInfo) ([]
 
 	droppedCount := currentNetmapLen - (candidatesLen - newCount)
 
-	droppedNodes := make([]*morphchain.Node, 0, droppedCount)
-	newNodes := make([]*morphchain.Node, 0, newCount)
+	droppedNodes := make([]*Node, 0, droppedCount)
+	newNodes := make([]*Node, 0, newCount)
 
 	for _, node := range diff {
 		if node.nextEpoch == nil {
@@ -681,46 +513,4 @@ func (m *Monitor) processContainersNumber() {
 	}
 
 	containersNumber.Set(float64(total))
-}
-
-func readKey(logger *zap.Logger, cfg *viper.Viper) (*keys.PrivateKey, error) {
-	var (
-		key *keys.PrivateKey
-		err error
-	)
-
-	keyFromCfg := cfg.GetString(cfgKey)
-
-	if keyFromCfg == "" {
-		logger.Debug("using random private key")
-
-		key, err = keys.NewPrivateKey()
-		if err != nil {
-			return nil, fmt.Errorf("can't generate private key: %w", err)
-		}
-
-		return key, nil
-	}
-
-	// WIF
-	if key, err = keys.NewPrivateKeyFromWIF(keyFromCfg); err == nil {
-		logger.Debug("using private key from WIF")
-		return key, nil
-	}
-
-	// hex
-	if key, err = keys.NewPrivateKeyFromHex(keyFromCfg); err == nil {
-		logger.Debug("using private key from hex")
-		return key, nil
-	}
-
-	var data []byte
-
-	// file
-	if data, err = os.ReadFile(keyFromCfg); err == nil {
-		logger.Debug("using private key from file")
-		return keys.NewPrivateKeyFromBytes(data)
-	}
-
-	return nil, errUnknownKeyFormat
 }

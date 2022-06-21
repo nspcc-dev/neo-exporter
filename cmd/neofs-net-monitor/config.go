@@ -1,9 +1,13 @@
-package monitor
+package main
 
 import (
+	"errors"
+	"fmt"
+	"os"
 	"strings"
 	"time"
 
+	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
@@ -79,4 +83,48 @@ func safeLevel(lvl string) zap.AtomicLevel {
 	default:
 		return zap.NewAtomicLevelAt(zap.InfoLevel)
 	}
+}
+
+var errUnknownKeyFormat = errors.New("could not parse private key: expected WIF, hex or path to binary key")
+
+func readKey(logger *zap.Logger, cfg *viper.Viper) (*keys.PrivateKey, error) {
+	var (
+		key *keys.PrivateKey
+		err error
+	)
+
+	keyFromCfg := cfg.GetString(cfgKey)
+
+	if keyFromCfg == "" {
+		logger.Debug("using random private key")
+
+		key, err = keys.NewPrivateKey()
+		if err != nil {
+			return nil, fmt.Errorf("can't generate private key: %w", err)
+		}
+
+		return key, nil
+	}
+
+	// WIF
+	if key, err = keys.NewPrivateKeyFromWIF(keyFromCfg); err == nil {
+		logger.Debug("using private key from WIF")
+		return key, nil
+	}
+
+	// hex
+	if key, err = keys.NewPrivateKeyFromHex(keyFromCfg); err == nil {
+		logger.Debug("using private key from hex")
+		return key, nil
+	}
+
+	var data []byte
+
+	// file
+	if data, err = os.ReadFile(keyFromCfg); err == nil {
+		logger.Debug("using private key from file")
+		return keys.NewPrivateKeyFromBytes(data)
+	}
+
+	return nil, errUnknownKeyFormat
 }
