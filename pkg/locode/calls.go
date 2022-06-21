@@ -7,8 +7,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/nspcc-dev/neofs-api-go/pkg/netmap"
-	"github.com/nspcc-dev/neofs-net-monitor/pkg/morphchain"
 	"go.etcd.io/bbolt"
 )
 
@@ -76,12 +74,12 @@ type (
 	}
 )
 
-func (db *DB) Get(node *morphchain.Node) (position Position, err error) {
+func (db *DB) Get(locode string) (position Position, err error) {
 	if db.bolt == nil {
 		return nil, errDBNotInitialized
 	}
 
-	cc, lc, err := parseLocode(node.Attributes[netmap.AttrUNLOCODE])
+	cc, lc, err := parseLocode(locode)
 	if err != nil {
 		return nil, err
 	}
