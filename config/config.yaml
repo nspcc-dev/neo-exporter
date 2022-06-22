@@ -1,6 +1,3 @@
-# WIF/hex/path to binary private key for the NEO client. If not set, it is randomly generated at startup.
-key: KyH4ASQ1tmm7q9eQKiSzCSH6kxNVbUe3B41EeLaJ15UoMwgZw3Zk
-
 # Mainchain NEO RPC related configuration.
 mainnet:
   rpc:
