@@ -4,16 +4,17 @@ import (
 	"crypto/elliptic"
 	"encoding/hex"
 	"fmt"
-	"strings"
+	"net/url"
 
+	"github.com/nspcc-dev/hrw"
 	"github.com/nspcc-dev/neo-go/pkg/core/native/noderoles"
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
 	"github.com/nspcc-dev/neo-go/pkg/smartcontract"
 	"github.com/nspcc-dev/neo-go/pkg/util"
-	"github.com/nspcc-dev/neofs-api-go/pkg/netmap"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/monitor"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/pool"
 	"github.com/nspcc-dev/neofs-node/pkg/network"
+	"github.com/nspcc-dev/neofs-sdk-go/netmap"
 	"go.uber.org/zap"
 )
 
@@ -136,7 +137,7 @@ func (c *Netmap) Epoch() (int64, error) {
 	return getInt64(res.Stack)
 }
 
-func (c *Netmap) Netmap() ([]*netmap.Node, error) {
+func (c *Netmap) Netmap() ([]*netmap.NodeInfo, error) {
 	res, err := c.pool.InvokeFunction(c.contractHash, netmapMethod, []smartcontract.Parameter{}, nil)
 	if err != nil {
 		return nil, err
@@ -151,19 +152,19 @@ func (c *Netmap) Netmap() ([]*netmap.Node, error) {
 		return nil, err
 	}
 
-	infos := make([]netmap.NodeInfo, 0, len(arr))
+	infos := make([]*netmap.NodeInfo, 0, len(arr))
 	for _, item := range arr {
 		nodeInfo, err := parseNode(item)
 		if err != nil {
 			return nil, err
 		}
-		infos = append(infos, *nodeInfo)
+		infos = append(infos, nodeInfo)
 	}
 
-	return netmap.NodesFromInfo(infos), nil
+	return infos, nil
 }
 
-func (c *Netmap) NetmapCandidates() (netmap.Nodes, error) {
+func (c *Netmap) NetmapCandidates() ([]*netmap.NodeInfo, error) {
 	res, err := c.pool.InvokeFunction(c.contractHash, netmapCandidatesMethod, []smartcontract.Parameter{}, nil)
 	if err != nil {
 		return nil, err
@@ -178,7 +179,7 @@ func (c *Netmap) NetmapCandidates() (netmap.Nodes, error) {
 		return nil, err
 	}
 
-	candidates := make([]netmap.NodeInfo, 0, len(arr))
+	candidates := make([]*netmap.NodeInfo, 0, len(arr))
 
 	for _, item := range arr {
 		nodeInfo, err := parseCandidate(item)
@@ -186,10 +187,10 @@ func (c *Netmap) NetmapCandidates() (netmap.Nodes, error) {
 			return nil, err
 		}
 
-		candidates = append(candidates, *nodeInfo)
+		candidates = append(candidates, nodeInfo)
 	}
 
-	return netmap.NodesFromInfo(candidates), nil
+	return candidates, nil
 }
 
 func (c *Netmap) InnerRingList() (keys.PublicKeys, error) {
@@ -220,7 +221,7 @@ func (c *Netmap) InnerRingList() (keys.PublicKeys, error) {
 	return irKeys, nil
 }
 
-func processNode(logger *zap.Logger, node *netmap.Node) (*monitor.Node, error) {
+func processNode(logger *zap.Logger, node *netmap.NodeInfo) (*monitor.Node, error) {
 	var address string
 
 	node.IterateAddresses(
@@ -251,11 +252,16 @@ func processNode(logger *zap.Logger, node *netmap.Node) (*monitor.Node, error) {
 		)
 	}
 
+	attrs := make(map[string]string, len(node.Attributes()))
+	for _, attr := range node.Attributes() {
+		attrs[attr.Key()] = attr.Value()
+	}
+
 	return &monitor.Node{
-		ID:         node.ID,
+		ID:         hrw.Hash(node.PublicKey()),
 		Address:    address,
 		PublicKey:  publicKey,
-		Attributes: node.AttrMap,
+		Attributes: attrs,
 	}, nil
 }
 
@@ -267,7 +273,10 @@ func multiAddrToIPStringWithoutPort(multiaddr string) (string, error) {
 		return "", err
 	}
 
-	ipWithPort := netAddress.HostAddr()
+	URL, err := url.Parse(netAddress.URIAddr())
+	if err != nil {
+		return "", err
+	}
 
-	return strings.Split(ipWithPort, ":")[0], nil
+	return URL.Hostname(), nil
 }
