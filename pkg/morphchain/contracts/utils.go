@@ -8,7 +8,7 @@ import (
 	"github.com/nspcc-dev/neo-go/pkg/rpc/response/result"
 	"github.com/nspcc-dev/neo-go/pkg/vm"
 	"github.com/nspcc-dev/neo-go/pkg/vm/stackitem"
-	"github.com/nspcc-dev/neofs-api-go/pkg/netmap"
+	"github.com/nspcc-dev/neofs-sdk-go/netmap"
 )
 
 func getInvocationError(result *result.Invoke) error {
