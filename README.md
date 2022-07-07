@@ -24,7 +24,7 @@ $ make up
 
 To stop environment run `make down` command.
 
-4. In grafana at `http://127.0.0.1:3000` select `NeoFS Network Monitor`
+4. In grafana at `http://localhost:3000` select `NeoFS Network Monitor`
 dashboard.
 
 Supported environments:
