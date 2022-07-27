@@ -5,8 +5,8 @@ mainnet:
     # stores the interval after which a current connection health check is performed.
     health_recheck_interval: 5s
     endpoint:
-      - https://rpc01.testnet.n3.nspcc.ru:21331
-      - https://rpc02.testnet.n3.nspcc.ru:21331
+      - https://rpc1.t5.n3.nspcc.ru:21331
+      - https://rpc2.t5.n3.nspcc.ru:21331
 
 # Sidechain NEO RPC related configuration.
 morph:
@@ -14,8 +14,8 @@ morph:
     dial_timeout: 5s
     health_recheck_interval: 5s
     endpoint:
-      - https://rpc01.morph.testnet.fs.neo.org:51331
-      - https://rpc02.morph.testnet.fs.neo.org:51331
+      - https://rpc1.morph.t5.fs.neo.org:51331
+      - https://rpc2.morph.t5.fs.neo.org:51331
 
 # Prometheus metric configuration.
 metrics:
@@ -30,7 +30,7 @@ locode:
 
 contracts:
   # NeoFS contract from main chain. Required for asset supply metric.
-  neofs: b65d8243ac63983206d17e5221af0653a7266fa1
+  neofs: 3c3f4b84773ef0141576e48c3ff60e5078235891
 
 logger:
   level: info
