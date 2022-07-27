@@ -29,7 +29,7 @@ dashboard.
 
 Supported environments:
 - N3 Mainnet (`make up`)
-- N3 Testent (`make up-testnet`)
+- N3 T5 (`make up-testnet`)
 - NeoFS Dev Env (`make up-devenv`)
    
 ## Available options
