@@ -14,7 +14,7 @@ LOCODE_DIR = ./locode
 LOCODE_FILE = locode_db.gz
 LOCODE_DB_URL = https://github.com/nspcc-dev/neofs-locode-db/releases/download/v0.2.1/locode_db.gz
 
-.PHONY: bin image up up-testnet up-devenv down down-testnet down-devenv clean locode
+.PHONY: bin image up up-testnet up-devenv down down-testnet down-devenv clean locode lint test cover
 
 bin:
 	@echo "Build neofs-net-monitor binary"
@@ -63,3 +63,16 @@ clean:
 
 version:
 	@echo ${VERSION}
+
+# Run linters
+lint:
+	@golangci-lint --timeout=5m run
+
+# Run tests
+test:
+	@go test ./... -cover
+
+# Run tests with race detection and produce coverage output
+cover:
+	@go test -v -race ./... -coverprofile=coverage.txt -covermode=atomic
+	@go tool cover -html=coverage.txt -o coverage.html

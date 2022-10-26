@@ -1,26 +1,25 @@
 package monitor
 
 import (
-	"github.com/stretchr/testify/require"
 	"strconv"
 	"testing"
 
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
-	"github.com/nspcc-dev/neofs-net-monitor/pkg/morphchain"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetDiff(t *testing.T) {
 	tests := []struct {
-		nm                   morphchain.NetmapInfo
-		cand                 morphchain.NetmapCandidatesInfo
+		nm                   NetmapInfo
+		cand                 NetmapCandidatesInfo
 		wantNew, wantDropped int
 	}{
 		// empty Network Map
 		{
-			nm: morphchain.NetmapInfo{
+			nm: NetmapInfo{
 				Nodes: generateNodes(0, 0),
 			},
-			cand: morphchain.NetmapCandidatesInfo{
+			cand: NetmapCandidatesInfo{
 				Nodes: generateNodes(0, 0),
 			},
 			wantNew:     0,
@@ -28,10 +27,10 @@ func TestGetDiff(t *testing.T) {
 		},
 		// disjoint Network Maps
 		{
-			nm: morphchain.NetmapInfo{
+			nm: NetmapInfo{
 				Nodes: generateNodes(0, 5),
 			},
-			cand: morphchain.NetmapCandidatesInfo{
+			cand: NetmapCandidatesInfo{
 				Nodes: generateNodes(5, 10),
 			},
 			wantNew:     5,
@@ -39,10 +38,10 @@ func TestGetDiff(t *testing.T) {
 		},
 		// intersecting Network Maps
 		{
-			nm: morphchain.NetmapInfo{
+			nm: NetmapInfo{
 				Nodes: generateNodes(0, 5),
 			},
-			cand: morphchain.NetmapCandidatesInfo{
+			cand: NetmapCandidatesInfo{
 				Nodes: generateNodes(3, 6),
 			},
 			wantNew:     1,
@@ -51,7 +50,7 @@ func TestGetDiff(t *testing.T) {
 	}
 
 	var (
-		gotNew, gotDropped []*morphchain.Node
+		gotNew, gotDropped []*Node
 	)
 
 	for _, test := range tests {
@@ -62,15 +61,15 @@ func TestGetDiff(t *testing.T) {
 	}
 }
 
-func generateNodes(start, finish int) []*morphchain.Node {
-	nodes := make([]*morphchain.Node, 0, finish-start)
+func generateNodes(start, finish int) []*Node {
+	nodes := make([]*Node, 0, finish-start)
 
 	for i := start; i < finish; i++ {
 		privKey, _ := keys.NewPrivateKey()
 
 		nodes = append(
 			nodes,
-			&morphchain.Node{
+			&Node{
 				ID:        uint64(i),
 				PublicKey: privKey.PublicKey(),
 				Address:   strconv.Itoa(i),
