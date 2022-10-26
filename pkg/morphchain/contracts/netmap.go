@@ -6,14 +6,16 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/multiformats/go-multiaddr"
+	manet "github.com/multiformats/go-multiaddr/net"
 	"github.com/nspcc-dev/hrw"
 	"github.com/nspcc-dev/neo-go/pkg/core/native/noderoles"
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
 	"github.com/nspcc-dev/neo-go/pkg/smartcontract"
 	"github.com/nspcc-dev/neo-go/pkg/util"
+	"github.com/nspcc-dev/neofs-api-go/v2/rpc/client"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/monitor"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/pool"
-	"github.com/nspcc-dev/neofs-node/pkg/network"
 	"github.com/nspcc-dev/neofs-sdk-go/netmap"
 	"go.uber.org/zap"
 )
@@ -265,15 +267,19 @@ func processNode(logger *zap.Logger, node *netmap.NodeInfo) (*monitor.Node, erro
 	}, nil
 }
 
-func multiAddrToIPStringWithoutPort(multiaddr string) (string, error) {
-	var netAddress network.Address
-
-	err := netAddress.FromString(multiaddr)
-	if err != nil {
+func multiAddrToIPStringWithoutPort(multiaddress string) (string, error) {
+	var host string
+	if netAddress, err := multiaddr.NewMultiaddr(multiaddress); err != nil {
+		if host, _, err = client.ParseURI(multiaddress); err != nil {
+			return "", err
+		}
+	} else if _, host, err = manet.DialArgs(netAddress); err != nil {
 		return "", err
 	}
 
-	URL, err := url.Parse(netAddress.URIAddr())
+	uriAddress := (&url.URL{Scheme: "grpc", Host: host}).String()
+	// we need this to splitHostPort
+	URL, err := url.Parse(uriAddress)
 	if err != nil {
 		return "", err
 	}
