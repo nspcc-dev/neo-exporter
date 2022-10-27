@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/big"
 
 	"github.com/nspcc-dev/neo-go/pkg/core/native/nativenames"
 	"github.com/nspcc-dev/neo-go/pkg/smartcontract"
 	"github.com/nspcc-dev/neo-go/pkg/util"
-	"github.com/nspcc-dev/neo-go/pkg/vm"
 	"github.com/nspcc-dev/neo-go/pkg/vm/stackitem"
+	"github.com/nspcc-dev/neo-go/pkg/vm/vmstate"
 	"github.com/nspcc-dev/neofs-contract/nns"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/locode"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/monitor"
@@ -188,13 +189,13 @@ func nnsResolve(c *pool.Pool, nnsHash util.Uint160, domain string) (util.Uint160
 		},
 		{
 			Type:  smartcontract.IntegerType,
-			Value: int64(nns.TXT),
+			Value: big.NewInt(int64(nns.TXT)),
 		},
 	}, nil)
 	if err != nil {
 		return util.Uint160{}, err
 	}
-	if result.State != vm.HaltState.String() {
+	if result.State != vmstate.Halt.String() {
 		return util.Uint160{}, fmt.Errorf("invocation failed: %s", result.FaultException)
 	}
 	if len(result.Stack) == 0 {
