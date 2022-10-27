@@ -11,6 +11,7 @@ import (
 	"github.com/nspcc-dev/hrw"
 	"github.com/nspcc-dev/neo-go/pkg/core/native/noderoles"
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
+
 	"github.com/nspcc-dev/neo-go/pkg/smartcontract"
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	"github.com/nspcc-dev/neofs-api-go/v2/rpc/client"
@@ -156,7 +157,7 @@ func (c *Netmap) Netmap() ([]*netmap.NodeInfo, error) {
 
 	infos := make([]*netmap.NodeInfo, 0, len(arr))
 	for _, item := range arr {
-		nodeInfo, err := parseNode(item)
+		nodeInfo, err := parseNodeInfo(item)
 		if err != nil {
 			return nil, err
 		}
@@ -184,7 +185,7 @@ func (c *Netmap) NetmapCandidates() ([]*netmap.NodeInfo, error) {
 	candidates := make([]*netmap.NodeInfo, 0, len(arr))
 
 	for _, item := range arr {
-		nodeInfo, err := parseCandidate(item)
+		nodeInfo, err := parseNodeInfo(item)
 		if err != nil {
 			return nil, err
 		}
@@ -226,7 +227,7 @@ func (c *Netmap) InnerRingList() (keys.PublicKeys, error) {
 func processNode(logger *zap.Logger, node *netmap.NodeInfo) (*monitor.Node, error) {
 	var address string
 
-	node.IterateAddresses(
+	node.IterateNetworkEndpoints(
 		func(mAddr string) bool {
 			addr, err := multiAddrToIPStringWithoutPort(mAddr)
 			if err != nil {
@@ -254,16 +255,17 @@ func processNode(logger *zap.Logger, node *netmap.NodeInfo) (*monitor.Node, erro
 		)
 	}
 
-	attrs := make(map[string]string, len(node.Attributes()))
-	for _, attr := range node.Attributes() {
-		attrs[attr.Key()] = attr.Value()
-	}
+	attrs := make(map[string]string)
+	//for _, attr := range node.Attributes() {
+	//	attrs[attr.Key()] = attr.Value()
+	//}
 
 	return &monitor.Node{
 		ID:         hrw.Hash(node.PublicKey()),
 		Address:    address,
 		PublicKey:  publicKey,
 		Attributes: attrs,
+		Locode:     node.LOCODE(),
 	}, nil
 }
 

@@ -5,14 +5,16 @@ import (
 	"fmt"
 
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
-	"github.com/nspcc-dev/neo-go/pkg/rpc/response/result"
-	"github.com/nspcc-dev/neo-go/pkg/vm"
+	"github.com/nspcc-dev/neo-go/pkg/neorpc/result"
 	"github.com/nspcc-dev/neo-go/pkg/vm/stackitem"
+	"github.com/nspcc-dev/neo-go/pkg/vm/vmstate"
+	v2netmap "github.com/nspcc-dev/neofs-api-go/v2/netmap"
+	netmapContract "github.com/nspcc-dev/neofs-contract/netmap"
 	"github.com/nspcc-dev/neofs-sdk-go/netmap"
 )
 
 func getInvocationError(result *result.Invoke) error {
-	if result.State != vm.HaltState.String() {
+	if result.State != vmstate.Halt.String() {
 		return fmt.Errorf("invocation failed: %s", result.FaultException)
 	}
 	if len(result.Stack) == 0 {
@@ -30,30 +32,7 @@ func getInt64(st []stackitem.Item) (int64, error) {
 	return bi.Int64(), nil
 }
 
-func parseNode(st stackitem.Item) (*netmap.NodeInfo, error) {
-	values, ok := st.Value().([]stackitem.Item)
-	if !ok {
-		return nil, fmt.Errorf("invalid netmap node")
-	}
-
-	if len(values) < 1 {
-		return nil, fmt.Errorf("invalid netmap node")
-	}
-
-	rawNode, err := values[0].TryBytes()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get node field: %w", err)
-	}
-
-	nodeInfo := netmap.NewNodeInfo()
-	if err = nodeInfo.Unmarshal(rawNode); err != nil {
-		return nil, fmt.Errorf("can't unmarshal peer info: %w", err)
-	}
-
-	return nodeInfo, nil
-}
-
-func parseCandidate(st stackitem.Item) (*netmap.NodeInfo, error) {
+func parseNodeInfo(st stackitem.Item) (*netmap.NodeInfo, error) {
 	values, ok := st.Value().([]stackitem.Item)
 	if !ok {
 		return nil, fmt.Errorf("invalid netmap node")
@@ -63,9 +42,14 @@ func parseCandidate(st stackitem.Item) (*netmap.NodeInfo, error) {
 		return nil, fmt.Errorf("invalid netmap node")
 	}
 
-	node, err := parseNode(values[0])
+	rawNode, err := values[0].TryBytes()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get node field: %w", err)
+	}
+
+	var nodeInfoV2 v2netmap.NodeInfo
+	if err = nodeInfoV2.Unmarshal(rawNode); err != nil {
+		return nil, fmt.Errorf("can't unmarshal peer info: %w", err)
 	}
 
 	state, err := getInt64(values[1:2])
@@ -74,15 +58,22 @@ func parseCandidate(st stackitem.Item) (*netmap.NodeInfo, error) {
 	}
 
 	switch state {
-	case 1:
-		node.SetState(netmap.NodeStateOnline)
-	case 2:
-		node.SetState(netmap.NodeStateOffline)
+	case int64(netmapContract.NodeStateOnline):
+		nodeInfoV2.SetState(v2netmap.Online)
+	case int64(netmapContract.NodeStateOffline):
+		nodeInfoV2.SetState(v2netmap.Offline)
+	case int64(netmapContract.NodeStateMaintenance):
+		nodeInfoV2.SetState(v2netmap.Maintenance)
 	default:
-		node.SetState(0)
+		nodeInfoV2.SetState(v2netmap.UnspecifiedState)
 	}
 
-	return node, nil
+	var nodeInfo netmap.NodeInfo
+	if err = nodeInfo.ReadFromV2(nodeInfoV2); err != nil {
+		return nil, fmt.Errorf("failed to read node info from v2: %w", err)
+	}
+
+	return &nodeInfo, nil
 }
 
 func parseIRNode(st stackitem.Item) (*keys.PublicKey, error) {

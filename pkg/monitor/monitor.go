@@ -12,7 +12,6 @@ import (
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/locode"
-	"github.com/nspcc-dev/neofs-sdk-go/netmap"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
@@ -50,6 +49,7 @@ type (
 		Address    string
 		PublicKey  *keys.PublicKey
 		Attributes map[string]string
+		Locode     string
 	}
 
 	NetmapInfo struct {
@@ -251,7 +251,7 @@ func (m *Monitor) processNetworkMap(nm NetmapInfo, candidates NetmapCandidatesIn
 			exportBalancesGAS[keyHex] = balanceGAS
 		}
 
-		pos, err := m.geoFetcher.Get(node.Attributes[netmap.AttrUNLOCODE])
+		pos, err := m.geoFetcher.Get(node.Locode)
 		if err != nil {
 			m.logger.Debug("can't fetch geoposition", zap.String("key", keyHex), zap.Error(err))
 		} else {

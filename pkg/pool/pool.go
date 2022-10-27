@@ -12,8 +12,8 @@ import (
 	"github.com/nspcc-dev/neo-go/pkg/core/state"
 	"github.com/nspcc-dev/neo-go/pkg/core/transaction"
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
-	"github.com/nspcc-dev/neo-go/pkg/rpc/client"
-	"github.com/nspcc-dev/neo-go/pkg/rpc/response/result"
+	"github.com/nspcc-dev/neo-go/pkg/neorpc/result"
+	"github.com/nspcc-dev/neo-go/pkg/rpcclient"
 	"github.com/nspcc-dev/neo-go/pkg/smartcontract"
 	"github.com/nspcc-dev/neo-go/pkg/util"
 )
@@ -23,8 +23,8 @@ import (
 type Pool struct {
 	ctx  context.Context
 	mu   sync.RWMutex
-	rpc  *client.Client
-	opts client.Options
+	rpc  *rpcclient.Client
+	opts rpcclient.Options
 
 	lastHealthyTimestamp int64
 	recheckInterval      time.Duration
@@ -54,7 +54,7 @@ func NewPool(ctx context.Context, prm PrmPool) (*Pool, error) {
 		ctx:             ctx,
 		endpoints:       prm.Endpoints,
 		recheckInterval: recheck,
-		opts:            client.Options{DialTimeout: prm.DialTimeout},
+		opts:            rpcclient.Options{DialTimeout: prm.DialTimeout},
 	}
 
 	return pool, pool.establishNewConnection()
@@ -81,7 +81,7 @@ func (p *Pool) isCurrentHealthy() bool {
 // nextConnection returns healthy connection,
 // the second resp value is true if current connection was updated.
 // Returns error if there are not healthy connections.
-func (p *Pool) nextConnection() (*client.Client, bool, error) {
+func (p *Pool) nextConnection() (*rpcclient.Client, bool, error) {
 	if p.isCurrentHealthy() {
 		return p.conn(), false, nil
 	}
@@ -186,7 +186,7 @@ func (p *Pool) ProbeNotary() bool {
 	return err == nil
 }
 
-func (p *Pool) conn() *client.Client {
+func (p *Pool) conn() *rpcclient.Client {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 	return p.rpc
@@ -208,8 +208,8 @@ func (p *Pool) establishNewConnection() error {
 	return fmt.Errorf("no healthy client")
 }
 
-func neoGoClient(ctx context.Context, endpoint string, opts client.Options) (*client.Client, error) {
-	cli, err := client.New(ctx, endpoint, opts)
+func neoGoClient(ctx context.Context, endpoint string, opts rpcclient.Options) (*rpcclient.Client, error) {
+	cli, err := rpcclient.New(ctx, endpoint, opts)
 	if err != nil {
 		return nil, fmt.Errorf("can't create neo-go client: %w", err)
 	}
