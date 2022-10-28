@@ -47,7 +47,7 @@ func NewNetmap(p NetmapArgs) (*Netmap, error) {
 	return &Netmap{
 		pool:           p.Pool,
 		contractHash:   p.NetmapContract,
-		notaryDisabled: !p.Pool.ProbeNotary(),
+		notaryDisabled: !p.Pool.IsNotaryEnabled(),
 		logger:         p.Logger,
 	}, nil
 }
