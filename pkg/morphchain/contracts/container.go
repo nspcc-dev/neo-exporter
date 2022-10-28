@@ -1,7 +1,7 @@
 package contracts
 
 import (
-	"github.com/nspcc-dev/neo-go/pkg/smartcontract"
+	"github.com/nspcc-dev/neo-go/pkg/rpcclient/unwrap"
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/pool"
 )
@@ -24,14 +24,5 @@ func NewContainer(p *pool.Pool, contractHash util.Uint160) (*Container, error) {
 }
 
 func (c *Container) Total() (int64, error) {
-	res, err := c.pool.InvokeFunction(c.contractHash, count, []smartcontract.Parameter{}, nil)
-	if err != nil {
-		return 0, err
-	}
-
-	if err = getInvocationError(res); err != nil {
-		return 0, err
-	}
-
-	return getInt64(res.Stack)
+	return unwrap.Int64(c.pool.Call(c.contractHash, count))
 }

@@ -11,8 +11,7 @@ import (
 	"github.com/nspcc-dev/hrw"
 	"github.com/nspcc-dev/neo-go/pkg/core/native/noderoles"
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
-
-	"github.com/nspcc-dev/neo-go/pkg/smartcontract"
+	"github.com/nspcc-dev/neo-go/pkg/rpcclient/unwrap"
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	"github.com/nspcc-dev/neofs-api-go/v2/rpc/client"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/monitor"
@@ -128,85 +127,38 @@ func (c *Netmap) FetchInnerRingKeys() (keys.PublicKeys, error) {
 }
 
 func (c *Netmap) Epoch() (int64, error) {
-	res, err := c.pool.InvokeFunction(c.contractHash, epochMethod, []smartcontract.Parameter{}, nil)
-	if err != nil {
-		return 0, err
-	}
-
-	if err = getInvocationError(res); err != nil {
-		return 0, err
-	}
-
-	return getInt64(res.Stack)
+	return unwrap.Int64(c.pool.Call(c.contractHash, epochMethod))
 }
 
 func (c *Netmap) Netmap() ([]*netmap.NodeInfo, error) {
-	res, err := c.pool.InvokeFunction(c.contractHash, netmapMethod, []smartcontract.Parameter{}, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	if err = getInvocationError(res); err != nil {
-		return nil, err
-	}
-
-	arr, err := getArray(res.Stack)
-	if err != nil {
-		return nil, err
-	}
-
-	infos := make([]*netmap.NodeInfo, 0, len(arr))
-	for _, item := range arr {
-		nodeInfo, err := parseNodeInfo(item)
-		if err != nil {
-			return nil, err
-		}
-		infos = append(infos, nodeInfo)
-	}
-
-	return infos, nil
+	return c.getNodesInfo(netmapMethod)
 }
 
 func (c *Netmap) NetmapCandidates() ([]*netmap.NodeInfo, error) {
-	res, err := c.pool.InvokeFunction(c.contractHash, netmapCandidatesMethod, []smartcontract.Parameter{}, nil)
+	return c.getNodesInfo(netmapCandidatesMethod)
+}
+
+func (c *Netmap) getNodesInfo(method string) ([]*netmap.NodeInfo, error) {
+	arr, err := unwrap.Array(c.pool.Call(c.contractHash, method))
 	if err != nil {
 		return nil, err
 	}
 
-	if err = getInvocationError(res); err != nil {
-		return nil, err
-	}
-
-	arr, err := getArray(res.Stack)
-	if err != nil {
-		return nil, err
-	}
-
-	candidates := make([]*netmap.NodeInfo, 0, len(arr))
-
+	nodes := make([]*netmap.NodeInfo, 0, len(arr))
 	for _, item := range arr {
 		nodeInfo, err := parseNodeInfo(item)
 		if err != nil {
 			return nil, err
 		}
 
-		candidates = append(candidates, nodeInfo)
+		nodes = append(nodes, nodeInfo)
 	}
 
-	return candidates, nil
+	return nodes, nil
 }
 
 func (c *Netmap) InnerRingList() (keys.PublicKeys, error) {
-	res, err := c.pool.InvokeFunction(c.contractHash, innerRingListMethod, []smartcontract.Parameter{}, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	if err = getInvocationError(res); err != nil {
-		return nil, err
-	}
-
-	arr, err := getArray(res.Stack)
+	arr, err := unwrap.Array(c.pool.Call(c.contractHash, innerRingListMethod))
 	if err != nil {
 		return nil, err
 	}
@@ -255,10 +207,10 @@ func processNode(logger *zap.Logger, node *netmap.NodeInfo) (*monitor.Node, erro
 		)
 	}
 
-	attrs := make(map[string]string)
-	//for _, attr := range node.Attributes() {
-	//	attrs[attr.Key()] = attr.Value()
-	//}
+	attrs := make(map[string]string, node.NumberOfAttributes())
+	node.IterateAttributes(func(key, value string) {
+		attrs[key] = value
+	})
 
 	return &monitor.Node{
 		ID:         hrw.Hash(node.PublicKey()),
