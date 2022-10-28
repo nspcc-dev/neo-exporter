@@ -10,21 +10,21 @@ import (
 	"github.com/nspcc-dev/neo-go/pkg/core/native/nativenames"
 	"github.com/nspcc-dev/neo-go/pkg/core/native/noderoles"
 	"github.com/nspcc-dev/neo-go/pkg/core/state"
-	"github.com/nspcc-dev/neo-go/pkg/core/transaction"
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
 	"github.com/nspcc-dev/neo-go/pkg/neorpc/result"
 	"github.com/nspcc-dev/neo-go/pkg/rpcclient"
-	"github.com/nspcc-dev/neo-go/pkg/smartcontract"
+	"github.com/nspcc-dev/neo-go/pkg/rpcclient/invoker"
 	"github.com/nspcc-dev/neo-go/pkg/util"
 )
 
 // Pool represent virtual connection to the Neo network to communicate
 // with multiple Neo servers.
 type Pool struct {
-	ctx  context.Context
-	mu   sync.RWMutex
-	rpc  *rpcclient.Client
-	opts rpcclient.Options
+	ctx     context.Context
+	mu      sync.RWMutex
+	rpc     *rpcclient.Client
+	invoker *invoker.Invoker
+	opts    rpcclient.Options
 
 	lastHealthyTimestamp int64
 	recheckInterval      time.Duration
@@ -93,6 +93,21 @@ func (p *Pool) nextConnection() (*rpcclient.Client, bool, error) {
 	return p.conn(), true, nil
 }
 
+// nextInvoker returns invoker wrapper on healthy connection,
+// the second resp value is true if current connection was updated.
+// Returns error if there are no healthy connections.
+func (p *Pool) nextInvoker() (*invoker.Invoker, bool, error) {
+	if p.isCurrentHealthy() {
+		return p.invokerConn(), false, nil
+	}
+
+	if err := p.establishNewConnection(); err != nil {
+		return nil, false, err
+	}
+
+	return p.invokerConn(), true, nil
+}
+
 // GetContractStateByID queries contract information, according to the contract ID.
 func (p *Pool) GetContractStateByID(id int32) (*state.Contract, error) {
 	conn, _, err := p.nextConnection()
@@ -133,16 +148,16 @@ func (p *Pool) NEP17TotalSupply(tokenHash util.Uint160) (int64, error) {
 	return conn.NEP17TotalSupply(tokenHash)
 }
 
-// InvokeFunction returns the results after calling the smart contract scripthash
+// Call returns the results after calling the smart contract scripthash
 // with the given operation and parameters.
 // NOTE: this is test invoke and will not affect the blockchain.
-func (p *Pool) InvokeFunction(contract util.Uint160, operation string, params []smartcontract.Parameter, signers []transaction.Signer) (*result.Invoke, error) {
-	conn, _, err := p.nextConnection()
+func (p *Pool) Call(contract util.Uint160, operation string, params ...interface{}) (*result.Invoke, error) {
+	conn, _, err := p.nextInvoker()
 	if err != nil {
 		return nil, err
 	}
 
-	return conn.InvokeFunction(contract, operation, params, signers)
+	return conn.Call(contract, operation, params...)
 }
 
 // GetBlockCount returns the number of blocks in the main chain.
@@ -192,6 +207,12 @@ func (p *Pool) conn() *rpcclient.Client {
 	return p.rpc
 }
 
+func (p *Pool) invokerConn() *invoker.Invoker {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+	return p.invoker
+}
+
 func (p *Pool) establishNewConnection() error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -200,6 +221,7 @@ func (p *Pool) establishNewConnection() error {
 	for i := p.next; i < p.next+len(p.endpoints); i++ {
 		index := i % len(p.endpoints)
 		if p.rpc, err = neoGoClient(p.ctx, p.endpoints[index], p.opts); err == nil {
+			p.invoker = invoker.New(p.rpc, nil)
 			p.next = (index + 1) % len(p.endpoints)
 			return nil
 		}

@@ -4,13 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math/big"
 
 	"github.com/nspcc-dev/neo-go/pkg/core/native/nativenames"
-	"github.com/nspcc-dev/neo-go/pkg/smartcontract"
+	"github.com/nspcc-dev/neo-go/pkg/rpcclient/unwrap"
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	"github.com/nspcc-dev/neo-go/pkg/vm/stackitem"
-	"github.com/nspcc-dev/neo-go/pkg/vm/vmstate"
 	"github.com/nspcc-dev/neofs-contract/nns"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/locode"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/monitor"
@@ -182,37 +180,25 @@ func getScriptHash(cfg *viper.Viper, cli *pool.Pool, nnsKey, configKey string) (
 }
 
 func nnsResolve(c *pool.Pool, nnsHash util.Uint160, domain string) (util.Uint160, error) {
-	result, err := c.InvokeFunction(nnsHash, "resolve", []smartcontract.Parameter{
-		{
-			Type:  smartcontract.StringType,
-			Value: domain,
-		},
-		{
-			Type:  smartcontract.IntegerType,
-			Value: big.NewInt(int64(nns.TXT)),
-		},
-	}, nil)
+	item, err := unwrap.Item(c.Call(nnsHash, "resolve", domain, int64(nns.TXT)))
 	if err != nil {
-		return util.Uint160{}, err
+		return util.Uint160{}, fmt.Errorf("contract invocation: %w", err)
 	}
-	if result.State != vmstate.Halt.String() {
-		return util.Uint160{}, fmt.Errorf("invocation failed: %s", result.FaultException)
-	}
-	if len(result.Stack) == 0 {
-		return util.Uint160{}, errors.New("result stack is empty")
+
+	if _, ok := item.(stackitem.Null); ok {
+		return util.Uint160{}, errors.New("NNS record is missing")
 	}
 
 	// Parse the result of resolving NNS record.
 	// It works with multiple formats (corresponding to multiple NNS versions).
 	// If array of hashes is provided, it returns only the first one.
-	res := result.Stack[0]
-	if arr, ok := res.Value().([]stackitem.Item); ok {
+	if arr, ok := item.Value().([]stackitem.Item); ok {
 		if len(arr) == 0 {
 			return util.Uint160{}, errors.New("NNS record is missing")
 		}
-		res = arr[0]
+		item = arr[0]
 	}
-	bs, err := res.TryBytes()
+	bs, err := item.TryBytes()
 	if err != nil {
 		return util.Uint160{}, fmt.Errorf("malformed response: %w", err)
 	}
