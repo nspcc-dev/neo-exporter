@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/nspcc-dev/neo-go/pkg/core/native/nativenames"
 	"github.com/nspcc-dev/neo-go/pkg/rpcclient/unwrap"
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	"github.com/nspcc-dev/neo-go/pkg/vm/stackitem"
@@ -128,9 +127,6 @@ func New(ctx context.Context, cfg *viper.Viper) (*monitor.Monitor, error) {
 		logger.Info("neofs contract ignored")
 	}
 
-	_, err = sideNeogoClient.GetNativeContractHash(nativenames.Notary)
-	notaryEnabled := err == nil
-
 	geoFetcher := locode.New(
 		locode.Prm{
 			Path: cfg.GetString(cfgLocodeDB),
@@ -151,7 +147,7 @@ func New(ctx context.Context, cfg *viper.Viper) (*monitor.Monitor, error) {
 		SideBlFetcher:          sideBalanceFetcher,
 		MainBlFetcher:          mainBalanceFetcher,
 		CnrFetcher:             cnrFetcher,
-		SideChainNotaryEnabled: notaryEnabled,
+		SideChainNotaryEnabled: sideNeogoClient.IsNotaryEnabled(),
 	}), nil
 }
 

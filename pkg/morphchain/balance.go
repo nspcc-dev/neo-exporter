@@ -1,11 +1,10 @@
 package morphchain
 
 import (
-	"fmt"
-
-	"github.com/nspcc-dev/neo-go/pkg/core/native/nativenames"
 	"github.com/nspcc-dev/neo-go/pkg/crypto/hash"
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
+	"github.com/nspcc-dev/neo-go/pkg/rpcclient/gas"
+	"github.com/nspcc-dev/neo-go/pkg/rpcclient/notary"
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/pool"
 )
@@ -23,17 +22,10 @@ type (
 )
 
 func NewBalanceFetcher(p BalanceFetcherArgs) (*BalanceFetcher, error) {
-	gas, err := p.Cli.GetNativeContractHash(nativenames.Gas)
-	if err != nil {
-		return nil, fmt.Errorf("can't get native GAS contract address: %w", err)
-	}
-
-	notary, _ := p.Cli.GetNativeContractHash(nativenames.Notary)
-
 	return &BalanceFetcher{
 		cli:    p.Cli,
-		gas:    gas,
-		notary: notary,
+		gas:    gas.Hash,
+		notary: notary.Hash,
 	}, nil
 }
 

@@ -14,6 +14,8 @@ import (
 	"github.com/nspcc-dev/neo-go/pkg/neorpc/result"
 	"github.com/nspcc-dev/neo-go/pkg/rpcclient"
 	"github.com/nspcc-dev/neo-go/pkg/rpcclient/invoker"
+	"github.com/nspcc-dev/neo-go/pkg/rpcclient/nep17"
+	"github.com/nspcc-dev/neo-go/pkg/rpcclient/rolemgmt"
 	"github.com/nspcc-dev/neo-go/pkg/util"
 )
 
@@ -80,7 +82,7 @@ func (p *Pool) isCurrentHealthy() bool {
 
 // nextConnection returns healthy connection,
 // the second resp value is true if current connection was updated.
-// Returns error if there are not healthy connections.
+// Returns error if there are no healthy connections.
 func (p *Pool) nextConnection() (*rpcclient.Client, bool, error) {
 	if p.isCurrentHealthy() {
 		return p.conn(), false, nil
@@ -96,16 +98,16 @@ func (p *Pool) nextConnection() (*rpcclient.Client, bool, error) {
 // nextInvoker returns invoker wrapper on healthy connection,
 // the second resp value is true if current connection was updated.
 // Returns error if there are no healthy connections.
-func (p *Pool) nextInvoker() (*invoker.Invoker, bool, error) {
+func (p *Pool) nextInvoker() (*invoker.Invoker, error) {
 	if p.isCurrentHealthy() {
-		return p.invokerConn(), false, nil
+		return p.invokerConn(), nil
 	}
 
 	if err := p.establishNewConnection(); err != nil {
-		return nil, false, err
+		return nil, err
 	}
 
-	return p.invokerConn(), true, nil
+	return p.invokerConn(), nil
 }
 
 // GetContractStateByID queries contract information, according to the contract ID.
@@ -118,41 +120,52 @@ func (p *Pool) GetContractStateByID(id int32) (*state.Contract, error) {
 	return conn.GetContractStateByID(id)
 }
 
-// GetNativeContractHash returns native contract hash by its name.
-func (p *Pool) GetNativeContractHash(name string) (util.Uint160, error) {
+// IsNotaryEnabled checks if notary is enabled.
+func (p *Pool) IsNotaryEnabled() bool {
 	conn, _, err := p.nextConnection()
 	if err != nil {
-		return util.Uint160{}, err
+		return false
 	}
 
-	return conn.GetNativeContractHash(name)
+	_, err = conn.GetContractStateByAddressOrName(nativenames.Notary)
+	return err == nil
 }
 
 // NEP17BalanceOf invokes `balanceOf` NEP17 method on a specified contract.
 func (p *Pool) NEP17BalanceOf(tokenHash, acc util.Uint160) (int64, error) {
-	conn, _, err := p.nextConnection()
+	invokerConn, err := p.nextInvoker()
 	if err != nil {
 		return 0, err
 	}
 
-	return conn.NEP17BalanceOf(tokenHash, acc)
+	res, err := nep17.NewReader(invokerConn, tokenHash).BalanceOf(acc)
+	if err != nil {
+		return 0, err
+	}
+
+	return res.Int64(), nil
 }
 
 // NEP17TotalSupply invokes `totalSupply` NEP17 method on a specified contract.
 func (p *Pool) NEP17TotalSupply(tokenHash util.Uint160) (int64, error) {
-	conn, _, err := p.nextConnection()
+	invokerConn, err := p.nextInvoker()
 	if err != nil {
 		return 0, err
 	}
 
-	return conn.NEP17TotalSupply(tokenHash)
+	res, err := nep17.NewReader(invokerConn, tokenHash).TotalSupply()
+	if err != nil {
+		return 0, err
+	}
+
+	return res.Int64(), nil
 }
 
 // Call returns the results after calling the smart contract scripthash
 // with the given operation and parameters.
 // NOTE: this is test invoke and will not affect the blockchain.
 func (p *Pool) Call(contract util.Uint160, operation string, params ...interface{}) (*result.Invoke, error) {
-	conn, _, err := p.nextInvoker()
+	conn, err := p.nextInvoker()
 	if err != nil {
 		return nil, err
 	}
@@ -172,12 +185,12 @@ func (p *Pool) GetBlockCount() (uint32, error) {
 
 // GetDesignatedByRole invokes `getDesignatedByRole` method on a native RoleManagement contract.
 func (p *Pool) GetDesignatedByRole(role noderoles.Role, height uint32) (keys.PublicKeys, error) {
-	conn, _, err := p.nextConnection()
+	invokerConn, err := p.nextInvoker()
 	if err != nil {
 		return nil, err
 	}
 
-	return conn.GetDesignatedByRole(role, height)
+	return rolemgmt.NewReader(invokerConn).GetDesignatedByRole(role, height)
 }
 
 // GetCommittee returns the current public keys of NEO nodes in committee.
@@ -188,17 +201,6 @@ func (p *Pool) GetCommittee() (keys.PublicKeys, error) {
 	}
 
 	return conn.GetCommittee()
-}
-
-// ProbeNotary checks if native `Notary` contract is presented on chain.
-func (p *Pool) ProbeNotary() bool {
-	conn, _, err := p.nextConnection()
-	if err != nil {
-		return false
-	}
-
-	_, err = conn.GetNativeContractHash(nativenames.Notary)
-	return err == nil
 }
 
 func (p *Pool) conn() *rpcclient.Client {
