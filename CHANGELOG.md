@@ -3,6 +3,12 @@ Changelog for NeoFS Monitor
 
 ## [Unreleased]
 
+## [0.9.5] - 2022-12-29
+
+### Changed
+- Removed neofs-node dependency (#75)
+- Fixed compatibility with the netmap contract version 0.16.0 (#81)
+
 ## [0.9.0] - 2022-07-27
 
 ### Changed
