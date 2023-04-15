@@ -1,8 +1,13 @@
 version: '2.4'
 
+networks:
+  internet:
+    external:
+      name: basenet_internet
+
 services:
   grafana:
-    image: grafana/grafana:8.4.2
+    image: grafana/grafana:9.4.7
     container_name: grafana
     depends_on:
       - prometheus
@@ -18,7 +23,7 @@ services:
     restart: on-failure
 
   prometheus:
-    image: prom/prometheus:v2.24.0
+    image: prom/prometheus:v2.43.0
     container_name: prometheus
     volumes:
       - ./prometheus/:/etc/prometheus/
@@ -32,22 +37,17 @@ services:
     restart: on-failure
 
   neofs-net-monitor:
-    image: nspccdev/neofs-net-monitor:0.9.0
+    image: nspccdev/neofs-net-monitor:0.9.5
     container_name: neofs-net-monitor
     depends_on:
       - prometheus
     environment:
-      - NEOFS_NET_MONITOR_MAINNET_RPC_ENDPOINT=http://192.168.130.50:30333
-      - NEOFS_NET_MONITOR_MORPH_RPC_ENDPOINT=http://192.168.130.90:30333
       - NEOFS_NET_MONITOR_METRICS_INTERVAL=15s
       - NEOFS_NET_MONITOR_LOCODE_DB_PATH=locode/db
+      - NEOFS_NET_MONITOR_MAINNET_RPC_ENDPOINT=http://192.168.130.50:30333
+      - NEOFS_NET_MONITOR_MORPH_RPC_ENDPOINT=http://192.168.130.90:30333
     volumes:
       - ./../locode/locode_db:/locode/db
     networks:
       - internet
     restart: on-failure
-
-networks:
-  internet:
-    external:
-      name: basenet_internet

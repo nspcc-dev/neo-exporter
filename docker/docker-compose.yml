@@ -6,7 +6,7 @@ networks:
 
 services:
   grafana:
-    image: grafana/grafana:8.4.2
+    image: grafana/grafana:9.4.7
     container_name: grafana
     depends_on:
       - prometheus
@@ -22,7 +22,7 @@ services:
     restart: on-failure
 
   prometheus:
-    image: prom/prometheus:v2.24.0
+    image: prom/prometheus:v2.43.0
     container_name: prometheus
     volumes:
       - ./prometheus/:/etc/prometheus/
@@ -34,16 +34,16 @@ services:
     restart: on-failure
 
   neofs-net-monitor:
-    image: nspccdev/neofs-net-monitor:0.9.0
+    image: nspccdev/neofs-net-monitor:0.9.5
     container_name: neofs-net-monitor
     depends_on:
       - prometheus
     environment:
-      - NEOFS_NET_MONITOR_MAINNET_RPC_ENDPOINT=https://rpc10.n3.nspcc.ru:10331
-      - NEOFS_NET_MONITOR_MORPH_RPC_ENDPOINT=https://rpc1.morph.fs.neo.org:40341
       - NEOFS_NET_MONITOR_METRICS_INTERVAL=15s
       - NEOFS_NET_MONITOR_LOCODE_DB_PATH=locode/db
-      - NEOFS_NET_MONITOR_CONTRACTS_NEOFS=2cafa46838e8b564468ebd868dcafdd99dce6221
+      - NEOFS_NET_MONITOR_MAINNET_RPC_ENDPOINT=${NEOFS_NET_MONITOR_MAINNET_RPC_ENDPOINT}
+      - NEOFS_NET_MONITOR_MORPH_RPC_ENDPOINT=${NEOFS_NET_MONITOR_MORPH_RPC_ENDPOINT}
+      - NEOFS_NET_MONITOR_CONTRACTS_NEOFS=${NEOFS_NET_MONITOR_CONTRACTS_NEOFS}
     volumes:
       - ./../locode/locode_db:/locode/db
     networks:
