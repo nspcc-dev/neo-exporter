@@ -625,7 +625,7 @@
           "refId": "A"
         }
       ],
-      "title": "Network epoch",
+      "title": "Epoch",
       "type": "stat"
     },
     {
@@ -645,10 +645,6 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           }
@@ -684,7 +680,7 @@
             "uid": "${datasource}"
           },
           "exemplar": true,
-          "expr": "neofs_net_monitor_containers_number",
+          "expr": "neofs_net_monitor_containers_number{net=\"$net\"}",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -1004,7 +1000,7 @@
             "uid": "$datasource"
           },
           "exemplar": true,
-          "expr": "neofs_net_monitor_main_chain_supply/1e8",
+          "expr": "neofs_net_monitor_main_chain_supply{net=\"$net\"}/1e8",
           "interval": "",
           "legendFormat": "Main chain supply",
           "refId": "A"
@@ -1014,7 +1010,7 @@
             "uid": "$datasource"
           },
           "exemplar": true,
-          "expr": "neofs_net_monitor_side_chain_supply/1e12",
+          "expr": "neofs_net_monitor_side_chain_supply{net=\"$net\"}/1e12",
           "hide": false,
           "interval": "",
           "legendFormat": "Side chain supply",
@@ -1025,7 +1021,7 @@
             "uid": "$datasource"
           },
           "exemplar": true,
-          "expr": "abs(neofs_net_monitor_main_chain_supply*1e4 - neofs_net_monitor_side_chain_supply)/1e12",
+          "expr": "abs(neofs_net_monitor_main_chain_supply{net=\"$net\"}*1e4 - neofs_net_monitor_side_chain_supply{net=\"$net\"})/1e12",
           "hide": false,
           "interval": "",
           "legendFormat": "delta",
