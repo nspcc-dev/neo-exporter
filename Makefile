@@ -40,10 +40,10 @@ locode:
 	gzip -dfk ${LOCODE_DIR}/${LOCODE_FILE}
 
 up: locode
-	@docker-compose -f docker/docker-compose.yml up -d
+	@docker-compose -f docker/docker-compose.yml --env-file docker/mainnet.env up -d
 
 up-testnet: locode
-	@docker-compose -f docker/docker-compose.testnet.yml up -d
+	@docker-compose -f docker/docker-compose.yml --env-file docker/testnet.env up -d
 
 up-devenv: locode
 	@docker-compose -f docker/docker-compose.devenv.yml up -d
@@ -52,7 +52,7 @@ down:
 	@docker-compose -f docker/docker-compose.yml down
 
 down-testnet:
-	@docker-compose -f docker/docker-compose.testnet.yml down
+	@docker-compose -f docker/docker-compose.yml down
 
 down-devenv:
 	@docker-compose -f docker/docker-compose.devenv.yml down
