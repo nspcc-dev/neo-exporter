@@ -1,6 +1,6 @@
 module github.com/nspcc-dev/neofs-net-monitor
 
-go 1.17
+go 1.19
 
 require (
 	github.com/multiformats/go-multiaddr v0.4.0
