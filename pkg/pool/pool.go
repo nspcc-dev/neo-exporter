@@ -164,7 +164,7 @@ func (p *Pool) NEP17TotalSupply(tokenHash util.Uint160) (int64, error) {
 // Call returns the results after calling the smart contract scripthash
 // with the given operation and parameters.
 // NOTE: this is test invoke and will not affect the blockchain.
-func (p *Pool) Call(contract util.Uint160, operation string, params ...interface{}) (*result.Invoke, error) {
+func (p *Pool) Call(contract util.Uint160, operation string, params ...any) (*result.Invoke, error) {
 	conn, err := p.nextInvoker()
 	if err != nil {
 		return nil, err
