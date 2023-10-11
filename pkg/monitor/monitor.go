@@ -66,34 +66,32 @@ type (
 		proxy   *util.Uint160
 		neofs   *util.Uint160
 
-		logger                 *zap.Logger
-		sleep                  time.Duration
-		metricsServer          http.Server
-		geoFetcher             *locode.DB
-		alpFetcher             AlphabetFetcher
-		nmFetcher              NetmapFetcher
-		irFetcher              InnerRingFetcher
-		sideBlFetcher          BalanceFetcher
-		mainBlFetcher          BalanceFetcher
-		cnrFetcher             ContainerFetcher
-		sideChainNotaryEnabled bool
+		logger        *zap.Logger
+		sleep         time.Duration
+		metricsServer http.Server
+		geoFetcher    *locode.DB
+		alpFetcher    AlphabetFetcher
+		nmFetcher     NetmapFetcher
+		irFetcher     InnerRingFetcher
+		sideBlFetcher BalanceFetcher
+		mainBlFetcher BalanceFetcher
+		cnrFetcher    ContainerFetcher
 	}
 
 	Args struct {
-		Balance                util.Uint160
-		Proxy                  *util.Uint160
-		Neofs                  *util.Uint160
-		Logger                 *zap.Logger
-		Sleep                  time.Duration
-		MetricsAddress         string
-		GeoFetcher             *locode.DB
-		AlpFetcher             AlphabetFetcher
-		NmFetcher              NetmapFetcher
-		IRFetcher              InnerRingFetcher
-		SideBlFetcher          BalanceFetcher
-		MainBlFetcher          BalanceFetcher
-		CnrFetcher             ContainerFetcher
-		SideChainNotaryEnabled bool
+		Balance        util.Uint160
+		Proxy          *util.Uint160
+		Neofs          *util.Uint160
+		Logger         *zap.Logger
+		Sleep          time.Duration
+		MetricsAddress string
+		GeoFetcher     *locode.DB
+		AlpFetcher     AlphabetFetcher
+		NmFetcher      NetmapFetcher
+		IRFetcher      InnerRingFetcher
+		SideBlFetcher  BalanceFetcher
+		MainBlFetcher  BalanceFetcher
+		CnrFetcher     ContainerFetcher
 	}
 )
 
@@ -108,14 +106,13 @@ func New(p Args) *Monitor {
 			Addr:    p.MetricsAddress,
 			Handler: promhttp.Handler(),
 		},
-		geoFetcher:             p.GeoFetcher,
-		alpFetcher:             p.AlpFetcher,
-		nmFetcher:              p.NmFetcher,
-		irFetcher:              p.IRFetcher,
-		sideBlFetcher:          p.SideBlFetcher,
-		mainBlFetcher:          p.MainBlFetcher,
-		cnrFetcher:             p.CnrFetcher,
-		sideChainNotaryEnabled: p.SideChainNotaryEnabled,
+		geoFetcher:    p.GeoFetcher,
+		alpFetcher:    p.AlpFetcher,
+		nmFetcher:     p.NmFetcher,
+		irFetcher:     p.IRFetcher,
+		sideBlFetcher: p.SideBlFetcher,
+		mainBlFetcher: p.MainBlFetcher,
+		cnrFetcher:    p.CnrFetcher,
 	}
 }
 
@@ -264,13 +261,11 @@ func (m *Monitor) processNetworkMap(nm NetmapInfo, candidates NetmapCandidatesIn
 			exportCountries[nodeLoc]++
 		}
 
-		if m.sideChainNotaryEnabled {
-			balanceNotary, err := m.sideBlFetcher.FetchNotary(*node.PublicKey)
-			if err != nil {
-				m.logger.Debug("can't fetch notary balance", zap.String("key", keyHex), zap.Error(err))
-			} else {
-				exportBalancesNotary[keyHex] = balanceNotary
-			}
+		balanceNotary, err := m.sideBlFetcher.FetchNotary(*node.PublicKey)
+		if err != nil {
+			m.logger.Debug("can't fetch notary balance", zap.String("key", keyHex), zap.Error(err))
+		} else {
+			exportBalancesNotary[keyHex] = balanceNotary
 		}
 	}
 
@@ -399,13 +394,11 @@ func (m *Monitor) processAlphabet(alphabet keys.PublicKeys) {
 			exportGasBalances[keyHex] = balanceGAS
 		}
 
-		if m.sideChainNotaryEnabled {
-			balanceNotary, err := m.sideBlFetcher.FetchNotary(*key)
-			if err != nil {
-				m.logger.Debug("can't fetch notary balance", zap.String("key", keyHex), zap.Error(err))
-			} else {
-				exportNotaryBalances[keyHex] = balanceNotary
-			}
+		balanceNotary, err := m.sideBlFetcher.FetchNotary(*key)
+		if err != nil {
+			m.logger.Debug("can't fetch notary balance", zap.String("key", keyHex), zap.Error(err))
+		} else {
+			exportNotaryBalances[keyHex] = balanceNotary
 		}
 	}
 
