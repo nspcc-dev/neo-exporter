@@ -167,4 +167,26 @@ var (
 			Help:      "Number of available containers",
 		},
 	)
+
+	chainHeight = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Subsystem: "neofs_net_monitor",
+			Name:      "chain_height",
+			Help:      "Chain height in blocks",
+		},
+		[]string{
+			"host",
+		},
+	)
+
+	chainState = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Subsystem: "neofs_net_monitor",
+			Name:      "chain_state",
+			Help:      "Chain state hash in specific height",
+		},
+		[]string{
+			"host", "hash",
+		},
+	)
 )
