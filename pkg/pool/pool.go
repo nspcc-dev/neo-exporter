@@ -7,7 +7,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/nspcc-dev/neo-go/pkg/core/native/nativenames"
 	"github.com/nspcc-dev/neo-go/pkg/core/native/noderoles"
 	"github.com/nspcc-dev/neo-go/pkg/core/state"
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
@@ -118,17 +117,6 @@ func (p *Pool) GetContractStateByID(id int32) (*state.Contract, error) {
 	}
 
 	return conn.GetContractStateByID(id)
-}
-
-// IsNotaryEnabled checks if notary is enabled.
-func (p *Pool) IsNotaryEnabled() bool {
-	conn, _, err := p.nextConnection()
-	if err != nil {
-		return false
-	}
-
-	_, err = conn.GetContractStateByAddressOrName(nativenames.Notary)
-	return err == nil
 }
 
 // NEP17BalanceOf invokes `balanceOf` NEP17 method on a specified contract.

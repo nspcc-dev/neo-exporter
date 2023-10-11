@@ -134,20 +134,19 @@ func New(ctx context.Context, cfg *viper.Viper) (*monitor.Monitor, error) {
 	)
 
 	return monitor.New(monitor.Args{
-		Balance:                balance,
-		Proxy:                  proxy,
-		Neofs:                  neofs,
-		Logger:                 logger,
-		Sleep:                  cfg.GetDuration(cfgMetricsInterval),
-		MetricsAddress:         cfg.GetString(cfgMetricsEndpoint),
-		GeoFetcher:             geoFetcher,
-		AlpFetcher:             alphabetFetcher,
-		NmFetcher:              nmFetcher,
-		IRFetcher:              nmFetcher,
-		SideBlFetcher:          sideBalanceFetcher,
-		MainBlFetcher:          mainBalanceFetcher,
-		CnrFetcher:             cnrFetcher,
-		SideChainNotaryEnabled: sideNeogoClient.IsNotaryEnabled(),
+		Balance:        balance,
+		Proxy:          proxy,
+		Neofs:          neofs,
+		Logger:         logger,
+		Sleep:          cfg.GetDuration(cfgMetricsInterval),
+		MetricsAddress: cfg.GetString(cfgMetricsEndpoint),
+		GeoFetcher:     geoFetcher,
+		AlpFetcher:     alphabetFetcher,
+		NmFetcher:      nmFetcher,
+		IRFetcher:      nmFetcher,
+		SideBlFetcher:  sideBalanceFetcher,
+		MainBlFetcher:  mainBalanceFetcher,
+		CnrFetcher:     cnrFetcher,
 	}), nil
 }
 

@@ -45,10 +45,9 @@ const (
 // NewNetmap creates Netmap to interact with 'netmap' contract in morph chain.
 func NewNetmap(p NetmapArgs) (*Netmap, error) {
 	return &Netmap{
-		pool:           p.Pool,
-		contractHash:   p.NetmapContract,
-		notaryDisabled: !p.Pool.IsNotaryEnabled(),
-		logger:         p.Logger,
+		pool:         p.Pool,
+		contractHash: p.NetmapContract,
+		logger:       p.Logger,
 	}, nil
 }
 
@@ -110,13 +109,9 @@ func (c *Netmap) FetchInnerRingKeys() (keys.PublicKeys, error) {
 		height     uint32
 	)
 
-	if c.notaryDisabled {
-		publicKeys, err = c.InnerRingList()
-	} else {
-		height, err = c.pool.GetBlockCount()
-		if err == nil {
-			publicKeys, err = c.pool.GetDesignatedByRole(noderoles.NeoFSAlphabet, height)
-		}
+	height, err = c.pool.GetBlockCount()
+	if err == nil {
+		publicKeys, err = c.pool.GetDesignatedByRole(noderoles.NeoFSAlphabet, height)
 	}
 
 	if err != nil {
