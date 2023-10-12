@@ -12,10 +12,9 @@ const (
 	delimiter = "."
 
 	// contracts scripthash
-	cfgProxyContract     = "contracts.proxy"
-	cfgBalanceContract   = "contracts.balance"
-	cfgNeoFSContract     = "contracts.neofs"
-	cfgContainerContract = "contracts.container"
+	cfgProxyContract   = "contracts.proxy"
+	cfgBalanceContract = "contracts.balance"
+	cfgNeoFSContract   = "contracts.neofs"
 
 	// neo rpc node related config values
 	mainPrefix = "mainnet"

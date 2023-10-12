@@ -58,7 +58,7 @@ func New(ctx context.Context, cfg *viper.Viper) (*monitor.Monitor, error) {
 		return nil, fmt.Errorf("can't read netmap scripthash: %w", err)
 	}
 
-	containerContract, err := getScriptHash(cfg, sideNeogoClient, "container.neofs", cfgContainerContract)
+	containerContract, err := sideNeogoClient.ResolveContract(rpcnns.NameContainer)
 	if err != nil {
 		return nil, fmt.Errorf("can't read container scripthash: %w", err)
 	}
