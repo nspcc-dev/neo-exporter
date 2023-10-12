@@ -9,6 +9,7 @@ import (
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	"github.com/nspcc-dev/neo-go/pkg/vm/stackitem"
 	"github.com/nspcc-dev/neofs-contract/nns"
+	rpcnns "github.com/nspcc-dev/neofs-contract/rpc/nns"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/locode"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/monitor"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/morphchain"
@@ -52,7 +53,7 @@ func New(ctx context.Context, cfg *viper.Viper) (*monitor.Monitor, error) {
 		return nil, fmt.Errorf("can't create main chain neo-go client: %w", err)
 	}
 
-	netmapContract, err := getScriptHash(cfg, sideNeogoClient, "netmap.neofs", cfgNetmapContract)
+	netmapContract, err := sideNeogoClient.ResolveContract(rpcnns.NameNetmap)
 	if err != nil {
 		return nil, fmt.Errorf("can't read netmap scripthash: %w", err)
 	}

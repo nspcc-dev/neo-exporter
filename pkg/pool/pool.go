@@ -2,11 +2,13 @@ package pool
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/nspcc-dev/neo-go/pkg/core/native/noderoles"
 	"github.com/nspcc-dev/neo-go/pkg/core/state"
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
@@ -16,6 +18,8 @@ import (
 	"github.com/nspcc-dev/neo-go/pkg/rpcclient/nep17"
 	"github.com/nspcc-dev/neo-go/pkg/rpcclient/rolemgmt"
 	"github.com/nspcc-dev/neo-go/pkg/util"
+	"github.com/nspcc-dev/neo-go/pkg/vm/stackitem"
+	rpcnns "github.com/nspcc-dev/neofs-contract/rpc/nns"
 )
 
 // Pool represent virtual connection to the Neo network to communicate
@@ -94,8 +98,7 @@ func (p *Pool) nextConnection() (*rpcclient.Client, bool, error) {
 	return p.conn(), true, nil
 }
 
-// nextInvoker returns invoker wrapper on healthy connection,
-// the second resp value is true if current connection was updated.
+// nextInvoker returns invoker wrapper on healthy connection.
 // Returns error if there are no healthy connections.
 func (p *Pool) nextInvoker() (*invoker.Invoker, error) {
 	if p.isCurrentHealthy() {
@@ -121,7 +124,7 @@ func (p *Pool) GetContractStateByID(id int32) (*state.Contract, error) {
 
 // NEP17BalanceOf invokes `balanceOf` NEP17 method on a specified contract.
 func (p *Pool) NEP17BalanceOf(tokenHash, acc util.Uint160) (int64, error) {
-	invokerConn, err := p.nextInvoker()
+	invokerConn, err := p.NextInvoker()
 	if err != nil {
 		return 0, err
 	}
@@ -136,7 +139,7 @@ func (p *Pool) NEP17BalanceOf(tokenHash, acc util.Uint160) (int64, error) {
 
 // NEP17TotalSupply invokes `totalSupply` NEP17 method on a specified contract.
 func (p *Pool) NEP17TotalSupply(tokenHash util.Uint160) (int64, error) {
-	invokerConn, err := p.nextInvoker()
+	invokerConn, err := p.NextInvoker()
 	if err != nil {
 		return 0, err
 	}
@@ -159,6 +162,32 @@ func (p *Pool) Call(contract util.Uint160, operation string, params ...any) (*re
 	}
 
 	return conn.Call(contract, operation, params...)
+}
+
+// CallAndExpandIterator creates a script containing a call of the specified method
+// of a contract with given parameters (similar to how Call operates). But then this
+// script contains additional code that expects that the result of the first call is
+// an iterator.
+func (p *Pool) CallAndExpandIterator(contract util.Uint160, method string, maxItems int, params ...any) (*result.Invoke, error) {
+	conn, err := p.nextInvoker()
+	if err != nil {
+		return nil, err
+	}
+
+	return conn.CallAndExpandIterator(contract, method, maxItems, params...)
+}
+
+// TerminateSession closes the given session, returning an error if anything
+// goes wrong. It's not strictly required to close the session (it'll expire on
+// the server anyway), but it helps to release server resources earlier.
+func (p *Pool) TerminateSession(_ uuid.UUID) error {
+	return errors.New("unsupported")
+}
+
+// TraverseIterator allows to retrieve the next batch of items from the given
+// iterator in the given session (previously returned from Call).
+func (p *Pool) TraverseIterator(_ uuid.UUID, _ *result.Iterator, _ int) ([]stackitem.Item, error) {
+	return nil, errors.New("unsupported")
 }
 
 // GetBlockCount returns the number of blocks in the main chain.
@@ -232,4 +261,21 @@ func neoGoClient(ctx context.Context, endpoint string, opts rpcclient.Options) (
 	}
 
 	return cli, nil
+}
+
+// ResolveContract helps to take contract address by contract name. Name list can be taken from contract wrappers,
+// for instance [rpcnns.NameNetmap].
+func (p *Pool) ResolveContract(contractName string) (util.Uint160, error) {
+	nnsHash, err := rpcnns.InferHash(p)
+	if err != nil {
+		return util.Uint160{}, fmt.Errorf("GetContractStateByID: %w", err)
+	}
+
+	nnsReader := rpcnns.NewReader(p, nnsHash)
+	addr, err := nnsReader.ResolveFSContract(contractName)
+	if err != nil {
+		return util.Uint160{}, fmt.Errorf("ResolveFSContract [%s]: %w", contractName, err)
+	}
+
+	return addr, nil
 }

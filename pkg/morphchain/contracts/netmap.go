@@ -11,9 +11,9 @@ import (
 	"github.com/nspcc-dev/hrw"
 	"github.com/nspcc-dev/neo-go/pkg/core/native/noderoles"
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
-	"github.com/nspcc-dev/neo-go/pkg/rpcclient/unwrap"
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	"github.com/nspcc-dev/neofs-api-go/v2/rpc/client"
+	rpcnetmap "github.com/nspcc-dev/neofs-contract/rpc/netmap"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/monitor"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/pool"
 	"github.com/nspcc-dev/neofs-sdk-go/netmap"
@@ -23,9 +23,10 @@ import (
 type (
 	Netmap struct {
 		pool           *pool.Pool
-		contractHash   util.Uint160
 		logger         *zap.Logger
 		notaryDisabled bool
+
+		contractReader *rpcnetmap.ContractReader
 	}
 
 	NetmapArgs struct {
@@ -35,19 +36,12 @@ type (
 	}
 )
 
-const (
-	epochMethod            = "epoch"
-	netmapMethod           = "netmap"
-	netmapCandidatesMethod = "netmapCandidates"
-	innerRingListMethod    = "innerRingList"
-)
-
 // NewNetmap creates Netmap to interact with 'netmap' contract in morph chain.
 func NewNetmap(p NetmapArgs) (*Netmap, error) {
 	return &Netmap{
-		pool:         p.Pool,
-		contractHash: p.NetmapContract,
-		logger:       p.Logger,
+		pool:           p.Pool,
+		logger:         p.Logger,
+		contractReader: rpcnetmap.NewReader(p.Pool, p.NetmapContract),
 	}, nil
 }
 
@@ -122,53 +116,34 @@ func (c *Netmap) FetchInnerRingKeys() (keys.PublicKeys, error) {
 }
 
 func (c *Netmap) Epoch() (int64, error) {
-	return unwrap.Int64(c.pool.Call(c.contractHash, epochMethod))
+	e, err := c.contractReader.Epoch()
+	if err != nil {
+		return 0, fmt.Errorf("epoch: %w", err)
+	}
+
+	return e.Int64(), nil
 }
 
 func (c *Netmap) Netmap() ([]*netmap.NodeInfo, error) {
-	return c.getNodesInfo(netmapMethod)
+	return c.parsedNodes((*rpcnetmap.ContractReader).Netmap)
 }
 
 func (c *Netmap) NetmapCandidates() ([]*netmap.NodeInfo, error) {
-	return c.getNodesInfo(netmapCandidatesMethod)
+	return c.parsedNodes((*rpcnetmap.ContractReader).NetmapCandidates)
 }
 
-func (c *Netmap) getNodesInfo(method string) ([]*netmap.NodeInfo, error) {
-	arr, err := unwrap.Array(c.pool.Call(c.contractHash, method))
+func (c *Netmap) parsedNodes(f func(reader *rpcnetmap.ContractReader) ([]*rpcnetmap.NetmapNode, error)) ([]*netmap.NodeInfo, error) {
+	data, err := f(c.contractReader)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("contract reader: %w", err)
 	}
 
-	nodes := make([]*netmap.NodeInfo, 0, len(arr))
-	for _, item := range arr {
-		nodeInfo, err := parseNodeInfo(item)
-		if err != nil {
-			return nil, err
-		}
-
-		nodes = append(nodes, nodeInfo)
+	nodes, err := parseContractNodes(data)
+	if err != nil {
+		return nil, fmt.Errorf("parseContractNodes: %w", err)
 	}
 
 	return nodes, nil
-}
-
-func (c *Netmap) InnerRingList() (keys.PublicKeys, error) {
-	arr, err := unwrap.Array(c.pool.Call(c.contractHash, innerRingListMethod))
-	if err != nil {
-		return nil, err
-	}
-
-	irKeys := make(keys.PublicKeys, 0, len(arr))
-
-	for _, item := range arr {
-		irKey, err := parseIRNode(item)
-		if err != nil {
-			return nil, err
-		}
-		irKeys = append(irKeys, irKey)
-	}
-
-	return irKeys, nil
 }
 
 func processNode(logger *zap.Logger, node *netmap.NodeInfo) (*monitor.Node, error) {

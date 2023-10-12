@@ -12,7 +12,6 @@ const (
 	delimiter = "."
 
 	// contracts scripthash
-	cfgNetmapContract    = "contracts.netmap"
 	cfgProxyContract     = "contracts.proxy"
 	cfgBalanceContract   = "contracts.balance"
 	cfgNeoFSContract     = "contracts.neofs"
@@ -38,7 +37,6 @@ const (
 )
 
 func DefaultConfiguration(cfg *viper.Viper) {
-	cfg.SetDefault(cfgNetmapContract, "")
 	cfg.SetDefault(cfgProxyContract, "")
 
 	cfg.SetDefault(sidePrefix+delimiter+cfgNeoRPCEndpoint, "")
