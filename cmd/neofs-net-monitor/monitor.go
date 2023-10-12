@@ -2,13 +2,9 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
-	"github.com/nspcc-dev/neo-go/pkg/rpcclient/unwrap"
 	"github.com/nspcc-dev/neo-go/pkg/util"
-	"github.com/nspcc-dev/neo-go/pkg/vm/stackitem"
-	"github.com/nspcc-dev/neofs-contract/nns"
 	rpcnns "github.com/nspcc-dev/neofs-contract/rpc/nns"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/locode"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/monitor"
@@ -105,12 +101,12 @@ func New(ctx context.Context, cfg *viper.Viper) (*monitor.Monitor, error) {
 		neofs   *util.Uint160
 	)
 
-	balance, err = getScriptHash(cfg, sideNeogoClient, "balance.neofs", cfgBalanceContract)
+	balance, err = sideNeogoClient.ResolveContract(rpcnns.NameBalance)
 	if err != nil {
 		return nil, fmt.Errorf("balance contract is not available: %w", err)
 	}
 
-	proxyContract, err := getScriptHash(cfg, sideNeogoClient, "proxy.neofs", cfgProxyContract)
+	proxyContract, err := sideNeogoClient.ResolveContract(rpcnns.NameProxy)
 	if err != nil {
 		logger.Info("proxy disabled")
 	} else {
@@ -149,54 +145,4 @@ func New(ctx context.Context, cfg *viper.Viper) (*monitor.Monitor, error) {
 		MainBlFetcher:  mainBalanceFetcher,
 		CnrFetcher:     cnrFetcher,
 	}), nil
-}
-
-const nnsContractID = 1
-
-func getScriptHash(cfg *viper.Viper, cli *pool.Pool, nnsKey, configKey string) (sh util.Uint160, err error) {
-	cs, err := cli.GetContractStateByID(nnsContractID)
-	if err != nil {
-		return sh, fmt.Errorf("NNS contract state: %w", err)
-	}
-
-	hash := cfg.GetString(configKey)
-	if len(hash) == 0 {
-		sh, err = nnsResolve(cli, cs.Hash, nnsKey)
-		if err != nil {
-			return sh, fmt.Errorf("NNS.resolve: %w", err)
-		}
-	} else {
-		sh, err = util.Uint160DecodeStringLE(hash)
-		if err != nil {
-			return sh, fmt.Errorf("NNS u160 decode: %w", err)
-		}
-	}
-
-	return sh, nil
-}
-
-func nnsResolve(c *pool.Pool, nnsHash util.Uint160, domain string) (util.Uint160, error) {
-	item, err := unwrap.Item(c.Call(nnsHash, "resolve", domain, int64(nns.TXT)))
-	if err != nil {
-		return util.Uint160{}, fmt.Errorf("contract invocation: %w", err)
-	}
-
-	if _, ok := item.(stackitem.Null); ok {
-		return util.Uint160{}, errors.New("NNS record is missing")
-	}
-
-	// Parse the result of resolving NNS record.
-	// It works with multiple formats (corresponding to multiple NNS versions).
-	// If array of hashes is provided, it returns only the first one.
-	if arr, ok := item.Value().([]stackitem.Item); ok {
-		if len(arr) == 0 {
-			return util.Uint160{}, errors.New("NNS record is missing")
-		}
-		item = arr[0]
-	}
-	bs, err := item.TryBytes()
-	if err != nil {
-		return util.Uint160{}, fmt.Errorf("malformed response: %w", err)
-	}
-	return util.Uint160DecodeStringLE(string(bs))
 }
