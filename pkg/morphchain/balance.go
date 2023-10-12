@@ -4,6 +4,7 @@ import (
 	"github.com/nspcc-dev/neo-go/pkg/crypto/hash"
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
 	"github.com/nspcc-dev/neo-go/pkg/rpcclient/gas"
+	"github.com/nspcc-dev/neo-go/pkg/rpcclient/nep17"
 	"github.com/nspcc-dev/neo-go/pkg/rpcclient/notary"
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/pool"
@@ -11,9 +12,7 @@ import (
 
 type (
 	BalanceFetcher struct {
-		cli    *pool.Pool
-		gas    util.Uint160
-		notary util.Uint160
+		cli *pool.Pool
 	}
 
 	BalanceFetcherArgs struct {
@@ -23,9 +22,7 @@ type (
 
 func NewBalanceFetcher(p BalanceFetcherArgs) (*BalanceFetcher, error) {
 	return &BalanceFetcher{
-		cli:    p.Cli,
-		gas:    gas.Hash,
-		notary: notary.Hash,
+		cli: p.Cli,
 	}, nil
 }
 
@@ -42,13 +39,28 @@ func (b BalanceFetcher) FetchNotary(key keys.PublicKey) (int64, error) {
 }
 
 func (b BalanceFetcher) FetchGASByScriptHash(sh util.Uint160) (int64, error) {
-	return b.cli.NEP17BalanceOf(b.gas, sh)
+	res, err := gas.NewReader(b.cli).BalanceOf(sh)
+	if err != nil {
+		return 0, err
+	}
+
+	return res.Int64(), nil
 }
 
 func (b BalanceFetcher) FetchNotaryByScriptHash(sh util.Uint160) (int64, error) {
-	return b.cli.NEP17BalanceOf(b.notary, sh)
+	res, err := notary.NewReader(b.cli).BalanceOf(sh)
+	if err != nil {
+		return 0, err
+	}
+
+	return res.Int64(), nil
 }
 
 func (b BalanceFetcher) FetchNEP17TotalSupply(tokenHash util.Uint160) (int64, error) {
-	return b.cli.NEP17TotalSupply(tokenHash)
+	res, err := nep17.NewReader(b.cli, tokenHash).TotalSupply()
+	if err != nil {
+		return 0, err
+	}
+
+	return res.Int64(), nil
 }

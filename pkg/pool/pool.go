@@ -15,7 +15,6 @@ import (
 	"github.com/nspcc-dev/neo-go/pkg/neorpc/result"
 	"github.com/nspcc-dev/neo-go/pkg/rpcclient"
 	"github.com/nspcc-dev/neo-go/pkg/rpcclient/invoker"
-	"github.com/nspcc-dev/neo-go/pkg/rpcclient/nep17"
 	"github.com/nspcc-dev/neo-go/pkg/rpcclient/rolemgmt"
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	"github.com/nspcc-dev/neo-go/pkg/vm/stackitem"
@@ -120,36 +119,6 @@ func (p *Pool) GetContractStateByID(id int32) (*state.Contract, error) {
 	}
 
 	return conn.GetContractStateByID(id)
-}
-
-// NEP17BalanceOf invokes `balanceOf` NEP17 method on a specified contract.
-func (p *Pool) NEP17BalanceOf(tokenHash, acc util.Uint160) (int64, error) {
-	invokerConn, err := p.NextInvoker()
-	if err != nil {
-		return 0, err
-	}
-
-	res, err := nep17.NewReader(invokerConn, tokenHash).BalanceOf(acc)
-	if err != nil {
-		return 0, err
-	}
-
-	return res.Int64(), nil
-}
-
-// NEP17TotalSupply invokes `totalSupply` NEP17 method on a specified contract.
-func (p *Pool) NEP17TotalSupply(tokenHash util.Uint160) (int64, error) {
-	invokerConn, err := p.NextInvoker()
-	if err != nil {
-		return 0, err
-	}
-
-	res, err := nep17.NewReader(invokerConn, tokenHash).TotalSupply()
-	if err != nil {
-		return 0, err
-	}
-
-	return res.Int64(), nil
 }
 
 // Call returns the results after calling the smart contract scripthash
