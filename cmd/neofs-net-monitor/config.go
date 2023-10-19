@@ -12,11 +12,7 @@ const (
 	delimiter = "."
 
 	// contracts scripthash
-	cfgNetmapContract    = "contracts.netmap"
-	cfgProxyContract     = "contracts.proxy"
-	cfgBalanceContract   = "contracts.balance"
-	cfgNeoFSContract     = "contracts.neofs"
-	cfgContainerContract = "contracts.container"
+	cfgNeoFSContract = "contracts.neofs"
 
 	// neo rpc node related config values
 	mainPrefix = "mainnet"
@@ -38,9 +34,6 @@ const (
 )
 
 func DefaultConfiguration(cfg *viper.Viper) {
-	cfg.SetDefault(cfgNetmapContract, "")
-	cfg.SetDefault(cfgProxyContract, "")
-
 	cfg.SetDefault(sidePrefix+delimiter+cfgNeoRPCEndpoint, "")
 	cfg.SetDefault(sidePrefix+delimiter+cfgNeoRPCDialTimeout, 5*time.Second)
 
