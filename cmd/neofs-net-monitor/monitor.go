@@ -6,7 +6,6 @@ import (
 
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	rpcnns "github.com/nspcc-dev/neofs-contract/rpc/nns"
-	"github.com/nspcc-dev/neofs-net-monitor/pkg/locode"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/monitor"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/morphchain"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/morphchain/contracts"
@@ -124,12 +123,6 @@ func New(ctx context.Context, cfg *viper.Viper) (*monitor.Monitor, error) {
 		logger.Info("neofs contract ignored")
 	}
 
-	geoFetcher := locode.New(
-		locode.Prm{
-			Path: cfg.GetString(cfgLocodeDB),
-		},
-	)
-
 	return monitor.New(monitor.Args{
 		Balance:        balance,
 		Proxy:          proxy,
@@ -137,7 +130,6 @@ func New(ctx context.Context, cfg *viper.Viper) (*monitor.Monitor, error) {
 		Logger:         logger,
 		Sleep:          cfg.GetDuration(cfgMetricsInterval),
 		MetricsAddress: cfg.GetString(cfgMetricsEndpoint),
-		GeoFetcher:     geoFetcher,
 		AlpFetcher:     alphabetFetcher,
 		NmFetcher:      nmFetcher,
 		IRFetcher:      nmFetcher,

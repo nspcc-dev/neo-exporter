@@ -10,11 +10,7 @@ APP = neofs-net-monitor
 BINARY = ./bin/${APP}
 SRC = ./cmd/${APP}/
 
-LOCODE_DIR = ./locode
-LOCODE_FILE = locode_db.gz
-LOCODE_DB_URL = https://github.com/nspcc-dev/neofs-locode-db/releases/download/v0.2.1/locode_db.gz
-
-.PHONY: bin image up up-testnet up-devenv down down-testnet down-devenv clean locode lint test cover
+.PHONY: bin image up up-testnet up-devenv down down-testnet down-devenv clean lint test cover
 
 bin:
 	@echo "Build neofs-net-monitor binary"
@@ -31,21 +27,13 @@ image:
 		--build-arg VERSION=$(VERSION) \
 		-t ${REPO}/${APP}:$(HUB_TAG) .
 
-locode:
-	@mkdir -p ${LOCODE_DIR}
-	@echo "⇒ Download NeoFS LOCODE database from ${LOCODE_DB_URL}"
-	@curl \
-    		-sSL "${LOCODE_DB_URL}" \
-    		-o ${LOCODE_DIR}/${LOCODE_FILE}
-	gzip -dfk ${LOCODE_DIR}/${LOCODE_FILE}
-
-up: locode
+up:
 	@docker-compose -f docker/docker-compose.yml --env-file docker/mainnet.env up -d
 
-up-testnet: locode
+up-testnet:
 	@docker-compose -f docker/docker-compose.yml --env-file docker/testnet.env up -d
 
-up-devenv: locode
+up-devenv:
 	@docker-compose -f docker/docker-compose.devenv.yml up -d
 
 down:
@@ -59,7 +47,6 @@ down-devenv:
 
 clean:
 	rm -f ${BINARY}
-	rm -rf ${LOCODE_DIR}
 
 version:
 	@echo ${VERSION}

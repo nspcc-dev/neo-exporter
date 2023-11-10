@@ -3,6 +3,12 @@ Changelog for NeoFS Monitor
 
 ## [Unreleased]
 
+### Changed
+- Usage of Locode DB Go package (#100)
+
+### Removed
+- Locode DB configuration options (#100)
+
 ## [0.9.5] - 2022-12-29
 
 ### Changed

@@ -26,9 +26,6 @@ const (
 	cfgMetricsEndpoint = "metrics.endpoint"
 	cfgMetricsInterval = "metrics.interval"
 
-	// path to the NeoFS locode database
-	cfgLocodeDB = "locode.db.path"
-
 	// level of logging
 	cfgLoggerLevel = "logger.level"
 )
@@ -42,8 +39,6 @@ func DefaultConfiguration(cfg *viper.Viper) {
 
 	cfg.SetDefault(cfgMetricsEndpoint, ":16512")
 	cfg.SetDefault(cfgMetricsInterval, 15*time.Minute)
-
-	cfg.SetDefault(cfgLocodeDB, "./locode/db")
 
 	cfg.SetDefault(cfgLoggerLevel, "info")
 }

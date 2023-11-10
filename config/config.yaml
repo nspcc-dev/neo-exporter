@@ -23,11 +23,6 @@ metrics:
   interval: 15s
   endpoint: ":16512"
 
-# Optional path to NeoFS LOCODE database.
-locode:
-  db:
-    path: locode/db
-
 contracts:
   # NeoFS contract from main chain. Required for asset supply metric.
   neofs: 3c3f4b84773ef0141576e48c3ff60e5078235891

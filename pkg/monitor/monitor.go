@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/nspcc-dev/locode-db/pkg/locodedb"
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
 	"github.com/nspcc-dev/neo-go/pkg/util"
-	"github.com/nspcc-dev/neofs-net-monitor/pkg/locode"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
@@ -69,7 +69,6 @@ type (
 		logger        *zap.Logger
 		sleep         time.Duration
 		metricsServer http.Server
-		geoFetcher    *locode.DB
 		alpFetcher    AlphabetFetcher
 		nmFetcher     NetmapFetcher
 		irFetcher     InnerRingFetcher
@@ -85,7 +84,6 @@ type (
 		Logger         *zap.Logger
 		Sleep          time.Duration
 		MetricsAddress string
-		GeoFetcher     *locode.DB
 		AlpFetcher     AlphabetFetcher
 		NmFetcher      NetmapFetcher
 		IRFetcher      InnerRingFetcher
@@ -106,7 +104,6 @@ func New(p Args) *Monitor {
 			Addr:    p.MetricsAddress,
 			Handler: promhttp.Handler(),
 		},
-		geoFetcher:    p.GeoFetcher,
 		alpFetcher:    p.AlpFetcher,
 		nmFetcher:     p.NmFetcher,
 		irFetcher:     p.IRFetcher,
@@ -134,10 +131,6 @@ func (m *Monitor) Start(ctx context.Context) {
 	prometheus.MustRegister(alphabetSideDivergence)
 	prometheus.MustRegister(containersNumber)
 
-	if err := m.geoFetcher.Open(); err != nil {
-		m.logger.Warn("geoposition fetching disabled", zap.Error(err))
-	}
-
 	go func() {
 		err := m.metricsServer.ListenAndServe()
 		if !errors.Is(err, http.ErrServerClosed) {
@@ -153,8 +146,6 @@ func (m *Monitor) Stop() {
 	if err != nil {
 		m.logger.Error("stop metrics server error", zap.Error(err))
 	}
-
-	_ = m.geoFetcher.Close()
 }
 
 func (m *Monitor) Job(ctx context.Context) {
@@ -248,14 +239,14 @@ func (m *Monitor) processNetworkMap(nm NetmapInfo, candidates NetmapCandidatesIn
 			exportBalancesGAS[keyHex] = balanceGAS
 		}
 
-		pos, err := m.geoFetcher.Get(node.Locode)
+		record, err := locodedb.Get(node.Locode)
 		if err != nil {
 			m.logger.Debug("can't fetch geoposition", zap.String("key", keyHex), zap.Error(err))
 		} else {
 			nodeLoc := nodeLocation{
-				name: pos.Location(),
-				long: strconv.FormatFloat(pos.Longitude(), 'f', 4, 64),
-				lat:  strconv.FormatFloat(pos.Latitude(), 'f', 4, 64),
+				name: record.Location,
+				long: strconv.FormatFloat(record.Point.Longitude(), 'f', 4, 64),
+				lat:  strconv.FormatFloat(record.Point.Latitude(), 'f', 4, 64),
 			}
 
 			exportCountries[nodeLoc]++

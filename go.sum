@@ -190,6 +190,8 @@ github.com/nspcc-dev/go-ordered-json v0.0.0-20220111165707-25110be27d22 h1:n4ZaF
 github.com/nspcc-dev/go-ordered-json v0.0.0-20220111165707-25110be27d22/go.mod h1:79bEUDEviBHJMFV6Iq6in57FEOCMcRhfQnfaf0ETA5U=
 github.com/nspcc-dev/hrw v1.0.9 h1:17VcAuTtrstmFppBjfRiia4K2wA/ukXZhLFS8Y8rz5Y=
 github.com/nspcc-dev/hrw v1.0.9/go.mod h1:l/W2vx83vMQo6aStyx2AuZrJ+07lGv2JQGlVkPG06MU=
+github.com/nspcc-dev/locode-db v0.4.1-0.20231110164540-a21ea2774f2e h1:mcL78g9av0/CYVrgMgGqRJLwZAfvLdIaoaPnEDLC6n8=
+github.com/nspcc-dev/locode-db v0.4.1-0.20231110164540-a21ea2774f2e/go.mod h1:M+v8C+t9vwYbIVEdTPX/0w2LFRY+FJnYbVUdrzq7iWQ=
 github.com/nspcc-dev/neo-go v0.102.0 h1:O2Gt4JPOWmp0c+PnPWwd2wPI74BKSwkaNCEyvyQTWJw=
 github.com/nspcc-dev/neo-go v0.102.0/go.mod h1:QXxpZxJT2KedwM0Nlj8UO0/fZN2WIe4h/i03uBHKbnc=
 github.com/nspcc-dev/neo-go/pkg/interop v0.0.0-20230919154019-f66abd020d6a h1:ZF1T2PfRJh0LbQcMQAPMmp94B27o/6DKZV+zcMIUNHM=
@@ -259,7 +261,6 @@ github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9de
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 go.etcd.io/bbolt v1.3.7 h1:j+zJOnnEjF/kyHlDDgGnVL/AIqIJPq8UoB2GSNfkUfQ=
-go.etcd.io/bbolt v1.3.7/go.mod h1:N9Mkw9X8x5fupy0IKsmuqVtoGDyxsaDlbk4Rd05IAQw=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=
 go.opencensus.io v0.22.0/go.mod h1:+kGneAE2xo2IficOXnaByMWTGM9T73dGwxeWcUqIpI8=
 go.opencensus.io v0.22.2/go.mod h1:yxeiOL68Rb0Xd1ddK5vPZ/oVn4vY4Ynel7k9FzqtOIw=
