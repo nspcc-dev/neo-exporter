@@ -40,12 +40,9 @@ services:
       - prometheus
     environment:
       - NEOFS_NET_MONITOR_METRICS_INTERVAL=15s
-      - NEOFS_NET_MONITOR_LOCODE_DB_PATH=locode/db
       - NEOFS_NET_MONITOR_MAINNET_RPC_ENDPOINT=${NEOFS_NET_MONITOR_MAINNET_RPC_ENDPOINT}
       - NEOFS_NET_MONITOR_MORPH_RPC_ENDPOINT=${NEOFS_NET_MONITOR_MORPH_RPC_ENDPOINT}
       - NEOFS_NET_MONITOR_CONTRACTS_NEOFS=${NEOFS_NET_MONITOR_CONTRACTS_NEOFS}
-    volumes:
-      - ./../locode/locode_db:/locode/db
     networks:
       - monitor-net
     restart: on-failure

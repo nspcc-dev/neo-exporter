@@ -44,14 +44,6 @@ $ neofs-net-monitor --config config.yaml
 
 Also, you can provide all options using env variables.
 
-To download actual LOCODE database run `$ make locode`.
-Visit LOCODE [repository](https://github.com/nspcc-dev/neofs-locode-db) for more information.
-
-```
-// Optional path to NeoFS LOCODE database.
-NEOFS_NET_MONITOR_LOCODE_DB_PATH=path/to/database
-``` 
-
 ## Connect to neofs-dev-env
 
 After `Jebudo` release monitor can be attached to 

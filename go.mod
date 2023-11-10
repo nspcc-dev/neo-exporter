@@ -3,8 +3,10 @@ module github.com/nspcc-dev/neofs-net-monitor
 go 1.19
 
 require (
+	github.com/google/uuid v1.3.0
 	github.com/multiformats/go-multiaddr v0.4.0
 	github.com/nspcc-dev/hrw v1.0.9
+	github.com/nspcc-dev/locode-db v0.4.1-0.20231110164540-a21ea2774f2e
 	github.com/nspcc-dev/neo-go v0.102.0
 	github.com/nspcc-dev/neofs-api-go/v2 v2.14.0
 	github.com/nspcc-dev/neofs-contract v0.18.0
@@ -12,7 +14,6 @@ require (
 	github.com/prometheus/client_golang v1.17.0
 	github.com/spf13/viper v1.16.0
 	github.com/stretchr/testify v1.8.4
-	go.etcd.io/bbolt v1.3.7
 	go.uber.org/zap v1.26.0
 	golang.org/x/crypto v0.12.0 // indirect
 )
@@ -25,7 +26,6 @@ require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/hashicorp/golang-lru v0.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect

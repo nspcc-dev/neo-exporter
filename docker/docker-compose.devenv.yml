@@ -43,11 +43,8 @@ services:
       - prometheus
     environment:
       - NEOFS_NET_MONITOR_METRICS_INTERVAL=15s
-      - NEOFS_NET_MONITOR_LOCODE_DB_PATH=locode/db
       - NEOFS_NET_MONITOR_MAINNET_RPC_ENDPOINT=http://192.168.130.50:30333
       - NEOFS_NET_MONITOR_MORPH_RPC_ENDPOINT=http://192.168.130.90:30333
-    volumes:
-      - ./../locode/locode_db:/locode/db
     networks:
       - internet
     restart: on-failure
