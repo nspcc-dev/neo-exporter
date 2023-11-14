@@ -9,6 +9,7 @@ import (
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/monitor"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/morphchain"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/morphchain/contracts"
+	"github.com/nspcc-dev/neofs-net-monitor/pkg/multinodepool"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/pool"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -123,6 +124,11 @@ func New(ctx context.Context, cfg *viper.Viper) (*monitor.Monitor, error) {
 		logger.Info("neofs contract ignored")
 	}
 
+	mnPool := multinodepool.NewPool(sideChainEndpoints, cfg.GetDuration(cfgMetricsInterval))
+	if err = mnPool.Dial(ctx); err != nil {
+		return nil, fmt.Errorf("multinodepool: %w", err)
+	}
+
 	return monitor.New(monitor.Args{
 		Balance:        balance,
 		Proxy:          proxy,
@@ -136,5 +142,7 @@ func New(ctx context.Context, cfg *viper.Viper) (*monitor.Monitor, error) {
 		SideBlFetcher:  sideBalanceFetcher,
 		MainBlFetcher:  mainBalanceFetcher,
 		CnrFetcher:     cnrFetcher,
+		HeightFetcher:  mnPool,
+		StateFetcher:   mnPool,
 	}), nil
 }

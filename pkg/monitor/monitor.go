@@ -44,6 +44,24 @@ type (
 		Total() (int64, error)
 	}
 
+	HeightFetcher interface {
+		FetchHeight() []HeightData
+	}
+
+	StateFetcher interface {
+		FetchState(height uint32) []StateData
+	}
+
+	HeightData struct {
+		Host  string
+		Value uint32
+	}
+
+	StateData struct {
+		Host  string
+		Value string
+	}
+
 	Node struct {
 		ID         uint64
 		Address    string
@@ -75,6 +93,8 @@ type (
 		sideBlFetcher BalanceFetcher
 		mainBlFetcher BalanceFetcher
 		cnrFetcher    ContainerFetcher
+		heightFetcher HeightFetcher
+		stateFetcher  StateFetcher
 	}
 
 	Args struct {
@@ -90,6 +110,8 @@ type (
 		SideBlFetcher  BalanceFetcher
 		MainBlFetcher  BalanceFetcher
 		CnrFetcher     ContainerFetcher
+		HeightFetcher  HeightFetcher
+		StateFetcher   StateFetcher
 	}
 )
 
@@ -110,6 +132,8 @@ func New(p Args) *Monitor {
 		sideBlFetcher: p.SideBlFetcher,
 		mainBlFetcher: p.MainBlFetcher,
 		cnrFetcher:    p.CnrFetcher,
+		heightFetcher: p.HeightFetcher,
+		stateFetcher:  p.StateFetcher,
 	}
 }
 
@@ -130,6 +154,8 @@ func (m *Monitor) Start(ctx context.Context) {
 	prometheus.MustRegister(alphabetMainDivergence)
 	prometheus.MustRegister(alphabetSideDivergence)
 	prometheus.MustRegister(containersNumber)
+	prometheus.MustRegister(chainHeight)
+	prometheus.MustRegister(chainState)
 
 	go func() {
 		err := m.metricsServer.ListenAndServe()
@@ -194,6 +220,9 @@ func (m *Monitor) Job(ctx context.Context) {
 		}
 
 		m.processContainersNumber()
+
+		minHeight := m.processChainHeight()
+		m.processChainState(minHeight)
 
 		select {
 		case <-time.After(m.sleep):
@@ -497,4 +526,34 @@ func (m *Monitor) processContainersNumber() {
 	}
 
 	containersNumber.Set(float64(total))
+}
+
+func (m *Monitor) processChainHeight() uint32 {
+	var minHeight uint32
+	heightData := m.heightFetcher.FetchHeight()
+
+	for _, d := range heightData {
+		chainHeight.WithLabelValues(d.Host).Set(float64(d.Value))
+
+		if minHeight == 0 || d.Value < minHeight {
+			minHeight = d.Value
+		}
+	}
+
+	return minHeight
+}
+
+func (m *Monitor) processChainState(height uint32) {
+	if height == 0 {
+		return
+	}
+
+	stateData := m.stateFetcher.FetchState(height)
+	chainState.Reset()
+
+	h := float64(height)
+
+	for _, d := range stateData {
+		chainState.WithLabelValues(d.Host, d.Value).Set(h)
+	}
 }
