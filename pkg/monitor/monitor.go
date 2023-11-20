@@ -274,8 +274,8 @@ func (m *Monitor) processNetworkMap(nm NetmapInfo, candidates NetmapCandidatesIn
 		} else {
 			nodeLoc := nodeLocation{
 				name: record.Location,
-				long: strconv.FormatFloat(record.Point.Longitude(), 'f', 4, 64),
-				lat:  strconv.FormatFloat(record.Point.Latitude(), 'f', 4, 64),
+				long: strconv.FormatFloat(float64(record.Point.Longitude), 'f', 4, 32),
+				lat:  strconv.FormatFloat(float64(record.Point.Latitude), 'f', 4, 32),
 			}
 
 			exportCountries[nodeLoc]++
