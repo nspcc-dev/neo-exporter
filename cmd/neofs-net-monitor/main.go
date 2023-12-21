@@ -10,6 +10,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/nspcc-dev/neofs-net-monitor/pkg/monitor"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
@@ -43,6 +44,8 @@ func main() {
 		log.Printf("can't initialize netmap monitor: %s", err.Error())
 		os.Exit(1)
 	}
+
+	monitor.RegisterMetrics()
 
 	neofsMonitor.Start(ctx)
 

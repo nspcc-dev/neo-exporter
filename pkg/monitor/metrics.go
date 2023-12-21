@@ -190,3 +190,25 @@ var (
 		},
 	)
 )
+
+// RegisterMetrics inits prometheus metrics. Panics if can't do it.
+func RegisterMetrics() {
+	prometheus.MustRegister(locationPresent)
+	prometheus.MustRegister(droppedNodesCount)
+	prometheus.MustRegister(newNodesCount)
+	prometheus.MustRegister(epochNumber)
+	prometheus.MustRegister(storageNodeGASBalances)
+	prometheus.MustRegister(storageNodeNotaryBalances)
+	prometheus.MustRegister(innerRingBalances)
+	prometheus.MustRegister(alphabetGASBalances)
+	prometheus.MustRegister(alphabetNotaryBalances)
+	prometheus.MustRegister(proxyBalance)
+	prometheus.MustRegister(mainChainSupply)
+	prometheus.MustRegister(sideChainSupply)
+	prometheus.MustRegister(alphabetDivergence)
+	prometheus.MustRegister(alphabetMainDivergence)
+	prometheus.MustRegister(alphabetSideDivergence)
+	prometheus.MustRegister(containersNumber)
+	prometheus.MustRegister(chainHeight)
+	prometheus.MustRegister(chainState)
+}

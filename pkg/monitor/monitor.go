@@ -138,25 +138,6 @@ func New(p Args) *Monitor {
 }
 
 func (m *Monitor) Start(ctx context.Context) {
-	prometheus.MustRegister(locationPresent)
-	prometheus.MustRegister(droppedNodesCount)
-	prometheus.MustRegister(newNodesCount)
-	prometheus.MustRegister(epochNumber)
-	prometheus.MustRegister(storageNodeGASBalances)
-	prometheus.MustRegister(storageNodeNotaryBalances)
-	prometheus.MustRegister(innerRingBalances)
-	prometheus.MustRegister(alphabetGASBalances)
-	prometheus.MustRegister(alphabetNotaryBalances)
-	prometheus.MustRegister(proxyBalance)
-	prometheus.MustRegister(mainChainSupply)
-	prometheus.MustRegister(sideChainSupply)
-	prometheus.MustRegister(alphabetDivergence)
-	prometheus.MustRegister(alphabetMainDivergence)
-	prometheus.MustRegister(alphabetSideDivergence)
-	prometheus.MustRegister(containersNumber)
-	prometheus.MustRegister(chainHeight)
-	prometheus.MustRegister(chainState)
-
 	go func() {
 		err := m.metricsServer.ListenAndServe()
 		if !errors.Is(err, http.ErrServerClosed) {
