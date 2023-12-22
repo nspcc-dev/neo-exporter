@@ -127,33 +127,11 @@ var (
 		},
 	)
 
-	alphabetDivergence = prometheus.NewGaugeVec(
+	alphabetPubKeys = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Subsystem: "neofs_net_monitor",
-			Name:      "alphabet_divergence_count",
-			Help:      "Number of unique alphabet keys in main chain and side chain",
-		},
-		[]string{
-			"chain",
-		},
-	)
-
-	alphabetMainDivergence = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Subsystem: "neofs_net_monitor",
-			Name:      "alphabet_main_divergence",
-			Help:      "Alphabet keys divergence in main chain",
-		},
-		[]string{
-			"key",
-		},
-	)
-
-	alphabetSideDivergence = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Subsystem: "neofs_net_monitor",
-			Name:      "alphabet_side_divergence",
-			Help:      "Alphabet keys divergence in side chain",
+			Name:      "alphabet_public_key",
+			Help:      "Alphabet public keys in chain",
 		},
 		[]string{
 			"key",
@@ -205,9 +183,7 @@ func RegisterMetrics() {
 	prometheus.MustRegister(proxyBalance)
 	prometheus.MustRegister(mainChainSupply)
 	prometheus.MustRegister(sideChainSupply)
-	prometheus.MustRegister(alphabetDivergence)
-	prometheus.MustRegister(alphabetMainDivergence)
-	prometheus.MustRegister(alphabetSideDivergence)
+	prometheus.MustRegister(alphabetPubKeys)
 	prometheus.MustRegister(containersNumber)
 	prometheus.MustRegister(chainHeight)
 	prometheus.MustRegister(chainState)

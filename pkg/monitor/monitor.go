@@ -159,53 +159,8 @@ func (m *Monitor) Stop() {
 
 func (m *Monitor) Job(ctx context.Context) {
 	for {
-		m.logger.Debug("scraping data from side chain")
-
-		netmap, err := m.nmFetcher.FetchNetmap()
-		if err != nil {
-			m.logger.Warn("can't scrap network map info", zap.Error(err))
-		} else {
-			candidatesNetmap, err := m.nmFetcher.FetchCandidates()
-			if err != nil {
-				m.logger.Warn("can't scrap network map candidates info", zap.Error(err))
-			} else {
-				m.processNetworkMap(netmap, candidatesNetmap)
-			}
-		}
-
-		innerRing, err := m.irFetcher.FetchInnerRingKeys()
-		if err != nil {
-			m.logger.Warn("can't scrap inner ring info", zap.Error(err))
-		} else {
-			m.processInnerRing(innerRing)
-		}
-
-		if m.proxy != nil {
-			m.processProxyContract()
-		}
-
-		m.processSideChainSupply()
-
-		if m.neofs != nil {
-			m.processMainChainSupply()
-		}
-
-		if sideAlphabet, err := m.sideAlpFetcher.FetchAlphabet(); err != nil {
-			m.logger.Warn("can't scrap side alphabet info", zap.Error(err))
-		} else {
-			m.processAlphabet(sideAlphabet)
-
-			if mainAlphabet, err := m.mainAlpFetcher.FetchAlphabet(); err != nil {
-				m.logger.Warn("can't scrap main alphabet info", zap.Error(err))
-			} else {
-				m.processAlphabetDivergence(mainAlphabet, sideAlphabet)
-			}
-		}
-
-		m.processContainersNumber()
-
-		minHeight := m.processChainHeight()
-		m.processChainState(minHeight)
+		m.processSideChain()
+		m.processMainChain()
 
 		select {
 		case <-time.After(m.sleep):
@@ -215,6 +170,57 @@ func (m *Monitor) Job(ctx context.Context) {
 			return
 		}
 	}
+}
+
+func (m *Monitor) processMainChain() {
+	if mainAlphabet, err := m.mainAlpFetcher.FetchAlphabet(); err != nil {
+		m.logger.Warn("can't scrap main alphabet info", zap.Error(err))
+	} else {
+		m.processAlphabetPublicKeys(mainAlphabet)
+	}
+
+	m.processMainChainSupply()
+}
+
+func (m *Monitor) processSideChain() {
+	m.logger.Debug("scraping data from side chain")
+
+	netmap, err := m.nmFetcher.FetchNetmap()
+	if err != nil {
+		m.logger.Warn("can't scrap network map info", zap.Error(err))
+	} else {
+		candidatesNetmap, err := m.nmFetcher.FetchCandidates()
+		if err != nil {
+			m.logger.Warn("can't scrap network map candidates info", zap.Error(err))
+		} else {
+			m.processNetworkMap(netmap, candidatesNetmap)
+		}
+	}
+
+	innerRing, err := m.irFetcher.FetchInnerRingKeys()
+	if err != nil {
+		m.logger.Warn("can't scrap inner ring info", zap.Error(err))
+	} else {
+		m.processInnerRing(innerRing)
+	}
+
+	if m.proxy != nil {
+		m.processProxyContract()
+	}
+
+	m.processSideChainSupply()
+
+	if alphabet, err := m.sideAlpFetcher.FetchAlphabet(); err != nil {
+		m.logger.Warn("can't scrap side alphabet info", zap.Error(err))
+	} else {
+		m.processAlphabetPublicKeys(alphabet)
+		m.processAlphabet(alphabet)
+	}
+
+	m.processContainersNumber()
+
+	minHeight := m.processChainHeight()
+	m.processChainState(minHeight)
 }
 
 func (m *Monitor) Logger() *zap.Logger {
@@ -416,59 +422,13 @@ func (m *Monitor) processAlphabet(alphabet keys.PublicKeys) {
 	}
 }
 
-const (
-	mainChainDivergenceLabel = "main"
-	sideChainDivergenceLabel = "side"
-)
+func (m *Monitor) processAlphabetPublicKeys(alphabet keys.PublicKeys) {
+	sorted := sortedAlphabet(alphabet)
 
-func (m *Monitor) processAlphabetDivergence(mainAlphabet, sideAlphabet keys.PublicKeys) {
-	sortedMain := sortedAlphabet(mainAlphabet)
-	sortedSide := sortedAlphabet(sideAlphabet)
-
-	uniqueMain, uniqueSide := computeUniqueAlphabets(sortedMain, sortedSide)
-
-	alphabetDivergence.Reset()
-	alphabetDivergence.WithLabelValues(mainChainDivergenceLabel).Set(float64(len(uniqueMain)))
-	alphabetDivergence.WithLabelValues(sideChainDivergenceLabel).Set(float64(len(uniqueSide)))
-
-	alphabetMainDivergence.Reset()
-	for _, key := range uniqueMain {
-		alphabetMainDivergence.WithLabelValues(key).Set(1)
+	alphabetPubKeys.Reset()
+	for _, key := range sorted {
+		alphabetPubKeys.WithLabelValues(key).Set(1)
 	}
-	alphabetSideDivergence.Reset()
-	for _, key := range uniqueSide {
-		alphabetSideDivergence.WithLabelValues(key).Set(1)
-	}
-}
-
-func computeUniqueAlphabets(sortedMain, sortedSide []string) ([]string, []string) {
-	var uniqueMain, uniqueSide []string
-
-	i, j := 0, 0
-	len1, len2 := len(sortedMain), len(sortedSide)
-	for i < len1 && j < len2 {
-		if sortedMain[i] == sortedSide[j] {
-			i++
-			j++
-			continue
-		}
-
-		if sortedMain[i] < sortedSide[j] {
-			uniqueMain = append(uniqueMain, sortedMain[i])
-			i++
-		} else {
-			uniqueSide = append(uniqueSide, sortedSide[j])
-			j++
-		}
-	}
-
-	if i == len1 {
-		uniqueSide = append(uniqueSide, sortedSide[j:]...)
-	} else if j == len2 {
-		uniqueMain = append(uniqueMain, sortedMain[i:]...)
-	}
-
-	return uniqueMain, uniqueSide
 }
 
 func sortedAlphabet(alphabet keys.PublicKeys) []string {
@@ -482,6 +442,10 @@ func sortedAlphabet(alphabet keys.PublicKeys) []string {
 }
 
 func (m *Monitor) processMainChainSupply() {
+	if m.neofs == nil {
+		return
+	}
+
 	balance, err := m.mainBlFetcher.FetchGASByScriptHash(*m.neofs)
 	if err != nil {
 		m.logger.Debug("can't fetch neofs contract balance", zap.Error(err))
