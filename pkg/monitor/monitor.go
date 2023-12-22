@@ -177,6 +177,7 @@ func (m *Monitor) processMainChain() {
 		m.logger.Warn("can't scrap main alphabet info", zap.Error(err))
 	} else {
 		m.processAlphabetPublicKeys(mainAlphabet)
+		m.processMainAlphabet(mainAlphabet)
 	}
 
 	m.processMainChainSupply()
@@ -214,7 +215,7 @@ func (m *Monitor) processSideChain() {
 		m.logger.Warn("can't scrap side alphabet info", zap.Error(err))
 	} else {
 		m.processAlphabetPublicKeys(alphabet)
-		m.processAlphabet(alphabet)
+		m.processSideAlphabet(alphabet)
 	}
 
 	m.processContainersNumber()
@@ -389,9 +390,28 @@ func (m *Monitor) processProxyContract() {
 	proxyBalance.Set(float64(balance))
 }
 
-func (m *Monitor) processAlphabet(alphabet keys.PublicKeys) {
-	exportGasBalances := make(map[string]int64, len(alphabet))
+func (m *Monitor) processSideAlphabet(alphabet keys.PublicKeys) {
 	exportNotaryBalances := make(map[string]int64, len(alphabet))
+
+	for _, key := range alphabet {
+		keyHex := hex.EncodeToString(key.Bytes())
+
+		balanceNotary, err := m.sideBlFetcher.FetchNotary(*key)
+		if err != nil {
+			m.logger.Debug("can't fetch notary balance", zap.String("key", keyHex), zap.Error(err))
+		} else {
+			exportNotaryBalances[keyHex] = balanceNotary
+		}
+	}
+
+	alphabetNotaryBalances.Reset()
+	for k, v := range exportNotaryBalances {
+		alphabetNotaryBalances.WithLabelValues(k).Set(float64(v))
+	}
+}
+
+func (m *Monitor) processMainAlphabet(alphabet keys.PublicKeys) {
+	exportGasBalances := make(map[string]int64, len(alphabet))
 
 	for _, key := range alphabet {
 		keyHex := hex.EncodeToString(key.Bytes())
@@ -402,23 +422,11 @@ func (m *Monitor) processAlphabet(alphabet keys.PublicKeys) {
 		} else {
 			exportGasBalances[keyHex] = balanceGAS
 		}
-
-		balanceNotary, err := m.sideBlFetcher.FetchNotary(*key)
-		if err != nil {
-			m.logger.Debug("can't fetch notary balance", zap.String("key", keyHex), zap.Error(err))
-		} else {
-			exportNotaryBalances[keyHex] = balanceNotary
-		}
 	}
 
 	alphabetGASBalances.Reset()
 	for k, v := range exportGasBalances {
 		alphabetGASBalances.WithLabelValues(k).Set(float64(v))
-	}
-
-	alphabetNotaryBalances.Reset()
-	for k, v := range exportNotaryBalances {
-		alphabetNotaryBalances.WithLabelValues(k).Set(float64(v))
 	}
 }
 
