@@ -38,8 +38,10 @@ func New(ctx context.Context, cfg *viper.Viper) (*monitor.Monitor, error) {
 
 	var job monitor.Job
 	if cfg.GetBool(cfgChainFSChain) {
+		monitor.RegisterSideChainMetrics()
 		job, err = sideChainJob(ctx, cfg, sideNeogoClient, logger, sideChainEndpoints)
 	} else {
+		monitor.RegisterMainChainMetrics()
 		job, err = mainChainJob(cfg, sideNeogoClient, logger)
 	}
 

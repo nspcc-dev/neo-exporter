@@ -169,8 +169,8 @@ var (
 	)
 )
 
-// RegisterMetrics inits prometheus metrics. Panics if can't do it.
-func RegisterMetrics() {
+// RegisterSideChainMetrics inits prometheus metrics for side chain. Panics if can't do it.
+func RegisterSideChainMetrics() {
 	prometheus.MustRegister(locationPresent)
 	prometheus.MustRegister(droppedNodesCount)
 	prometheus.MustRegister(newNodesCount)
@@ -178,13 +178,18 @@ func RegisterMetrics() {
 	prometheus.MustRegister(storageNodeGASBalances)
 	prometheus.MustRegister(storageNodeNotaryBalances)
 	prometheus.MustRegister(innerRingBalances)
-	prometheus.MustRegister(alphabetGASBalances)
 	prometheus.MustRegister(alphabetNotaryBalances)
 	prometheus.MustRegister(proxyBalance)
-	prometheus.MustRegister(mainChainSupply)
 	prometheus.MustRegister(sideChainSupply)
-	prometheus.MustRegister(alphabetPubKeys)
+	prometheus.MustRegister(alphabetPubKeys) // used for both monitors
 	prometheus.MustRegister(containersNumber)
 	prometheus.MustRegister(chainHeight)
 	prometheus.MustRegister(chainState)
+}
+
+// RegisterMainChainMetrics inits prometheus metrics for main chain. Panics if can't do it.
+func RegisterMainChainMetrics() {
+	prometheus.MustRegister(alphabetGASBalances)
+	prometheus.MustRegister(mainChainSupply)
+	prometheus.MustRegister(alphabetPubKeys) // used for both monitors
 }
