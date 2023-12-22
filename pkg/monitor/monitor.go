@@ -36,8 +36,7 @@ type (
 	}
 
 	AlphabetFetcher interface {
-		FetchSideAlphabet() (keys.PublicKeys, error)
-		FetchMainAlphabet() (keys.PublicKeys, error)
+		FetchAlphabet() (keys.PublicKeys, error)
 	}
 
 	ContainerFetcher interface {
@@ -84,17 +83,18 @@ type (
 		proxy   *util.Uint160
 		neofs   *util.Uint160
 
-		logger        *zap.Logger
-		sleep         time.Duration
-		metricsServer http.Server
-		alpFetcher    AlphabetFetcher
-		nmFetcher     NetmapFetcher
-		irFetcher     InnerRingFetcher
-		sideBlFetcher BalanceFetcher
-		mainBlFetcher BalanceFetcher
-		cnrFetcher    ContainerFetcher
-		heightFetcher HeightFetcher
-		stateFetcher  StateFetcher
+		logger         *zap.Logger
+		sleep          time.Duration
+		metricsServer  http.Server
+		mainAlpFetcher AlphabetFetcher
+		sideAlpFetcher AlphabetFetcher
+		nmFetcher      NetmapFetcher
+		irFetcher      InnerRingFetcher
+		sideBlFetcher  BalanceFetcher
+		mainBlFetcher  BalanceFetcher
+		cnrFetcher     ContainerFetcher
+		heightFetcher  HeightFetcher
+		stateFetcher   StateFetcher
 	}
 
 	Args struct {
@@ -104,7 +104,8 @@ type (
 		Logger         *zap.Logger
 		Sleep          time.Duration
 		MetricsAddress string
-		AlpFetcher     AlphabetFetcher
+		MainAlpFetcher AlphabetFetcher
+		SideAlpFetcher AlphabetFetcher
 		NmFetcher      NetmapFetcher
 		IRFetcher      InnerRingFetcher
 		SideBlFetcher  BalanceFetcher
@@ -126,14 +127,15 @@ func New(p Args) *Monitor {
 			Addr:    p.MetricsAddress,
 			Handler: promhttp.Handler(),
 		},
-		alpFetcher:    p.AlpFetcher,
-		nmFetcher:     p.NmFetcher,
-		irFetcher:     p.IRFetcher,
-		sideBlFetcher: p.SideBlFetcher,
-		mainBlFetcher: p.MainBlFetcher,
-		cnrFetcher:    p.CnrFetcher,
-		heightFetcher: p.HeightFetcher,
-		stateFetcher:  p.StateFetcher,
+		mainAlpFetcher: p.MainAlpFetcher,
+		sideAlpFetcher: p.SideAlpFetcher,
+		nmFetcher:      p.NmFetcher,
+		irFetcher:      p.IRFetcher,
+		sideBlFetcher:  p.SideBlFetcher,
+		mainBlFetcher:  p.MainBlFetcher,
+		cnrFetcher:     p.CnrFetcher,
+		heightFetcher:  p.HeightFetcher,
+		stateFetcher:   p.StateFetcher,
 	}
 }
 
@@ -188,12 +190,12 @@ func (m *Monitor) Job(ctx context.Context) {
 			m.processMainChainSupply()
 		}
 
-		if sideAlphabet, err := m.alpFetcher.FetchSideAlphabet(); err != nil {
+		if sideAlphabet, err := m.sideAlpFetcher.FetchAlphabet(); err != nil {
 			m.logger.Warn("can't scrap side alphabet info", zap.Error(err))
 		} else {
 			m.processAlphabet(sideAlphabet)
 
-			if mainAlphabet, err := m.alpFetcher.FetchMainAlphabet(); err != nil {
+			if mainAlphabet, err := m.mainAlpFetcher.FetchAlphabet(); err != nil {
 				m.logger.Warn("can't scrap main alphabet info", zap.Error(err))
 			} else {
 				m.processAlphabetDivergence(mainAlphabet, sideAlphabet)

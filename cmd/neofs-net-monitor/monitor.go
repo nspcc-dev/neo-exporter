@@ -73,13 +73,8 @@ func New(ctx context.Context, cfg *viper.Viper) (*monitor.Monitor, error) {
 		return nil, fmt.Errorf("can't initialize container fetcher: %w", err)
 	}
 
-	alphabetFetcher, err := morphchain.NewAlphabetFetcher(morphchain.AlphabetFetcherArgs{
-		Committeer: sideNeogoClient,
-		Designater: mainNeogoClient,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("can't initialize alphabet fetcher: %w", err)
-	}
+	mainAlphabetFetcher := morphchain.NewMainChainAlphabetFetcher(mainNeogoClient)
+	sideAlphabetFetcher := morphchain.NewSideChainAlphabetFetcher(sideNeogoClient)
 
 	sideBalanceFetcher, err := morphchain.NewBalanceFetcher(morphchain.BalanceFetcherArgs{
 		Cli: sideNeogoClient,
@@ -136,7 +131,8 @@ func New(ctx context.Context, cfg *viper.Viper) (*monitor.Monitor, error) {
 		Logger:         logger,
 		Sleep:          cfg.GetDuration(cfgMetricsInterval),
 		MetricsAddress: cfg.GetString(cfgMetricsEndpoint),
-		AlpFetcher:     alphabetFetcher,
+		MainAlpFetcher: mainAlphabetFetcher,
+		SideAlpFetcher: sideAlphabetFetcher,
 		NmFetcher:      nmFetcher,
 		IRFetcher:      nmFetcher,
 		SideBlFetcher:  sideBalanceFetcher,
