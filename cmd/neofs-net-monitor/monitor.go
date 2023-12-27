@@ -9,7 +9,6 @@ import (
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/monitor"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/morphchain"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/morphchain/contracts"
-	"github.com/nspcc-dev/neofs-net-monitor/pkg/multinodepool"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/pool"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -39,7 +38,7 @@ func New(ctx context.Context, cfg *viper.Viper) (*monitor.Monitor, error) {
 	var job monitor.Job
 	if cfg.GetBool(cfgChainFSChain) {
 		monitor.RegisterSideChainMetrics()
-		job, err = sideChainJob(ctx, cfg, sideNeogoClient, logger, sideChainEndpoints)
+		job, err = sideChainJob(sideNeogoClient, logger)
 	} else {
 		monitor.RegisterMainChainMetrics()
 		job, err = mainChainJob(cfg, sideNeogoClient, logger)
@@ -89,7 +88,7 @@ func mainChainJob(cfg *viper.Viper, neogoClient *pool.Pool, logger *zap.Logger) 
 	}), nil
 }
 
-func sideChainJob(ctx context.Context, cfg *viper.Viper, neogoClient *pool.Pool, logger *zap.Logger, sideChainEndpoints []string) (*monitor.SideJob, error) {
+func sideChainJob(neogoClient *pool.Pool, logger *zap.Logger) (*monitor.SideJob, error) {
 	netmapContract, err := neogoClient.ResolveContract(rpcnns.NameNetmap)
 	if err != nil {
 		return nil, fmt.Errorf("can't read netmap scripthash: %w", err)
@@ -140,11 +139,6 @@ func sideChainJob(ctx context.Context, cfg *viper.Viper, neogoClient *pool.Pool,
 		proxy = &proxyContract
 	}
 
-	mnPool := multinodepool.NewPool(sideChainEndpoints, cfg.GetDuration(cfgMetricsInterval))
-	if err = mnPool.Dial(ctx); err != nil {
-		return nil, fmt.Errorf("multinodepool: %w", err)
-	}
-
 	return monitor.NewSideJob(monitor.SideJobArgs{
 		Logger:          logger,
 		Balance:         balance,
@@ -154,7 +148,7 @@ func sideChainJob(ctx context.Context, cfg *viper.Viper, neogoClient *pool.Pool,
 		IRFetcher:       nmFetcher,
 		BalanceFetcher:  balanceFetcher,
 		CnrFetcher:      cnrFetcher,
-		HeightFetcher:   mnPool,
-		StateFetcher:    mnPool,
+		HeightFetcher:   neogoClient,
+		StateFetcher:    neogoClient,
 	}), nil
 }
