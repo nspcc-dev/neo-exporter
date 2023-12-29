@@ -5,9 +5,16 @@ Changelog for NeoFS Monitor
 
 ### Changed
 - Usage of Locode DB Go package (#100)
+- Configuration supports only one chain in a moment (#103)
 
 ### Removed
 - Locode DB configuration options (#100)
+
+### Upgrading from v0.9.5
+
+The configuration sections `mainnet` and  `morph` were replaced with similar `chain` sections. To choice between
+main (Neo) chain and side (NeoFS) chain, use `chain.fschain` option. If true, monitor connects to the NeoFS chain,
+otherwise, to the Neo chain.
 
 ## [0.9.5] - 2022-12-29
 
