@@ -127,33 +127,11 @@ var (
 		},
 	)
 
-	alphabetDivergence = prometheus.NewGaugeVec(
+	alphabetPubKeys = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Subsystem: "neofs_net_monitor",
-			Name:      "alphabet_divergence_count",
-			Help:      "Number of unique alphabet keys in main chain and side chain",
-		},
-		[]string{
-			"chain",
-		},
-	)
-
-	alphabetMainDivergence = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Subsystem: "neofs_net_monitor",
-			Name:      "alphabet_main_divergence",
-			Help:      "Alphabet keys divergence in main chain",
-		},
-		[]string{
-			"key",
-		},
-	)
-
-	alphabetSideDivergence = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Subsystem: "neofs_net_monitor",
-			Name:      "alphabet_side_divergence",
-			Help:      "Alphabet keys divergence in side chain",
+			Name:      "alphabet_public_key",
+			Help:      "Alphabet public keys in chain",
 		},
 		[]string{
 			"key",
@@ -190,3 +168,28 @@ var (
 		},
 	)
 )
+
+// RegisterSideChainMetrics inits prometheus metrics for side chain. Panics if can't do it.
+func RegisterSideChainMetrics() {
+	prometheus.MustRegister(locationPresent)
+	prometheus.MustRegister(droppedNodesCount)
+	prometheus.MustRegister(newNodesCount)
+	prometheus.MustRegister(epochNumber)
+	prometheus.MustRegister(storageNodeGASBalances)
+	prometheus.MustRegister(storageNodeNotaryBalances)
+	prometheus.MustRegister(innerRingBalances)
+	prometheus.MustRegister(alphabetNotaryBalances)
+	prometheus.MustRegister(proxyBalance)
+	prometheus.MustRegister(sideChainSupply)
+	prometheus.MustRegister(alphabetPubKeys) // used for both monitors
+	prometheus.MustRegister(containersNumber)
+	prometheus.MustRegister(chainHeight)
+	prometheus.MustRegister(chainState)
+}
+
+// RegisterMainChainMetrics inits prometheus metrics for main chain. Panics if can't do it.
+func RegisterMainChainMetrics() {
+	prometheus.MustRegister(alphabetGASBalances)
+	prometheus.MustRegister(mainChainSupply)
+	prometheus.MustRegister(alphabetPubKeys) // used for both monitors
+}

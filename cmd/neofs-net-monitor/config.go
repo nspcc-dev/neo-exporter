@@ -15,8 +15,9 @@ const (
 	cfgNeoFSContract = "contracts.neofs"
 
 	// neo rpc node related config values
-	mainPrefix = "mainnet"
-	sidePrefix = "morph"
+	prefix = "chain"
+
+	cfgChainFSChain = "chain.fschain"
 
 	cfgNeoRPCEndpoint        = "rpc.endpoint"
 	cfgNeoRPCDialTimeout     = "rpc.dial_timeout"
@@ -31,11 +32,8 @@ const (
 )
 
 func DefaultConfiguration(cfg *viper.Viper) {
-	cfg.SetDefault(sidePrefix+delimiter+cfgNeoRPCEndpoint, "")
-	cfg.SetDefault(sidePrefix+delimiter+cfgNeoRPCDialTimeout, 5*time.Second)
-
-	cfg.SetDefault(mainPrefix+delimiter+cfgNeoRPCEndpoint, "")
-	cfg.SetDefault(mainPrefix+delimiter+cfgNeoRPCDialTimeout, 5*time.Second)
+	cfg.SetDefault(prefix+delimiter+cfgNeoRPCEndpoint, "")
+	cfg.SetDefault(prefix+delimiter+cfgNeoRPCDialTimeout, 5*time.Second)
 
 	cfg.SetDefault(cfgMetricsEndpoint, ":16512")
 	cfg.SetDefault(cfgMetricsInterval, 15*time.Minute)
