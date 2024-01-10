@@ -12,15 +12,19 @@ import (
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/pool"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 func New(ctx context.Context, cfg *viper.Viper) (*monitor.Monitor, error) {
 	logConf := zap.NewProductionConfig()
+	logConf.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	logConf.Level = WithLevel(cfg.GetString(cfgLoggerLevel))
 	logger, err := logConf.Build()
 	if err != nil {
 		return nil, err
 	}
+
+	zap.ReplaceGlobals(logger)
 
 	sideChainEndpoints := cfg.GetStringSlice(prefix + delimiter + cfgNeoRPCEndpoint)
 	sideChainTimeout := cfg.GetDuration(prefix + delimiter + cfgNeoRPCDialTimeout)
