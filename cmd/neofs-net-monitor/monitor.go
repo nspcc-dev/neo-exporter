@@ -87,7 +87,7 @@ func mainChainJob(cfg *viper.Viper, neogoClient *pool.Pool, logger *zap.Logger) 
 		return nil, fmt.Errorf("cfg nep17 parse: %w", err)
 	}
 
-	tasks, err := monitor.ParseNep17Tasks(balanceFetcher, items)
+	tasks, err := monitor.ParseNep17Tasks(balanceFetcher, items, &contracts.NNSNoOp{})
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +160,17 @@ func sideChainJob(cfg *viper.Viper, neogoClient *pool.Pool, logger *zap.Logger) 
 		return nil, fmt.Errorf("cfg nep17 parse: %w", err)
 	}
 
-	tasks, err := monitor.ParseNep17Tasks(balanceFetcher, items)
+	nnsHash, err := rpcnns.InferHash(neogoClient)
+	if err != nil {
+		return nil, fmt.Errorf("can't read nns scripthash: %w", err)
+	}
+
+	nnsContract, err := contracts.NewNNS(neogoClient, nnsHash)
+	if err != nil {
+		return nil, fmt.Errorf("can't initialize nns fetcher: %w", err)
+	}
+
+	tasks, err := monitor.ParseNep17Tasks(balanceFetcher, items, nnsContract)
 	if err != nil {
 		return nil, err
 	}

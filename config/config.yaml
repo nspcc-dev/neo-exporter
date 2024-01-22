@@ -35,6 +35,11 @@ nep17:
     balanceOf:
       - NSPCCpw8YmgNDYWiBfXJHRfz38NDjv6WW3
       - NSPCCa2T6nc2kYcgWC2k68boyGgc9YdKsj
+#  - contract: "balance"
+#    label: "neofs_balance"
+#    totalSupply: true
+#    balanceOf:
+#      - NagentXDvR5c3pQ4gxXpqZjMoUpKVCUMmB
 # Another variant of contract definition.
 #  - contract: "3c3f4b84773ef0141576e48c3ff60e5078235891"
 #    label: "SomeContractName"

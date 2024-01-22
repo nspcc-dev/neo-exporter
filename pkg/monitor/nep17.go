@@ -13,6 +13,11 @@ import (
 )
 
 type (
+	// NNSResolver helps to resolve NNS contract name to address.
+	NNSResolver interface {
+		ResolveFSContract(name string) (util.Uint160, error)
+	}
+
 	// Item describes task for [Nep17tracker].
 	Item struct {
 		Label    string
@@ -28,7 +33,7 @@ var (
 )
 
 // ParseNep17Tasks prepares tasks for [Nep17tracker].
-func ParseNep17Tasks(balanceFetcher Nep17BalanceFetcher, items []model.Nep17Balance) ([]Item, error) {
+func ParseNep17Tasks(balanceFetcher Nep17BalanceFetcher, items []model.Nep17Balance, nns NNSResolver) ([]Item, error) {
 	var (
 		result []Item
 	)
@@ -45,7 +50,7 @@ func ParseNep17Tasks(balanceFetcher Nep17BalanceFetcher, items []model.Nep17Bala
 			Accounts: make([]util.Uint160, 0, len(it.BalanceOf)),
 		}
 
-		contract = nativeNep17ContractHash(it.Contract)
+		contract = nativeNep17ContractHash(it.Contract, nns)
 		if contract == nil {
 			contract, err = parseUint160(it.Contract)
 			if err != nil {
@@ -84,12 +89,17 @@ func ParseNep17Tasks(balanceFetcher Nep17BalanceFetcher, items []model.Nep17Bala
 	return result, nil
 }
 
-func nativeNep17ContractHash(name string) *util.Uint160 {
+func nativeNep17ContractHash(name string, nns NNSResolver) *util.Uint160 {
 	switch name {
 	case "NEO", "neo":
 		return &neo.Hash
 	case "GAS", "gas":
 		return &gas.Hash
+	default:
+		addr, err := nns.ResolveFSContract(name)
+		if err == nil {
+			return &addr
+		}
 	}
 
 	return nil

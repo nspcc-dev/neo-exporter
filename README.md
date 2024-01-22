@@ -76,6 +76,27 @@ nep17:
         - NSPCCa2T6nc2kYcgWC2k68boyGgc9YdKsj
 ```
 
+NeoFS balance contract can be configured with next config:
+
+```yaml
+nep17:
+    - contract: "balance"
+      label: "neofs_balance"
+      totalSupply: true
+      balanceOf:
+        - NagentXDvR5c3pQ4gxXpqZjMoUpKVCUMmB
+```
+
+If contract has NNS record, you may configure tracker to monitor it. Just use NNS name in contract:
+
+```yaml
+nep17:
+    - contract: "<contract_nns_name>"
+      label: "<contract_name>"
+      balanceOf:
+        - NagentXDvR5c3pQ4gxXpqZjMoUpKVCUMmB
+```
+
 ## Connect to neofs-dev-env
 
 After `Jebudo` release monitor can be attached to 
