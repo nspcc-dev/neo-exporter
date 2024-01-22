@@ -56,7 +56,7 @@ func (m *MainJob) processNep17tracker() {
 }
 
 func (m *MainJob) processMainAlphabet(alphabet keys.PublicKeys) {
-	exportGasBalances := make(map[string]int64, len(alphabet))
+	exportGasBalances := make(map[string]float64, len(alphabet))
 
 	for _, key := range alphabet {
 		keyHex := hex.EncodeToString(key.Bytes())
@@ -71,7 +71,7 @@ func (m *MainJob) processMainAlphabet(alphabet keys.PublicKeys) {
 
 	alphabetGASBalances.Reset()
 	for k, v := range exportGasBalances {
-		alphabetGASBalances.WithLabelValues(k).Set(float64(v))
+		alphabetGASBalances.WithLabelValues(k).Set(v)
 	}
 }
 
@@ -86,5 +86,5 @@ func (m *MainJob) processMainChainSupply() {
 		return
 	}
 
-	mainChainSupply.Set(float64(balance))
+	mainChainSupply.Set(balance)
 }

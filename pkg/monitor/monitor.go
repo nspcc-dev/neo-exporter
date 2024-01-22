@@ -16,8 +16,8 @@ import (
 
 type (
 	Nep17BalanceFetcher interface {
-		Fetch(tokenHash util.Uint160, account util.Uint160) (int64, error)
-		FetchTotalSupply(tokenHash util.Uint160) (int64, error)
+		Fetch(tokenHash util.Uint160, account util.Uint160) (float64, error)
+		FetchTotalSupply(tokenHash util.Uint160) (float64, error)
 		Symbol(tokenHash util.Uint160) (string, error)
 	}
 

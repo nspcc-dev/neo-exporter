@@ -170,8 +170,8 @@ func (m *SideJob) processNetworkMap(nm NetmapInfo, candidates NetmapCandidatesIn
 	currentNetmapLen := len(nm.Nodes)
 
 	exportCountries := make(map[nodeLocation]int, currentNetmapLen)
-	exportBalancesGAS := make(map[string]int64, currentNetmapLen)
-	exportBalancesNotary := make(map[string]int64, currentNetmapLen)
+	exportBalancesGAS := make(map[string]float64, currentNetmapLen)
+	exportBalancesNotary := make(map[string]float64, currentNetmapLen)
 
 	newNodes, droppedNodes := getDiff(nm, candidates)
 
@@ -232,12 +232,12 @@ func (m *SideJob) processNetworkMap(nm NetmapInfo, candidates NetmapCandidatesIn
 
 	storageNodeGASBalances.Reset()
 	for k, v := range exportBalancesGAS {
-		storageNodeGASBalances.WithLabelValues(k).Set(float64(v))
+		storageNodeGASBalances.WithLabelValues(k).Set(v)
 	}
 
 	storageNodeNotaryBalances.Reset()
 	for k, v := range exportBalancesNotary {
-		storageNodeNotaryBalances.WithLabelValues(k).Set(float64(v))
+		storageNodeNotaryBalances.WithLabelValues(k).Set(v)
 	}
 }
 
@@ -256,7 +256,7 @@ func (m *SideJob) logNodes(msg string, nodes []*Node) {
 }
 
 func (m *SideJob) processInnerRing(ir keys.PublicKeys) {
-	exportBalances := make(map[string]int64, len(ir))
+	exportBalances := make(map[string]float64, len(ir))
 
 	for _, key := range ir {
 		keyHex := hex.EncodeToString(key.Bytes())
@@ -275,7 +275,7 @@ func (m *SideJob) processInnerRing(ir keys.PublicKeys) {
 
 	innerRingBalances.Reset()
 	for k, v := range exportBalances {
-		innerRingBalances.WithLabelValues(k).Set(float64(v))
+		innerRingBalances.WithLabelValues(k).Set(v)
 	}
 }
 
@@ -286,11 +286,11 @@ func (m *SideJob) processProxyContract() {
 		return
 	}
 
-	proxyBalance.Set(float64(balance))
+	proxyBalance.Set(balance)
 }
 
 func (m *SideJob) processSideAlphabet(alphabet keys.PublicKeys) {
-	exportNotaryBalances := make(map[string]int64, len(alphabet))
+	exportNotaryBalances := make(map[string]float64, len(alphabet))
 
 	for _, key := range alphabet {
 		keyHex := hex.EncodeToString(key.Bytes())
@@ -305,7 +305,7 @@ func (m *SideJob) processSideAlphabet(alphabet keys.PublicKeys) {
 
 	alphabetNotaryBalances.Reset()
 	for k, v := range exportNotaryBalances {
-		alphabetNotaryBalances.WithLabelValues(k).Set(float64(v))
+		alphabetNotaryBalances.WithLabelValues(k).Set(v)
 	}
 }
 
@@ -316,7 +316,7 @@ func (m *SideJob) processSideChainSupply() {
 		return
 	}
 
-	sideChainSupply.Set(float64(balance))
+	sideChainSupply.Set(balance)
 }
 
 func (m *SideJob) processContainersNumber() {

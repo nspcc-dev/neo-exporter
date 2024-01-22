@@ -36,7 +36,7 @@ func (n *Nep17tracker) Process(metric *prometheus.GaugeVec, metricTotal *prometh
 				item.Symbol,
 				item.Hash.StringLE(),
 				acc.StringLE(),
-			).Set(float64(balance))
+			).Set(balance)
 		}
 
 		if item.Total {
@@ -50,7 +50,7 @@ func (n *Nep17tracker) Process(metric *prometheus.GaugeVec, metricTotal *prometh
 				item.Label,
 				item.Symbol,
 				item.Hash.StringLE(),
-			).Set(float64(balance))
+			).Set(balance)
 		}
 	}
 }
