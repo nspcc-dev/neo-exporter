@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
+	"github.com/nspcc-dev/neo-go/pkg/rpcclient/gas"
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	"go.uber.org/zap"
 )
@@ -11,14 +12,14 @@ import (
 type (
 	MainJobArgs struct {
 		AlphabetFetcher AlphabetFetcher
-		BalanceFetcher  BalanceFetcher
+		BalanceFetcher  Nep17BalanceFetcher
 		Neofs           *util.Uint160
 		Logger          *zap.Logger
 	}
 
 	MainJob struct {
 		alphabetFetcher AlphabetFetcher
-		balanceFetcher  BalanceFetcher
+		balanceFetcher  Nep17BalanceFetcher
 		logger          *zap.Logger
 		neofs           *util.Uint160
 	}
@@ -50,7 +51,7 @@ func (m *MainJob) processMainAlphabet(alphabet keys.PublicKeys) {
 	for _, key := range alphabet {
 		keyHex := hex.EncodeToString(key.Bytes())
 
-		balanceGAS, err := m.balanceFetcher.FetchGAS(*key)
+		balanceGAS, err := m.balanceFetcher.Fetch(gas.Hash, key.GetScriptHash())
 		if err != nil {
 			m.logger.Debug("can't fetch gas balance", zap.String("key", keyHex), zap.Error(err))
 		} else {
@@ -69,7 +70,7 @@ func (m *MainJob) processMainChainSupply() {
 		return
 	}
 
-	balance, err := m.balanceFetcher.FetchGASByScriptHash(*m.neofs)
+	balance, err := m.balanceFetcher.Fetch(gas.Hash, *m.neofs)
 	if err != nil {
 		m.logger.Debug("can't fetch NeoFS contract's GAS balance", zap.Error(err))
 		return

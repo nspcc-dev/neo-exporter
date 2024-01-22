@@ -63,10 +63,7 @@ func New(ctx context.Context, cfg *viper.Viper) (*monitor.Monitor, error) {
 func mainChainJob(cfg *viper.Viper, neogoClient *pool.Pool, logger *zap.Logger) (*monitor.MainJob, error) {
 	alphabetFetcher := morphchain.NewMainChainAlphabetFetcher(neogoClient)
 
-	balanceFetcher, err := morphchain.NewBalanceFetcher(
-		morphchain.BalanceFetcherArgs{
-			Cli: neogoClient,
-		})
+	balanceFetcher, err := monitor.NewNep17BalanceFetcher(neogoClient)
 	if err != nil {
 		return nil, fmt.Errorf("can't initialize Neo chain balance reader: %w", err)
 	}
@@ -119,9 +116,7 @@ func sideChainJob(neogoClient *pool.Pool, logger *zap.Logger) (*monitor.SideJob,
 
 	alphabetFetcher := morphchain.NewSideChainAlphabetFetcher(neogoClient)
 
-	balanceFetcher, err := morphchain.NewBalanceFetcher(morphchain.BalanceFetcherArgs{
-		Cli: neogoClient,
-	})
+	balanceFetcher, err := monitor.NewNep17BalanceFetcher(neogoClient)
 	if err != nil {
 		return nil, fmt.Errorf("can't initialize side balance fetcher: %w", err)
 	}
