@@ -38,3 +38,13 @@ func (b Nep17Fetcher) FetchTotalSupply(tokenHash util.Uint160) (int64, error) {
 
 	return res.Int64(), nil
 }
+
+// Symbol returns a short token identifier.
+func (b Nep17Fetcher) Symbol(tokenHash util.Uint160) (string, error) {
+	symbol, err := nep17.NewReader(b.cli, tokenHash).Symbol()
+	if err != nil {
+		return "", err
+	}
+
+	return symbol, nil
+}

@@ -6,6 +6,7 @@ import (
 
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	rpcnns "github.com/nspcc-dev/neofs-contract/rpc/nns"
+	"github.com/nspcc-dev/neofs-net-monitor/pkg/model"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/monitor"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/morphchain"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/morphchain/contracts"
@@ -42,7 +43,7 @@ func New(ctx context.Context, cfg *viper.Viper) (*monitor.Monitor, error) {
 	var job monitor.Job
 	if cfg.GetBool(cfgChainFSChain) {
 		monitor.RegisterSideChainMetrics()
-		job, err = sideChainJob(sideNeogoClient, logger)
+		job, err = sideChainJob(cfg, sideNeogoClient, logger)
 	} else {
 		monitor.RegisterMainChainMetrics()
 		job, err = mainChainJob(cfg, sideNeogoClient, logger)
@@ -81,15 +82,31 @@ func mainChainJob(cfg *viper.Viper, neogoClient *pool.Pool, logger *zap.Logger) 
 		logger.Info("NeoFS contract address not configured, continue without it")
 	}
 
+	var items []model.Nep17Balance
+	if err = cfg.UnmarshalKey("nep17", &items); err != nil {
+		return nil, fmt.Errorf("cfg nep17 parse: %w", err)
+	}
+
+	tasks, err := monitor.ParseNep17Tasks(balanceFetcher, items)
+	if err != nil {
+		return nil, err
+	}
+
+	nep17tracker, err := monitor.NewNep17tracker(balanceFetcher, tasks)
+	if err != nil {
+		return nil, fmt.Errorf("nep17tracker: %w", err)
+	}
+
 	return monitor.NewMainJob(monitor.MainJobArgs{
 		AlphabetFetcher: alphabetFetcher,
 		BalanceFetcher:  balanceFetcher,
 		Neofs:           neofs,
 		Logger:          logger,
+		Nep17tracker:    nep17tracker,
 	}), nil
 }
 
-func sideChainJob(neogoClient *pool.Pool, logger *zap.Logger) (*monitor.SideJob, error) {
+func sideChainJob(cfg *viper.Viper, neogoClient *pool.Pool, logger *zap.Logger) (*monitor.SideJob, error) {
 	netmapContract, err := neogoClient.ResolveContract(rpcnns.NameNetmap)
 	if err != nil {
 		return nil, fmt.Errorf("can't read netmap scripthash: %w", err)
@@ -138,6 +155,21 @@ func sideChainJob(neogoClient *pool.Pool, logger *zap.Logger) (*monitor.SideJob,
 		proxy = &proxyContract
 	}
 
+	var items []model.Nep17Balance
+	if err = cfg.UnmarshalKey("nep17", &items); err != nil {
+		return nil, fmt.Errorf("cfg nep17 parse: %w", err)
+	}
+
+	tasks, err := monitor.ParseNep17Tasks(balanceFetcher, items)
+	if err != nil {
+		return nil, err
+	}
+
+	nep17tracker, err := monitor.NewNep17tracker(balanceFetcher, tasks)
+	if err != nil {
+		return nil, fmt.Errorf("nep17tracker: %w", err)
+	}
+
 	return monitor.NewSideJob(monitor.SideJobArgs{
 		Logger:          logger,
 		Balance:         balance,
@@ -149,5 +181,6 @@ func sideChainJob(neogoClient *pool.Pool, logger *zap.Logger) (*monitor.SideJob,
 		CnrFetcher:      cnrFetcher,
 		HeightFetcher:   neogoClient,
 		StateFetcher:    neogoClient,
+		Nep17tracker:    nep17tracker,
 	}), nil
 }

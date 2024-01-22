@@ -25,6 +25,7 @@ type (
 		CnrFetcher      ContainerFetcher
 		HeightFetcher   HeightFetcher
 		StateFetcher    StateFetcher
+		Nep17tracker    *Nep17tracker
 	}
 
 	SideJob struct {
@@ -38,6 +39,7 @@ type (
 		stateFetcher    StateFetcher
 		alphabetFetcher AlphabetFetcher
 		balance         util.Uint160
+		nep17tracker    *Nep17tracker
 	}
 
 	diffNode struct {
@@ -112,6 +114,7 @@ func NewSideJob(args SideJobArgs) *SideJob {
 		stateFetcher:    args.StateFetcher,
 		alphabetFetcher: args.AlphabetFetcher,
 		balance:         args.Balance,
+		nep17tracker:    args.Nep17tracker,
 	}
 }
 
@@ -154,6 +157,13 @@ func (m *SideJob) Process() {
 
 	minHeight := m.processChainHeight()
 	m.processChainState(minHeight)
+	m.processNep17tracker()
+}
+
+func (m *SideJob) processNep17tracker() {
+	if m.nep17tracker != nil {
+		m.nep17tracker.Process(nep17tracker, nep17trackerTotal)
+	}
 }
 
 func (m *SideJob) processNetworkMap(nm NetmapInfo, candidates NetmapCandidatesInfo) {

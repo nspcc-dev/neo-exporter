@@ -18,6 +18,7 @@ type (
 	Nep17BalanceFetcher interface {
 		Fetch(tokenHash util.Uint160, account util.Uint160) (int64, error)
 		FetchTotalSupply(tokenHash util.Uint160) (int64, error)
+		Symbol(tokenHash util.Uint160) (string, error)
 	}
 
 	AlphabetFetcher interface {

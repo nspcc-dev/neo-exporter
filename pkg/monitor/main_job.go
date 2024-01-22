@@ -15,6 +15,7 @@ type (
 		BalanceFetcher  Nep17BalanceFetcher
 		Neofs           *util.Uint160
 		Logger          *zap.Logger
+		Nep17tracker    *Nep17tracker
 	}
 
 	MainJob struct {
@@ -22,6 +23,7 @@ type (
 		balanceFetcher  Nep17BalanceFetcher
 		logger          *zap.Logger
 		neofs           *util.Uint160
+		nep17tracker    *Nep17tracker
 	}
 )
 
@@ -31,6 +33,7 @@ func NewMainJob(args MainJobArgs) *MainJob {
 		balanceFetcher:  args.BalanceFetcher,
 		logger:          args.Logger,
 		neofs:           args.Neofs,
+		nep17tracker:    args.Nep17tracker,
 	}
 }
 
@@ -43,6 +46,13 @@ func (m *MainJob) Process() {
 	}
 
 	m.processMainChainSupply()
+	m.processNep17tracker()
+}
+
+func (m *MainJob) processNep17tracker() {
+	if m.nep17tracker != nil {
+		m.nep17tracker.Process(nep17tracker, nep17trackerTotal)
+	}
 }
 
 func (m *MainJob) processMainAlphabet(alphabet keys.PublicKeys) {
