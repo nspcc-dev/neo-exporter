@@ -3,7 +3,7 @@ module github.com/nspcc-dev/neofs-net-monitor
 go 1.19
 
 require (
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.5.0
 	github.com/multiformats/go-multiaddr v0.4.0
 	github.com/nspcc-dev/hrw v1.0.9
 	github.com/nspcc-dev/locode-db v0.4.1-0.20231120112844-64febbb63ce3
