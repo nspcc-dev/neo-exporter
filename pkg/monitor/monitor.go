@@ -15,12 +15,10 @@ import (
 )
 
 type (
-	BalanceFetcher interface {
-		FetchGAS(keys.PublicKey) (int64, error)
-		FetchGASByScriptHash(uint160 util.Uint160) (int64, error)
-		FetchNotary(keys.PublicKey) (int64, error)
-		FetchNotaryByScriptHash(uint160 util.Uint160) (int64, error)
-		FetchNEP17TotalSupply(util.Uint160) (int64, error)
+	Nep17BalanceFetcher interface {
+		Fetch(tokenHash util.Uint160, account util.Uint160) (float64, error)
+		FetchTotalSupply(tokenHash util.Uint160) (float64, error)
+		Symbol(tokenHash util.Uint160) (string, error)
 	}
 
 	AlphabetFetcher interface {

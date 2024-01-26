@@ -6,21 +6,26 @@ import (
 
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	rpcnns "github.com/nspcc-dev/neofs-contract/rpc/nns"
+	"github.com/nspcc-dev/neofs-net-monitor/pkg/model"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/monitor"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/morphchain"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/morphchain/contracts"
 	"github.com/nspcc-dev/neofs-net-monitor/pkg/pool"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 func New(ctx context.Context, cfg *viper.Viper) (*monitor.Monitor, error) {
 	logConf := zap.NewProductionConfig()
+	logConf.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	logConf.Level = WithLevel(cfg.GetString(cfgLoggerLevel))
 	logger, err := logConf.Build()
 	if err != nil {
 		return nil, err
 	}
+
+	zap.ReplaceGlobals(logger)
 
 	sideChainEndpoints := cfg.GetStringSlice(prefix + delimiter + cfgNeoRPCEndpoint)
 	sideChainTimeout := cfg.GetDuration(prefix + delimiter + cfgNeoRPCDialTimeout)
@@ -38,7 +43,7 @@ func New(ctx context.Context, cfg *viper.Viper) (*monitor.Monitor, error) {
 	var job monitor.Job
 	if cfg.GetBool(cfgChainFSChain) {
 		monitor.RegisterSideChainMetrics()
-		job, err = sideChainJob(sideNeogoClient, logger)
+		job, err = sideChainJob(cfg, sideNeogoClient, logger)
 	} else {
 		monitor.RegisterMainChainMetrics()
 		job, err = mainChainJob(cfg, sideNeogoClient, logger)
@@ -59,10 +64,7 @@ func New(ctx context.Context, cfg *viper.Viper) (*monitor.Monitor, error) {
 func mainChainJob(cfg *viper.Viper, neogoClient *pool.Pool, logger *zap.Logger) (*monitor.MainJob, error) {
 	alphabetFetcher := morphchain.NewMainChainAlphabetFetcher(neogoClient)
 
-	balanceFetcher, err := morphchain.NewBalanceFetcher(
-		morphchain.BalanceFetcherArgs{
-			Cli: neogoClient,
-		})
+	balanceFetcher, err := monitor.NewNep17BalanceFetcher(neogoClient)
 	if err != nil {
 		return nil, fmt.Errorf("can't initialize Neo chain balance reader: %w", err)
 	}
@@ -80,15 +82,31 @@ func mainChainJob(cfg *viper.Viper, neogoClient *pool.Pool, logger *zap.Logger) 
 		logger.Info("NeoFS contract address not configured, continue without it")
 	}
 
+	var items []model.Nep17Balance
+	if err = cfg.UnmarshalKey("nep17", &items); err != nil {
+		return nil, fmt.Errorf("cfg nep17 parse: %w", err)
+	}
+
+	tasks, err := monitor.ParseNep17Tasks(balanceFetcher, items, &contracts.NNSNoOp{})
+	if err != nil {
+		return nil, err
+	}
+
+	nep17tracker, err := monitor.NewNep17tracker(balanceFetcher, tasks)
+	if err != nil {
+		return nil, fmt.Errorf("nep17tracker: %w", err)
+	}
+
 	return monitor.NewMainJob(monitor.MainJobArgs{
 		AlphabetFetcher: alphabetFetcher,
 		BalanceFetcher:  balanceFetcher,
 		Neofs:           neofs,
 		Logger:          logger,
+		Nep17tracker:    nep17tracker,
 	}), nil
 }
 
-func sideChainJob(neogoClient *pool.Pool, logger *zap.Logger) (*monitor.SideJob, error) {
+func sideChainJob(cfg *viper.Viper, neogoClient *pool.Pool, logger *zap.Logger) (*monitor.SideJob, error) {
 	netmapContract, err := neogoClient.ResolveContract(rpcnns.NameNetmap)
 	if err != nil {
 		return nil, fmt.Errorf("can't read netmap scripthash: %w", err)
@@ -115,9 +133,7 @@ func sideChainJob(neogoClient *pool.Pool, logger *zap.Logger) (*monitor.SideJob,
 
 	alphabetFetcher := morphchain.NewSideChainAlphabetFetcher(neogoClient)
 
-	balanceFetcher, err := morphchain.NewBalanceFetcher(morphchain.BalanceFetcherArgs{
-		Cli: neogoClient,
-	})
+	balanceFetcher, err := monitor.NewNep17BalanceFetcher(neogoClient)
 	if err != nil {
 		return nil, fmt.Errorf("can't initialize side balance fetcher: %w", err)
 	}
@@ -139,6 +155,31 @@ func sideChainJob(neogoClient *pool.Pool, logger *zap.Logger) (*monitor.SideJob,
 		proxy = &proxyContract
 	}
 
+	var items []model.Nep17Balance
+	if err = cfg.UnmarshalKey("nep17", &items); err != nil {
+		return nil, fmt.Errorf("cfg nep17 parse: %w", err)
+	}
+
+	nnsHash, err := rpcnns.InferHash(neogoClient)
+	if err != nil {
+		return nil, fmt.Errorf("can't read nns scripthash: %w", err)
+	}
+
+	nnsContract, err := contracts.NewNNS(neogoClient, nnsHash)
+	if err != nil {
+		return nil, fmt.Errorf("can't initialize nns fetcher: %w", err)
+	}
+
+	tasks, err := monitor.ParseNep17Tasks(balanceFetcher, items, nnsContract)
+	if err != nil {
+		return nil, err
+	}
+
+	nep17tracker, err := monitor.NewNep17tracker(balanceFetcher, tasks)
+	if err != nil {
+		return nil, fmt.Errorf("nep17tracker: %w", err)
+	}
+
 	return monitor.NewSideJob(monitor.SideJobArgs{
 		Logger:          logger,
 		Balance:         balance,
@@ -150,5 +191,6 @@ func sideChainJob(neogoClient *pool.Pool, logger *zap.Logger) (*monitor.SideJob,
 		CnrFetcher:      cnrFetcher,
 		HeightFetcher:   neogoClient,
 		StateFetcher:    neogoClient,
+		Nep17tracker:    nep17tracker,
 	}), nil
 }

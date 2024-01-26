@@ -167,6 +167,28 @@ var (
 			"host", "hash",
 		},
 	)
+
+	nep17tracker = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Subsystem: "neofs_net_monitor",
+			Name:      "nep_17_balance",
+			Help:      "NEP-17 balance of contract and account",
+		},
+		[]string{
+			"label", "symbol", "contract", "account",
+		},
+	)
+
+	nep17trackerTotal = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Subsystem: "neofs_net_monitor",
+			Name:      "nep_17_total_supply",
+			Help:      "NEP-17 total supply of contract",
+		},
+		[]string{
+			"label", "symbol", "contract",
+		},
+	)
 )
 
 // RegisterSideChainMetrics inits prometheus metrics for side chain. Panics if can't do it.
@@ -185,11 +207,15 @@ func RegisterSideChainMetrics() {
 	prometheus.MustRegister(containersNumber)
 	prometheus.MustRegister(chainHeight)
 	prometheus.MustRegister(chainState)
+	prometheus.MustRegister(nep17tracker)      // used for both monitors
+	prometheus.MustRegister(nep17trackerTotal) // used for both monitors
 }
 
 // RegisterMainChainMetrics inits prometheus metrics for main chain. Panics if can't do it.
 func RegisterMainChainMetrics() {
 	prometheus.MustRegister(alphabetGASBalances)
 	prometheus.MustRegister(mainChainSupply)
-	prometheus.MustRegister(alphabetPubKeys) // used for both monitors
+	prometheus.MustRegister(alphabetPubKeys)   // used for both monitors
+	prometheus.MustRegister(nep17tracker)      // used for both monitors
+	prometheus.MustRegister(nep17trackerTotal) // used for both monitors
 }

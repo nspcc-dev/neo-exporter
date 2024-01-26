@@ -6,6 +6,8 @@ import (
 
 	"github.com/nspcc-dev/locode-db/pkg/locodedb"
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
+	"github.com/nspcc-dev/neo-go/pkg/rpcclient/gas"
+	"github.com/nspcc-dev/neo-go/pkg/rpcclient/notary"
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
@@ -19,23 +21,25 @@ type (
 		AlphabetFetcher AlphabetFetcher
 		NmFetcher       NetmapFetcher
 		IRFetcher       InnerRingFetcher
-		BalanceFetcher  BalanceFetcher
+		BalanceFetcher  Nep17BalanceFetcher
 		CnrFetcher      ContainerFetcher
 		HeightFetcher   HeightFetcher
 		StateFetcher    StateFetcher
+		Nep17tracker    *Nep17tracker
 	}
 
 	SideJob struct {
 		logger          *zap.Logger
 		nmFetcher       NetmapFetcher
 		irFetcher       InnerRingFetcher
-		balanceFetcher  BalanceFetcher
+		balanceFetcher  Nep17BalanceFetcher
 		proxy           *util.Uint160
 		cnrFetcher      ContainerFetcher
 		heightFetcher   HeightFetcher
 		stateFetcher    StateFetcher
 		alphabetFetcher AlphabetFetcher
 		balance         util.Uint160
+		nep17tracker    *Nep17tracker
 	}
 
 	diffNode struct {
@@ -110,6 +114,7 @@ func NewSideJob(args SideJobArgs) *SideJob {
 		stateFetcher:    args.StateFetcher,
 		alphabetFetcher: args.AlphabetFetcher,
 		balance:         args.Balance,
+		nep17tracker:    args.Nep17tracker,
 	}
 }
 
@@ -152,21 +157,29 @@ func (m *SideJob) Process() {
 
 	minHeight := m.processChainHeight()
 	m.processChainState(minHeight)
+	m.processNep17tracker()
+}
+
+func (m *SideJob) processNep17tracker() {
+	if m.nep17tracker != nil {
+		m.nep17tracker.Process(nep17tracker, nep17trackerTotal)
+	}
 }
 
 func (m *SideJob) processNetworkMap(nm NetmapInfo, candidates NetmapCandidatesInfo) {
 	currentNetmapLen := len(nm.Nodes)
 
 	exportCountries := make(map[nodeLocation]int, currentNetmapLen)
-	exportBalancesGAS := make(map[string]int64, currentNetmapLen)
-	exportBalancesNotary := make(map[string]int64, currentNetmapLen)
+	exportBalancesGAS := make(map[string]float64, currentNetmapLen)
+	exportBalancesNotary := make(map[string]float64, currentNetmapLen)
 
 	newNodes, droppedNodes := getDiff(nm, candidates)
 
 	for _, node := range nm.Nodes {
 		keyHex := hex.EncodeToString(node.PublicKey.Bytes())
+		scriptHash := node.PublicKey.GetScriptHash()
 
-		balanceGAS, err := m.balanceFetcher.FetchGAS(*node.PublicKey)
+		balanceGAS, err := m.balanceFetcher.Fetch(gas.Hash, scriptHash)
 		if err != nil {
 			m.logger.Debug("can't fetch GAS balance", zap.String("key", keyHex), zap.Error(err))
 		} else {
@@ -190,7 +203,7 @@ func (m *SideJob) processNetworkMap(nm NetmapInfo, candidates NetmapCandidatesIn
 			exportCountries[nodeLoc]++
 		}
 
-		balanceNotary, err := m.balanceFetcher.FetchNotary(*node.PublicKey)
+		balanceNotary, err := m.balanceFetcher.Fetch(notary.Hash, scriptHash)
 		if err != nil {
 			m.logger.Debug("can't fetch notary balance of node from the NeoFS network map",
 				zap.String("key", keyHex),
@@ -219,12 +232,12 @@ func (m *SideJob) processNetworkMap(nm NetmapInfo, candidates NetmapCandidatesIn
 
 	storageNodeGASBalances.Reset()
 	for k, v := range exportBalancesGAS {
-		storageNodeGASBalances.WithLabelValues(k).Set(float64(v))
+		storageNodeGASBalances.WithLabelValues(k).Set(v)
 	}
 
 	storageNodeNotaryBalances.Reset()
 	for k, v := range exportBalancesNotary {
-		storageNodeNotaryBalances.WithLabelValues(k).Set(float64(v))
+		storageNodeNotaryBalances.WithLabelValues(k).Set(v)
 	}
 }
 
@@ -243,12 +256,12 @@ func (m *SideJob) logNodes(msg string, nodes []*Node) {
 }
 
 func (m *SideJob) processInnerRing(ir keys.PublicKeys) {
-	exportBalances := make(map[string]int64, len(ir))
+	exportBalances := make(map[string]float64, len(ir))
 
 	for _, key := range ir {
 		keyHex := hex.EncodeToString(key.Bytes())
 
-		balance, err := m.balanceFetcher.FetchGAS(*key)
+		balance, err := m.balanceFetcher.Fetch(gas.Hash, key.GetScriptHash())
 		if err != nil {
 			m.logger.Debug("can't fetch GAS balance of the NeoFS Inner Ring member",
 				zap.String("key", keyHex),
@@ -262,27 +275,27 @@ func (m *SideJob) processInnerRing(ir keys.PublicKeys) {
 
 	innerRingBalances.Reset()
 	for k, v := range exportBalances {
-		innerRingBalances.WithLabelValues(k).Set(float64(v))
+		innerRingBalances.WithLabelValues(k).Set(v)
 	}
 }
 
 func (m *SideJob) processProxyContract() {
-	balance, err := m.balanceFetcher.FetchGASByScriptHash(*m.proxy)
+	balance, err := m.balanceFetcher.Fetch(gas.Hash, *m.proxy)
 	if err != nil {
 		m.logger.Debug("can't fetch proxy contract balance", zap.Stringer("address", m.proxy), zap.Error(err))
 		return
 	}
 
-	proxyBalance.Set(float64(balance))
+	proxyBalance.Set(balance)
 }
 
 func (m *SideJob) processSideAlphabet(alphabet keys.PublicKeys) {
-	exportNotaryBalances := make(map[string]int64, len(alphabet))
+	exportNotaryBalances := make(map[string]float64, len(alphabet))
 
 	for _, key := range alphabet {
 		keyHex := hex.EncodeToString(key.Bytes())
 
-		balanceNotary, err := m.balanceFetcher.FetchNotary(*key)
+		balanceNotary, err := m.balanceFetcher.Fetch(notary.Hash, key.GetScriptHash())
 		if err != nil {
 			m.logger.Debug("can't fetch notary balance of the NeoFS Alphabet member", zap.String("key", keyHex), zap.Error(err))
 		} else {
@@ -292,18 +305,18 @@ func (m *SideJob) processSideAlphabet(alphabet keys.PublicKeys) {
 
 	alphabetNotaryBalances.Reset()
 	for k, v := range exportNotaryBalances {
-		alphabetNotaryBalances.WithLabelValues(k).Set(float64(v))
+		alphabetNotaryBalances.WithLabelValues(k).Set(v)
 	}
 }
 
 func (m *SideJob) processSideChainSupply() {
-	balance, err := m.balanceFetcher.FetchNEP17TotalSupply(m.balance)
+	balance, err := m.balanceFetcher.FetchTotalSupply(m.balance)
 	if err != nil {
 		m.logger.Debug("can't fetch balance contract total supply", zap.Stringer("address", m.balance), zap.Error(err))
 		return
 	}
 
-	sideChainSupply.Set(float64(balance))
+	sideChainSupply.Set(balance)
 }
 
 func (m *SideJob) processContainersNumber() {
