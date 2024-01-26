@@ -24,14 +24,14 @@ logger:
   level: info
 
 nep17:
-  - contract: "Gas"
-    label: "Gas"
+  - contract: "gas"
+    label: "GAS"
     # allows to return the total token supply currently available.
     # totalSupply: true
     balanceOf:
       - 3c3f4b84773ef0141576e48c3ff60e5078235891
-  - contract: "Neo"
-    label: "Neo"
+  - contract: "NEO"
+    label: "neo"
     balanceOf:
       - NSPCCpw8YmgNDYWiBfXJHRfz38NDjv6WW3
       - NSPCCa2T6nc2kYcgWC2k68boyGgc9YdKsj
