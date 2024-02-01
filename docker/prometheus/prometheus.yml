@@ -6,9 +6,9 @@ scrape_configs:
     scrape_interval: 5s
     static_configs:
       - targets: ['localhost:9090']
-  - job_name: 'neofs-net-monitor'
+  - job_name: 'neo-exporter'
     scrape_interval: 15s
     static_configs:
-      - targets: ['neofs-net-monitor:16512']
+      - targets: ['neo-exporter:16512']
         labels:
           net: 'monitor'

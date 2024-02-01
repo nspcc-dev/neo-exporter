@@ -1,4 +1,4 @@
-module github.com/nspcc-dev/neofs-net-monitor
+module github.com/nspcc-dev/neo-exporter
 
 go 1.19
 

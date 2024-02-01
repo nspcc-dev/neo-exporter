@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/nspcc-dev/neo-exporter/pkg/pool"
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	"github.com/nspcc-dev/neofs-contract/rpc/nns"
-	"github.com/nspcc-dev/neofs-net-monitor/pkg/pool"
 )
 
 type (

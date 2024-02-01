@@ -19,7 +19,7 @@ These should run successfully:
 3. Build and push image to a Docker Hub:
 ```shell
 $ make image
-$ docker push nspccdev/neofs-net-monitor:0.7.1
+$ docker push nspccdev/neo-exporter:0.7.1
 ```
 
 

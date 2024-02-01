@@ -1,20 +1,19 @@
-# NeoFS Network Monitor
+# Neo Exporter
 
-Testnet network monitor. Application scrapes data from network map contract in
-neo side chain. Then exposes it to prometheus instance. Then grafana visualise 
-data in pretty format.
-
-For internal usage.
+Export various data from Neo chains as Prometheus metrics. Special support is
+provided for NeoFS contracts (deployed into FS chains). Metrics are updated
+regularly and can then be scraped/stored/analysed/visualized in various ways
+(VictoriaMetrics/Grafana).
 
 ## How to use 
 
-1. (Optional) Build image of neofs-network-monitor app.
+1. (Optional) Build image of neo-exporter app.
 
 ```
 $ make image
 ```
 
-2. (Optional) Specify neofs-net-monitor image version in `docker/docker-compose.yml`.
+2. (Optional) Specify neo-exporter image version in `docker/docker-compose.yml`.
 
 3. Start environment.
 
@@ -36,10 +35,10 @@ Supported environments:
 
 See [config examples](./config) for all available options.
 
-You can provide a config for neofs-net-monitor:
+You can provide a config for neo-exporter:
 
 ```shell
-$ neofs-net-monitor --config config.yaml
+$ neo-exporter --config config.yaml
 ```
 
 Also, you can provide all options using env variables.

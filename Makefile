@@ -6,26 +6,29 @@ VERSION ?= $(shell git describe --tags --dirty --match "v*" --always --abbrev=8 
 HUB_TAG ?= "$(shell echo ${VERSION} | sed 's/^v//')"
 
 REPO = nspccdev
-APP = neofs-net-monitor
+APP = neo-exporter
 BINARY = ./bin/${APP}
 SRC = ./cmd/${APP}/
 
 .PHONY: bin image up up-testnet up-devenv down down-testnet down-devenv clean lint test cover
 
 bin:
-	@echo "Build neofs-net-monitor binary"
+	@echo "Build neo-exporter binary"
 	CGO_ENABLED=0 \
 	go build -v -trimpath \
 	-ldflags "-X main.Version=$(VERSION)" \
 	-o ${BINARY} ${SRC}
 
 image:
-	@echo "Build neofs-net-monitor docker image"
+	@echo "Build neo-exporter docker image"
 	@docker build \
 		--rm \
 		-f Dockerfile \
 		--build-arg VERSION=$(VERSION) \
 		-t ${REPO}/${APP}:$(HUB_TAG) .
+
+fmt:
+	@gofmt -l -w -s $$(find . -type f -name '*.go'| grep -v "/vendor/")
 
 up:
 	@docker-compose -f docker/docker-compose.yml --env-file docker/mainnet.env up -d
