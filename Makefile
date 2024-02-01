@@ -27,6 +27,9 @@ image:
 		--build-arg VERSION=$(VERSION) \
 		-t ${REPO}/${APP}:$(HUB_TAG) .
 
+fmt:
+	@gofmt -l -w -s $$(find . -type f -name '*.go'| grep -v "/vendor/")
+
 up:
 	@docker-compose -f docker/docker-compose.yml --env-file docker/mainnet.env up -d
 

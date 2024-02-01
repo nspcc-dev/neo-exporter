@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/nspcc-dev/neo-exporter/pkg/monitor"
 	"github.com/nspcc-dev/neo-go/pkg/core/native/noderoles"
 	"github.com/nspcc-dev/neo-go/pkg/core/state"
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
@@ -20,7 +21,6 @@ import (
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	"github.com/nspcc-dev/neo-go/pkg/vm/stackitem"
 	rpcnns "github.com/nspcc-dev/neofs-contract/rpc/nns"
-	"github.com/nspcc-dev/neo-exporter/pkg/monitor"
 )
 
 // Pool represent virtual connection to the Neo network to communicate

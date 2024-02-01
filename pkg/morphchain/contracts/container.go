@@ -3,9 +3,9 @@ package contracts
 import (
 	"fmt"
 
+	"github.com/nspcc-dev/neo-exporter/pkg/pool"
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	"github.com/nspcc-dev/neofs-contract/rpc/container"
-	"github.com/nspcc-dev/neo-exporter/pkg/pool"
 )
 
 type Container struct {
