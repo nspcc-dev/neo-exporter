@@ -33,9 +33,9 @@ services:
       - monitor-net
     restart: on-failure
 
-  neofs-net-monitor:
-    image: nspccdev/neofs-net-monitor:0.9.0
-    container_name: neofs-net-monitor
+  neo-exporter:
+    image: nspccdev/neo-exporter:0.9.0
+    container_name: neo-exporter
     depends_on:
       - prometheus
     environment:

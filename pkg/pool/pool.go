@@ -20,7 +20,7 @@ import (
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	"github.com/nspcc-dev/neo-go/pkg/vm/stackitem"
 	rpcnns "github.com/nspcc-dev/neofs-contract/rpc/nns"
-	"github.com/nspcc-dev/neofs-net-monitor/pkg/monitor"
+	"github.com/nspcc-dev/neo-exporter/pkg/monitor"
 )
 
 // Pool represent virtual connection to the Neo network to communicate
