@@ -7,6 +7,20 @@ on:
     types: [opened, synchronize]
     paths-ignore:
       - '**/*.md'
+  push:
+    # Build for the master branch.
+    branches:
+      - master
+  release:
+    # Publish released commit as Docker `latest` and `git_revision` images.
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Ref to build the binary [default: latest master; examples: v0.10.0, 0a4ff9d3e4a9ab432fd5812eb18c98e03b5a7432]'
+        required: false
+        default: ''
 
 jobs:
   build_cli:
@@ -29,6 +43,22 @@ jobs:
 
       - name: Check version
         run: if [[ $(make version) == *"dirty"* ]]; then exit 1; fi
+
+      - name: Rename CLI binary
+        run: mv ./bin/neo-exporter* ./bin/neo-exporter-linux-amd64
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: neo-exporter
+          path: ./bin/neo-exporter*
+          if-no-files-found: error
+
+      - name: Attach binary to the release as an asset
+        if: ${{ github.event_name == 'release' }}
+        run: gh release upload ${{ github.event.release.tag_name }} ./bin/neo-exporter-linux-amd64
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build_image:
     needs: build_cli
