@@ -38,11 +38,11 @@ jobs:
           cache: true
           go-version: 1.21
 
-      - name: Build CLI
-        run: make
-
       - name: Check version
         run: if [[ $(make version) == *"dirty"* ]]; then exit 1; fi
+
+      - name: Build CLI
+        run: make
 
       - name: Rename CLI binary
         run: mv ./bin/neo-exporter* ./bin/neo-exporter-linux-amd64
