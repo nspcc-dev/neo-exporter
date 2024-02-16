@@ -3,18 +3,30 @@ Changelog for NeoFS Monitor
 
 ## [Unreleased]
 
+## [0.10.0] - 2024-02-16
+
+### Added
+- Height and state data export for a set of configured nodes (#96)
+- NEP-17 balance tracking (#105)
+
 ### Changed
+- Go 1.19+ is required to build now (#92)
+- Updated all dependencies (#92, #109)
+- Contract wrappers are used now to interact with blockchain (#98)
 - Usage of Locode DB Go package (#100)
 - Configuration supports only one chain in a moment (#103)
+- The tool is known as neo-exporter now (#112)
 
 ### Removed
+- Notary-less mode for FS chains (#97)
 - Locode DB configuration options (#100)
 
 ### Upgrading from v0.9.5
 
 The configuration sections `mainnet` and  `morph` were replaced with similar `chain` sections. To choice between
-main (Neo) chain and side (NeoFS) chain, use `chain.fschain` option. If true, monitor connects to the NeoFS chain,
-otherwise, to the Neo chain.
+main (Neo) chain and side (NeoFS) chain, use `chain.fschain` option. If true, exporter connects to the NeoFS chain,
+otherwise, to the Neo chain. It no longer watches two chains at once, so to monitor NeoFS you need two instances
+of the tool.
 
 ## [0.9.5] - 2022-12-29
 
@@ -114,7 +126,8 @@ to establish connection to the RC4 main chain and `NEOFS_NET_MONITOR_MORPH_RPC_E
 `NEOFS_NET_MONITOR_MORPH_RPC_DIAL_TIMEOUT` for the side chain instead.
 `NEOFS_NET_MONITOR_CONTRACTS_PROXY` env is now optional for notary disabled environments.
 
-[Unreleased]: https://github.com/nspcc-dev/neo-exporter/compare/v0.9.5...master
+[Unreleased]: https://github.com/nspcc-dev/neo-exporter/compare/v0.10.0...master
+[0.10.0]: https://github.com/nspcc-dev/neo-exporter/compare/v0.9.5...v0.10.0
 [0.9.5]: https://github.com/nspcc-dev/neo-exporter/compare/v0.9.0...v0.9.5
 [0.9.0]: https://github.com/nspcc-dev/neo-exporter/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/nspcc-dev/neo-exporter/compare/v0.7.1...v0.8.0
