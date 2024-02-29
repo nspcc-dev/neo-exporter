@@ -28,7 +28,12 @@ func (n *Nep17tracker) Process(metric *prometheus.GaugeVec, metricTotal *prometh
 		for _, acc := range item.Accounts {
 			balance, err := n.balanceFetcher.Fetch(item.Hash, acc)
 			if err != nil {
-				zap.L().Error("nep17 balance", zap.Error(err), zap.String("contract", item.Hash.StringLE()), zap.String("account", address.Uint160ToString(acc)))
+				zap.L().Error(
+					"nep17 balance",
+					zap.Error(err),
+					zap.String("contract", item.Hash.StringLE()),
+					zap.String("account", address.Uint160ToString(acc)),
+				)
 				continue
 			}
 
@@ -43,7 +48,11 @@ func (n *Nep17tracker) Process(metric *prometheus.GaugeVec, metricTotal *prometh
 		if item.Total {
 			balance, err := n.balanceFetcher.FetchTotalSupply(item.Hash)
 			if err != nil {
-				zap.L().Error("nep17 total balance", zap.Error(err), zap.String("contract", item.Hash.StringLE()))
+				zap.L().Error(
+					"nep17 total balance",
+					zap.Error(err),
+					zap.String("contract", item.Hash.StringLE()),
+				)
 				continue
 			}
 
