@@ -3,7 +3,7 @@ module github.com/nspcc-dev/neo-exporter
 go 1.20
 
 require (
-	github.com/google/uuid v1.5.0
+	github.com/google/uuid v1.6.0
 	github.com/multiformats/go-multiaddr v0.4.0
 	github.com/nspcc-dev/hrw v1.0.9
 	github.com/nspcc-dev/locode-db v0.6.0
