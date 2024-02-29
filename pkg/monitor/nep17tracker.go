@@ -1,6 +1,7 @@
 package monitor
 
 import (
+	"github.com/nspcc-dev/neo-go/pkg/encoding/address"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 )
@@ -27,7 +28,12 @@ func (n *Nep17tracker) Process(metric *prometheus.GaugeVec, metricTotal *prometh
 		for _, acc := range item.Accounts {
 			balance, err := n.balanceFetcher.Fetch(item.Hash, acc)
 			if err != nil {
-				zap.L().Error("nep17 balance", zap.Error(err), zap.String("contract", item.Hash.StringLE()), zap.String("account", acc.StringLE()))
+				zap.L().Error(
+					"nep17 balance",
+					zap.Error(err),
+					zap.String("contract", item.Hash.StringLE()),
+					zap.String("account", address.Uint160ToString(acc)),
+				)
 				continue
 			}
 
@@ -35,14 +41,18 @@ func (n *Nep17tracker) Process(metric *prometheus.GaugeVec, metricTotal *prometh
 				item.Label,
 				item.Symbol,
 				item.Hash.StringLE(),
-				acc.StringLE(),
+				address.Uint160ToString(acc),
 			).Set(balance)
 		}
 
 		if item.Total {
 			balance, err := n.balanceFetcher.FetchTotalSupply(item.Hash)
 			if err != nil {
-				zap.L().Error("nep17 total balance", zap.Error(err), zap.String("contract", item.Hash.StringLE()))
+				zap.L().Error(
+					"nep17 total balance",
+					zap.Error(err),
+					zap.String("contract", item.Hash.StringLE()),
+				)
 				continue
 			}
 
