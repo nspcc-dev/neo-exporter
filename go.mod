@@ -14,7 +14,7 @@ require (
 	github.com/prometheus/client_golang v1.18.0
 	github.com/spf13/viper v1.16.0
 	github.com/stretchr/testify v1.8.4
-	go.uber.org/zap v1.26.0
+	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.17.0 // indirect
 )
 
@@ -59,7 +59,7 @@ require (
 	github.com/syndtr/goleveldb v1.0.1-0.20210305035536-64b5b1c73954 // indirect
 	github.com/twmb/murmur3 v1.1.5 // indirect
 	go.etcd.io/bbolt v1.3.8 // indirect
-	go.uber.org/multierr v1.10.0 // indirect
+	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63 // indirect
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
