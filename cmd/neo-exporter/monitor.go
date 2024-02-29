@@ -138,6 +138,11 @@ func sideChainJob(cfg *viper.Viper, neogoClient *pool.Pool, logger *zap.Logger) 
 		return nil, fmt.Errorf("can't initialize side balance fetcher: %w", err)
 	}
 
+	notaryBalanceFetcher, err := monitor.NewNotaryFetcher(neogoClient)
+	if err != nil {
+		return nil, fmt.Errorf("can't initialize notary side balance fetcher: %w", err)
+	}
+
 	var (
 		balance util.Uint160
 		proxy   *util.Uint160
@@ -181,16 +186,17 @@ func sideChainJob(cfg *viper.Viper, neogoClient *pool.Pool, logger *zap.Logger) 
 	}
 
 	return monitor.NewSideJob(monitor.SideJobArgs{
-		Logger:          logger,
-		Balance:         balance,
-		Proxy:           proxy,
-		AlphabetFetcher: alphabetFetcher,
-		NmFetcher:       nmFetcher,
-		IRFetcher:       nmFetcher,
-		BalanceFetcher:  balanceFetcher,
-		CnrFetcher:      cnrFetcher,
-		HeightFetcher:   neogoClient,
-		StateFetcher:    neogoClient,
-		Nep17tracker:    nep17tracker,
+		Logger:               logger,
+		Balance:              balance,
+		Proxy:                proxy,
+		AlphabetFetcher:      alphabetFetcher,
+		NmFetcher:            nmFetcher,
+		IRFetcher:            nmFetcher,
+		BalanceFetcher:       balanceFetcher,
+		NotaryBalanceFetcher: notaryBalanceFetcher,
+		CnrFetcher:           cnrFetcher,
+		HeightFetcher:        neogoClient,
+		StateFetcher:         neogoClient,
+		Nep17tracker:         nep17tracker,
 	}), nil
 }

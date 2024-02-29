@@ -7,7 +7,6 @@ import (
 	"github.com/nspcc-dev/locode-db/pkg/locodedb"
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
 	"github.com/nspcc-dev/neo-go/pkg/rpcclient/gas"
-	"github.com/nspcc-dev/neo-go/pkg/rpcclient/notary"
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
@@ -15,31 +14,33 @@ import (
 
 type (
 	SideJobArgs struct {
-		Logger          *zap.Logger
-		Balance         util.Uint160
-		Proxy           *util.Uint160
-		AlphabetFetcher AlphabetFetcher
-		NmFetcher       NetmapFetcher
-		IRFetcher       InnerRingFetcher
-		BalanceFetcher  Nep17BalanceFetcher
-		CnrFetcher      ContainerFetcher
-		HeightFetcher   HeightFetcher
-		StateFetcher    StateFetcher
-		Nep17tracker    *Nep17tracker
+		Logger               *zap.Logger
+		Balance              util.Uint160
+		Proxy                *util.Uint160
+		AlphabetFetcher      AlphabetFetcher
+		NmFetcher            NetmapFetcher
+		IRFetcher            InnerRingFetcher
+		BalanceFetcher       Nep17BalanceFetcher
+		NotaryBalanceFetcher NotaryBalanceFetcher
+		CnrFetcher           ContainerFetcher
+		HeightFetcher        HeightFetcher
+		StateFetcher         StateFetcher
+		Nep17tracker         *Nep17tracker
 	}
 
 	SideJob struct {
-		logger          *zap.Logger
-		nmFetcher       NetmapFetcher
-		irFetcher       InnerRingFetcher
-		balanceFetcher  Nep17BalanceFetcher
-		proxy           *util.Uint160
-		cnrFetcher      ContainerFetcher
-		heightFetcher   HeightFetcher
-		stateFetcher    StateFetcher
-		alphabetFetcher AlphabetFetcher
-		balance         util.Uint160
-		nep17tracker    *Nep17tracker
+		logger               *zap.Logger
+		nmFetcher            NetmapFetcher
+		irFetcher            InnerRingFetcher
+		balanceFetcher       Nep17BalanceFetcher
+		notaryBalanceFetcher NotaryBalanceFetcher
+		proxy                *util.Uint160
+		cnrFetcher           ContainerFetcher
+		heightFetcher        HeightFetcher
+		stateFetcher         StateFetcher
+		alphabetFetcher      AlphabetFetcher
+		balance              util.Uint160
+		nep17tracker         *Nep17tracker
 	}
 
 	diffNode struct {
@@ -104,17 +105,18 @@ type (
 
 func NewSideJob(args SideJobArgs) *SideJob {
 	return &SideJob{
-		logger:          args.Logger,
-		nmFetcher:       args.NmFetcher,
-		irFetcher:       args.IRFetcher,
-		balanceFetcher:  args.BalanceFetcher,
-		proxy:           args.Proxy,
-		cnrFetcher:      args.CnrFetcher,
-		heightFetcher:   args.HeightFetcher,
-		stateFetcher:    args.StateFetcher,
-		alphabetFetcher: args.AlphabetFetcher,
-		balance:         args.Balance,
-		nep17tracker:    args.Nep17tracker,
+		logger:               args.Logger,
+		nmFetcher:            args.NmFetcher,
+		irFetcher:            args.IRFetcher,
+		balanceFetcher:       args.BalanceFetcher,
+		notaryBalanceFetcher: args.NotaryBalanceFetcher,
+		proxy:                args.Proxy,
+		cnrFetcher:           args.CnrFetcher,
+		heightFetcher:        args.HeightFetcher,
+		stateFetcher:         args.StateFetcher,
+		alphabetFetcher:      args.AlphabetFetcher,
+		balance:              args.Balance,
+		nep17tracker:         args.Nep17tracker,
 	}
 }
 
@@ -203,7 +205,7 @@ func (m *SideJob) processNetworkMap(nm NetmapInfo, candidates NetmapCandidatesIn
 			exportCountries[nodeLoc]++
 		}
 
-		balanceNotary, err := m.balanceFetcher.Fetch(notary.Hash, scriptHash)
+		balanceNotary, err := m.notaryBalanceFetcher.FetchNotary(scriptHash)
 		if err != nil {
 			m.logger.Debug("can't fetch notary balance of node from the NeoFS network map",
 				zap.String("key", keyHex),
@@ -295,7 +297,7 @@ func (m *SideJob) processSideAlphabet(alphabet keys.PublicKeys) {
 	for _, key := range alphabet {
 		keyHex := hex.EncodeToString(key.Bytes())
 
-		balanceNotary, err := m.balanceFetcher.Fetch(notary.Hash, key.GetScriptHash())
+		balanceNotary, err := m.notaryBalanceFetcher.FetchNotary(key.GetScriptHash())
 		if err != nil {
 			m.logger.Debug("can't fetch notary balance of the NeoFS Alphabet member", zap.String("key", keyHex), zap.Error(err))
 		} else {

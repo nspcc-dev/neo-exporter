@@ -21,6 +21,10 @@ type (
 		Symbol(tokenHash util.Uint160) (string, error)
 	}
 
+	NotaryBalanceFetcher interface {
+		FetchNotary(account util.Uint160) (float64, error)
+	}
+
 	AlphabetFetcher interface {
 		FetchAlphabet() (keys.PublicKeys, error)
 	}
