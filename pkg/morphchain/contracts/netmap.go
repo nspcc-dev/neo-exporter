@@ -8,7 +8,7 @@ import (
 
 	"github.com/multiformats/go-multiaddr"
 	manet "github.com/multiformats/go-multiaddr/net"
-	"github.com/nspcc-dev/hrw"
+	"github.com/nspcc-dev/hrw/v2"
 	"github.com/nspcc-dev/neo-exporter/pkg/monitor"
 	"github.com/nspcc-dev/neo-exporter/pkg/pool"
 	"github.com/nspcc-dev/neo-go/pkg/core/native/noderoles"
