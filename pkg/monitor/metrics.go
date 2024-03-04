@@ -175,7 +175,7 @@ var (
 			Help:      "NEP-17 balance of contract and account",
 		},
 		[]string{
-			"label", "symbol", "contract", "account",
+			"symbol", "contract", "account",
 		},
 	)
 
@@ -186,7 +186,7 @@ var (
 			Help:      "NEP-17 total supply of contract",
 		},
 		[]string{
-			"label", "symbol", "contract",
+			"symbol", "contract",
 		},
 	)
 )

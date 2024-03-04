@@ -38,7 +38,6 @@ func (n *Nep17tracker) Process(metric *prometheus.GaugeVec, metricTotal *prometh
 			}
 
 			metric.WithLabelValues(
-				item.Label,
 				item.Symbol,
 				item.Hash.StringLE(),
 				address.Uint160ToString(acc),
@@ -57,7 +56,6 @@ func (n *Nep17tracker) Process(metric *prometheus.GaugeVec, metricTotal *prometh
 			}
 
 			metricTotal.WithLabelValues(
-				item.Label,
 				item.Symbol,
 				item.Hash.StringLE(),
 			).Set(balance)
