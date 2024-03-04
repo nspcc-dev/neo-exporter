@@ -20,7 +20,6 @@ type (
 
 	// Item describes task for [Nep17tracker].
 	Item struct {
-		Label    string
 		Symbol   string
 		Hash     util.Uint160
 		Accounts []util.Uint160
@@ -45,7 +44,6 @@ func ParseNep17Tasks(balanceFetcher Nep17BalanceFetcher, items []model.Nep17Bala
 		)
 
 		task := Item{
-			Label:    it.Label,
 			Total:    it.TotalSupply,
 			Accounts: make([]util.Uint160, 0, len(it.BalanceOf)),
 		}
@@ -73,7 +71,6 @@ func ParseNep17Tasks(balanceFetcher Nep17BalanceFetcher, items []model.Nep17Bala
 				zap.L().Error(
 					"parse nep17 account",
 					zap.Error(err),
-					zap.String("label", it.Label),
 					zap.String("contract", contract.StringLE()),
 					zap.String("balanceOf", balanceOf),
 				)
