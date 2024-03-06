@@ -5,32 +5,6 @@ provided for NeoFS contracts (deployed into FS chains). Metrics are updated
 regularly and can then be scraped/stored/analysed/visualized in various ways
 (VictoriaMetrics/Grafana).
 
-## How to use 
-
-1. (Optional) Build image of neo-exporter app.
-
-```
-$ make image
-```
-
-2. (Optional) Specify neo-exporter image version in `docker/docker-compose.yml`.
-
-3. Start environment.
-
-```
-$ make up
-```
-
-To stop environment run `make down` command.
-
-4. In grafana at `http://localhost:3000` select `NeoFS Network Monitor`
-dashboard.
-
-Supported environments:
-- N3 Mainnet (`make up`)
-- N3 T5 (`make up-testnet`)
-- NeoFS Dev Env (`make up-devenv`)
-   
 ## Available options
 
 See [config examples](./config) for all available options.
@@ -95,10 +69,3 @@ nep17:
       balanceOf:
         - NagentXDvR5c3pQ4gxXpqZjMoUpKVCUMmB
 ```
-
-## Connect to neofs-dev-env
-
-After `Jebudo` release monitor can be attached to 
-[neofs-dev-env](https://github.com/nspcc-dev/neofs-dev-env). Go to 
-`docker/docker-compose.devenv.yml` file, make sure that NeoFS contract script
-hash is correct, and run `make up-devenv` command.

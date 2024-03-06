@@ -30,24 +30,6 @@ image:
 fmt:
 	@gofmt -l -w -s $$(find . -type f -name '*.go'| grep -v "/vendor/")
 
-up:
-	@docker-compose -f docker/docker-compose.yml --env-file docker/mainnet.env up -d
-
-up-testnet:
-	@docker-compose -f docker/docker-compose.yml --env-file docker/testnet.env up -d
-
-up-devenv:
-	@docker-compose -f docker/docker-compose.devenv.yml up -d
-
-down:
-	@docker-compose -f docker/docker-compose.yml down
-
-down-testnet:
-	@docker-compose -f docker/docker-compose.yml down
-
-down-devenv:
-	@docker-compose -f docker/docker-compose.devenv.yml down
-
 clean:
 	rm -f ${BINARY}
 
