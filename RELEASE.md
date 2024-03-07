@@ -8,19 +8,8 @@ These should run successfully:
 
 ## Release steps
 
-1. Update `CHANGELOG.md`, `VERSION` and `docker-compose` files and create PR.
-
+1. Update `CHANGELOG.md` and `VERSION` files, create PR.
 
 2. After successful PR merge:
-   * Create and sign tag: `git tag -s v0.7.1`
-   * Push it to origin master: `git push origin master v0.7.1`
-   
-
-3. Build and push image to a Docker Hub:
-```shell
-$ make image
-$ docker push nspccdev/neo-exporter:0.7.1
-```
-
-
-4. Make a proper GitHub release page
+   * Create Github release, copy changelog there.
+   * Wait for autobuild to complete successfully.
