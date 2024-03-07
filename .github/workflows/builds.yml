@@ -30,6 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.inputs.ref }}
           fetch-depth: 0
 
       - name: Setup Go
@@ -68,6 +69,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.inputs.ref }}
           fetch-depth: 0
 
       - name: Set up Go
