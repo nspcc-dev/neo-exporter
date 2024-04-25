@@ -34,6 +34,10 @@ jobs:
   build_cli:
     name: Build CLI
     runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        os: [ linux, darwin ]
+        arch: [ amd64, arm64 ]
 
     steps:
       - uses: actions/checkout@v4
@@ -51,21 +55,21 @@ jobs:
         run: if [[ $(make version) == *"dirty"* ]]; then exit 1; fi
 
       - name: Build CLI
-        run: make
+        run: GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} make
 
       - name: Rename CLI binary
-        run: mv ./bin/neo-exporter* ./bin/neo-exporter-linux-amd64
+        run: mv ./bin/neo-exporter* ./bin/neo-exporter-${{ matrix.os }}-${{ matrix.arch }}${{ (matrix.os == 'windows' && '.exe') || '' }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: neo-exporter
+          name: neo-exporter-${{ matrix.os }}-${{ matrix.arch }}
           path: ./bin/neo-exporter*
           if-no-files-found: error
 
       - name: Attach binary to the release as an asset
         if: ${{ github.event_name == 'release' }}
-        run: gh release upload ${{ github.event.release.tag_name }} ./bin/neo-exporter-linux-amd64
+        run: gh release upload ${{ github.event.release.tag_name }} ./bin/neo-exporter-${{ matrix.os }}-${{ matrix.arch }}${{ (matrix.os == 'windows' && '.exe') || '' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
