@@ -1,7 +1,6 @@
 package monitor
 
 import (
-	"encoding/hex"
 	"strconv"
 
 	"github.com/nspcc-dev/locode-db/pkg/locodedb"
@@ -178,7 +177,7 @@ func (m *SideJob) processNetworkMap(nm NetmapInfo, candidates NetmapCandidatesIn
 	newNodes, droppedNodes := getDiff(nm, candidates)
 
 	for _, node := range nm.Nodes {
-		keyHex := hex.EncodeToString(node.PublicKey.Bytes())
+		keyHex := node.PublicKey.StringCompressed()
 		scriptHash := node.PublicKey.GetScriptHash()
 
 		balanceGAS, err := m.balanceFetcher.Fetch(gas.Hash, scriptHash)
@@ -261,7 +260,7 @@ func (m *SideJob) processInnerRing(ir keys.PublicKeys) {
 	exportBalances := make(map[string]float64, len(ir))
 
 	for _, key := range ir {
-		keyHex := hex.EncodeToString(key.Bytes())
+		keyHex := key.StringCompressed()
 
 		balance, err := m.balanceFetcher.Fetch(gas.Hash, key.GetScriptHash())
 		if err != nil {
@@ -295,7 +294,7 @@ func (m *SideJob) processSideAlphabet(alphabet keys.PublicKeys) {
 	exportNotaryBalances := make(map[string]float64, len(alphabet))
 
 	for _, key := range alphabet {
-		keyHex := hex.EncodeToString(key.Bytes())
+		keyHex := key.StringCompressed()
 
 		balanceNotary, err := m.notaryBalanceFetcher.FetchNotary(key.GetScriptHash())
 		if err != nil {

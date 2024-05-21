@@ -1,8 +1,6 @@
 package monitor
 
 import (
-	"encoding/hex"
-
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
 	"github.com/nspcc-dev/neo-go/pkg/rpcclient/gas"
 	"github.com/nspcc-dev/neo-go/pkg/util"
@@ -59,7 +57,7 @@ func (m *MainJob) processMainAlphabet(alphabet keys.PublicKeys) {
 	exportGasBalances := make(map[string]float64, len(alphabet))
 
 	for _, key := range alphabet {
-		keyHex := hex.EncodeToString(key.Bytes())
+		keyHex := key.StringCompressed()
 
 		balanceGAS, err := m.balanceFetcher.Fetch(gas.Hash, key.GetScriptHash())
 		if err != nil {
