@@ -3,6 +3,16 @@ Changelog for NeoFS Monitor
 
 ## [Unreleased]
 
+## [0.11.1] - 2024-05-22
+
+### Added
+- arm64 and darwin builds (#132)
+
+### Changed
+- google.golang.org/protobuf dependency from 1.32.0 to 1.33.0 (#129)
+- golang.org/x/net dependency from 0.21.0 to 0.23.0 (#131)
+- github.com/nspcc-dev/neo-go dependency from 0.105.1 to 0.106.0 (#133)
+
 ## [0.11.0] - 2024-03-07
 
 Please notice that monitored NEP-17 accounts are exported in address form now
@@ -141,7 +151,8 @@ to establish connection to the RC4 main chain and `NEOFS_NET_MONITOR_MORPH_RPC_E
 `NEOFS_NET_MONITOR_MORPH_RPC_DIAL_TIMEOUT` for the side chain instead.
 `NEOFS_NET_MONITOR_CONTRACTS_PROXY` env is now optional for notary disabled environments.
 
-[Unreleased]: https://github.com/nspcc-dev/neo-exporter/compare/v0.11.0...master
+[Unreleased]: https://github.com/nspcc-dev/neo-exporter/compare/v0.11.1...master
+[0.11.1]: https://github.com/nspcc-dev/neo-exporter/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/nspcc-dev/neo-exporter/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/nspcc-dev/neo-exporter/compare/v0.9.5...v0.10.0
 [0.9.5]: https://github.com/nspcc-dev/neo-exporter/compare/v0.9.0...v0.9.5
