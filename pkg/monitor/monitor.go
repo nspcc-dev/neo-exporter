@@ -2,7 +2,6 @@ package monitor
 
 import (
 	"context"
-	"encoding/hex"
 	"errors"
 	"net/http"
 	"sort"
@@ -93,7 +92,7 @@ func sortedAlphabet(alphabet keys.PublicKeys) []string {
 	sort.Sort(alphabet)
 	sorted := make([]string, 0, len(alphabet))
 	for _, key := range alphabet {
-		keyHex := hex.EncodeToString(key.Bytes())
+		keyHex := key.StringCompressed()
 		sorted = append(sorted, keyHex)
 	}
 	return sorted

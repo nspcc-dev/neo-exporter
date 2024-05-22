@@ -2,7 +2,6 @@ package contracts
 
 import (
 	"crypto/elliptic"
-	"encoding/hex"
 	"fmt"
 	"net/url"
 
@@ -172,7 +171,7 @@ func processNode(logger *zap.Logger, node *netmap.NodeInfo) (*monitor.Node, erro
 	if err != nil {
 		return nil, fmt.Errorf(
 			"can't parse storage node public key <%s>: %w",
-			hex.EncodeToString(rawPublicKey),
+			publicKey.StringCompressed(),
 			err,
 		)
 	}
