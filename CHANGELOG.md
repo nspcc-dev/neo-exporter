@@ -3,6 +3,15 @@ Changelog for NeoFS Monitor
 
 ## [Unreleased]
 
+## [0.11.2] - 2024-06-13
+
+This release adds support for the Domovoi hardfork with no other functional
+changes.
+
+### Changed
+- github.com/nspcc-dev/neo-go dependency from 0.106.0 to 0.106.2 (#135)
+- NeoFS SDK dependency to RC12 (#135)
+
 ## [0.11.1] - 2024-05-22
 
 ### Added
@@ -151,7 +160,8 @@ to establish connection to the RC4 main chain and `NEOFS_NET_MONITOR_MORPH_RPC_E
 `NEOFS_NET_MONITOR_MORPH_RPC_DIAL_TIMEOUT` for the side chain instead.
 `NEOFS_NET_MONITOR_CONTRACTS_PROXY` env is now optional for notary disabled environments.
 
-[Unreleased]: https://github.com/nspcc-dev/neo-exporter/compare/v0.11.1...master
+[Unreleased]: https://github.com/nspcc-dev/neo-exporter/compare/v0.11.2...master
+[0.11.2]: https://github.com/nspcc-dev/neo-exporter/compare/v0.11.1...v0.11.2
 [0.11.1]: https://github.com/nspcc-dev/neo-exporter/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/nspcc-dev/neo-exporter/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/nspcc-dev/neo-exporter/compare/v0.9.5...v0.10.0
