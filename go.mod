@@ -7,10 +7,10 @@ require (
 	github.com/multiformats/go-multiaddr v0.12.2
 	github.com/nspcc-dev/hrw/v2 v2.0.1
 	github.com/nspcc-dev/locode-db v0.6.0
-	github.com/nspcc-dev/neo-go v0.106.0
-	github.com/nspcc-dev/neofs-api-go/v2 v2.14.0
+	github.com/nspcc-dev/neo-go v0.106.2
+	github.com/nspcc-dev/neofs-api-go/v2 v2.14.1-0.20240305074711-35bc78d84dc4
 	github.com/nspcc-dev/neofs-contract v0.19.1
-	github.com/nspcc-dev/neofs-sdk-go v1.0.0-rc.11
+	github.com/nspcc-dev/neofs-sdk-go v1.0.0-rc.12
 	github.com/prometheus/client_golang v1.19.0
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.9.0
@@ -41,7 +41,6 @@ require (
 	github.com/multiformats/go-multihash v0.2.3 // indirect
 	github.com/multiformats/go-varint v0.0.7 // indirect
 	github.com/nspcc-dev/go-ordered-json v0.0.0-20240301084351-0246b013f8b2 // indirect
-	github.com/nspcc-dev/hrw v1.0.9 // indirect
 	github.com/nspcc-dev/neo-go/pkg/interop v0.0.0-20240521091047-78685785716d // indirect
 	github.com/nspcc-dev/rfc6979 v0.2.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.1 // indirect
@@ -66,8 +65,8 @@ require (
 	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20231120223509-83a465c0220f // indirect
-	google.golang.org/grpc v1.59.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240221002015-b0ce06bbee7c // indirect
+	google.golang.org/grpc v1.62.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
