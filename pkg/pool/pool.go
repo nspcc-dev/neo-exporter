@@ -104,9 +104,15 @@ func (p *Pool) recheck(ctx context.Context) {
 	defer p.mu.Unlock()
 
 	for i := 0; i < len(p.endpoints); i++ {
-		cl := p.clients[i]
+		var (
+			cl  = p.clients[i]
+			err error
+		)
 
-		if _, err := cl.GetBlockCount(); err != nil {
+		if cl != nil {
+			_, err = cl.GetBlockCount()
+		}
+		if cl == nil || err != nil {
 			p.clients[i], err = neoGoClient(ctx, p.endpoints[i], p.opts)
 			if err != nil {
 				log.Printf("reconnect to Neo node %s failed: %v", cl.Endpoint(), err)
