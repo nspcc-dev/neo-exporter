@@ -3,6 +3,11 @@ Changelog for NeoFS Monitor
 
 ## [Unreleased]
 
+## [0.11.3] - 2024-06-18
+
+### Fixed
+- Panic on RPC reconnection failure (#137)
+
 ## [0.11.2] - 2024-06-13
 
 This release adds support for the Domovoi hardfork with no other functional
@@ -160,7 +165,8 @@ to establish connection to the RC4 main chain and `NEOFS_NET_MONITOR_MORPH_RPC_E
 `NEOFS_NET_MONITOR_MORPH_RPC_DIAL_TIMEOUT` for the side chain instead.
 `NEOFS_NET_MONITOR_CONTRACTS_PROXY` env is now optional for notary disabled environments.
 
-[Unreleased]: https://github.com/nspcc-dev/neo-exporter/compare/v0.11.2...master
+[Unreleased]: https://github.com/nspcc-dev/neo-exporter/compare/v0.11.3...master
+[0.11.3]: https://github.com/nspcc-dev/neo-exporter/compare/v0.11.2...v0.11.3
 [0.11.2]: https://github.com/nspcc-dev/neo-exporter/compare/v0.11.1...v0.11.2
 [0.11.1]: https://github.com/nspcc-dev/neo-exporter/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/nspcc-dev/neo-exporter/compare/v0.10.0...v0.11.0
