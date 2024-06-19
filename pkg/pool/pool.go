@@ -115,7 +115,7 @@ func (p *Pool) recheck(ctx context.Context) {
 		if cl == nil || err != nil {
 			p.clients[i], err = neoGoClient(ctx, p.endpoints[i], p.opts)
 			if err != nil {
-				log.Printf("reconnect to Neo node %s failed: %v", cl.Endpoint(), err)
+				log.Printf("reconnect to Neo node %s failed: %v", p.endpoints[i], err)
 			}
 
 			continue
@@ -319,6 +319,9 @@ func (p *Pool) FetchHeight() []monitor.HeightData {
 	)
 
 	for _, cl := range p.clients {
+		if cl == nil {
+			continue
+		}
 		wg.Add(1)
 
 		go func(cl *rpcclient.Client) {
@@ -358,6 +361,9 @@ func (p *Pool) FetchState(height uint32) []monitor.StateData {
 	)
 
 	for _, cl := range p.clients {
+		if cl == nil {
+			continue
+		}
 		wg.Add(1)
 
 		go func(cl *rpcclient.Client) {
