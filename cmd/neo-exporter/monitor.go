@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+	"time"
 
 	"github.com/nspcc-dev/neo-exporter/pkg/model"
 	"github.com/nspcc-dev/neo-exporter/pkg/monitor"
@@ -14,11 +16,16 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"golang.org/x/term"
 )
 
 func New(ctx context.Context, cfg *viper.Viper) (*monitor.Monitor, error) {
 	logConf := zap.NewProductionConfig()
-	logConf.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	if term.IsTerminal(int(os.Stdout.Fd())) {
+		logConf.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	} else {
+		logConf.EncoderConfig.EncodeTime = func(_ time.Time, _ zapcore.PrimitiveArrayEncoder) {}
+	}
 	logConf.Level = WithLevel(cfg.GetString(cfgLoggerLevel))
 	logger, err := logConf.Build()
 	if err != nil {
