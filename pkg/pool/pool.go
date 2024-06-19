@@ -319,6 +319,9 @@ func (p *Pool) FetchHeight() []monitor.HeightData {
 	)
 
 	for _, cl := range p.clients {
+		if cl == nil {
+			continue
+		}
 		wg.Add(1)
 
 		go func(cl *rpcclient.Client) {
@@ -358,6 +361,9 @@ func (p *Pool) FetchState(height uint32) []monitor.StateData {
 	)
 
 	for _, cl := range p.clients {
+		if cl == nil {
+			continue
+		}
 		wg.Add(1)
 
 		go func(cl *rpcclient.Client) {
