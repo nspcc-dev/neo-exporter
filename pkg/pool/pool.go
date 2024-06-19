@@ -115,7 +115,7 @@ func (p *Pool) recheck(ctx context.Context) {
 		if cl == nil || err != nil {
 			p.clients[i], err = neoGoClient(ctx, p.endpoints[i], p.opts)
 			if err != nil {
-				log.Printf("reconnect to Neo node %s failed: %v", cl.Endpoint(), err)
+				log.Printf("reconnect to Neo node %s failed: %v", p.endpoints[i], err)
 			}
 
 			continue
