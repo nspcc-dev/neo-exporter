@@ -12,6 +12,15 @@ const (
 )
 
 var (
+	binaryVersion = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Help:      "Exporter version",
+			Name:      "version",
+			Subsystem: subsystem,
+		},
+		[]string{"version"},
+	)
+
 	locationPresent = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Subsystem: subsystem,
@@ -194,6 +203,7 @@ var (
 
 // RegisterSideChainMetrics inits prometheus metrics for side chain. Panics if can't do it.
 func RegisterSideChainMetrics() {
+	prometheus.MustRegister(binaryVersion)
 	prometheus.MustRegister(locationPresent)
 	prometheus.MustRegister(droppedNodesCount)
 	prometheus.MustRegister(newNodesCount)
@@ -214,9 +224,15 @@ func RegisterSideChainMetrics() {
 
 // RegisterMainChainMetrics inits prometheus metrics for main chain. Panics if can't do it.
 func RegisterMainChainMetrics() {
+	prometheus.MustRegister(binaryVersion)
 	prometheus.MustRegister(alphabetGASBalances)
 	prometheus.MustRegister(mainChainSupply)
 	prometheus.MustRegister(alphabetPubKeys)   // used for both monitors
 	prometheus.MustRegister(nep17tracker)      // used for both monitors
 	prometheus.MustRegister(nep17trackerTotal) // used for both monitors
+}
+
+// SetExporterVersion sets neo-exporter version metric.
+func SetExporterVersion(ver string) {
+	binaryVersion.WithLabelValues(ver).Add(1)
 }
