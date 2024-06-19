@@ -8,7 +8,7 @@ const (
 	location  = "location"
 	longitude = "longitude"
 	latitude  = "latitude"
-	subsystem = "neofs_net_monitor"
+	namespace = "neo_exporter"
 )
 
 var (
@@ -16,14 +16,14 @@ var (
 		prometheus.GaugeOpts{
 			Help:      "Exporter version",
 			Name:      "version",
-			Subsystem: subsystem,
+			Namespace: namespace,
 		},
 		[]string{"version"},
 	)
 
 	locationPresent = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Subsystem: subsystem,
+			Namespace: namespace,
 			Name:      "netmap",
 			Help:      "Locations where NeoFS storage nodes are located",
 		},
@@ -36,7 +36,7 @@ var (
 
 	droppedNodesCount = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Subsystem: subsystem,
+			Namespace: namespace,
 			Name:      "netmap_dropped",
 			Help:      "Amount of nodes that will be dropped from network in the next epoch",
 		},
@@ -44,7 +44,7 @@ var (
 
 	newNodesCount = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Subsystem: subsystem,
+			Namespace: namespace,
 			Name:      "netmap_new",
 			Help:      "Amount of nodes that will be added to network in the next epoch",
 		},
@@ -52,7 +52,7 @@ var (
 
 	epochNumber = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Subsystem: subsystem,
+			Namespace: namespace,
 			Name:      "epoch",
 			Help:      "Epoch number of NeoFS network",
 		},
@@ -60,7 +60,7 @@ var (
 
 	innerRingBalances = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Subsystem: subsystem,
+			Namespace: namespace,
 			Name:      "ir_balance",
 			Help:      "Side chain GAS amount of inner ring nodes",
 		},
@@ -71,7 +71,7 @@ var (
 
 	alphabetGASBalances = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Subsystem: subsystem,
+			Namespace: namespace,
 			Name:      "alphabet_balance",
 			Help:      "Main chain GAS amount of alphabet nodes",
 		},
@@ -82,7 +82,7 @@ var (
 
 	alphabetNotaryBalances = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Subsystem: subsystem,
+			Namespace: namespace,
 			Name:      "alphabet_balance_notary",
 			Help:      "Side chain notary balance of alphabet nodes",
 		},
@@ -93,7 +93,7 @@ var (
 
 	storageNodeGASBalances = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Subsystem: subsystem,
+			Namespace: namespace,
 			Name:      "sn_balance",
 			Help:      "Side chain GAS amount of storage nodes",
 		},
@@ -104,7 +104,7 @@ var (
 
 	storageNodeNotaryBalances = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Subsystem: subsystem,
+			Namespace: namespace,
 			Name:      "sn_balance_notary",
 			Help:      "Side chain notary balance of storage nodes",
 		},
@@ -115,7 +115,7 @@ var (
 
 	proxyBalance = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Subsystem: subsystem,
+			Namespace: namespace,
 			Name:      "proxy_balance",
 			Help:      "Side chain GAS amount of proxy contract",
 		},
@@ -123,7 +123,7 @@ var (
 
 	mainChainSupply = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Subsystem: subsystem,
+			Namespace: namespace,
 			Name:      "main_chain_supply",
 			Help:      "Main chain GAS amount of neofs contract",
 		},
@@ -131,7 +131,7 @@ var (
 
 	sideChainSupply = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Subsystem: subsystem,
+			Namespace: namespace,
 			Name:      "side_chain_supply",
 			Help:      "Side chain total supply of balance contract",
 		},
@@ -139,7 +139,7 @@ var (
 
 	alphabetPubKeys = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Subsystem: subsystem,
+			Namespace: namespace,
 			Name:      "alphabet_public_key",
 			Help:      "Alphabet public keys in chain",
 		},
@@ -150,7 +150,7 @@ var (
 
 	containersNumber = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Subsystem: subsystem,
+			Namespace: namespace,
 			Name:      "containers_number",
 			Help:      "Number of available containers",
 		},
@@ -158,7 +158,7 @@ var (
 
 	chainHeight = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Subsystem: subsystem,
+			Namespace: namespace,
 			Name:      "chain_height",
 			Help:      "Chain height in blocks",
 		},
@@ -169,7 +169,7 @@ var (
 
 	chainState = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Subsystem: subsystem,
+			Namespace: namespace,
 			Name:      "chain_state",
 			Help:      "Chain state hash in specific height",
 		},
@@ -180,7 +180,7 @@ var (
 
 	nep17tracker = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Subsystem: subsystem,
+			Namespace: namespace,
 			Name:      "nep_17_balance",
 			Help:      "NEP-17 balance of contract and account",
 		},
@@ -191,7 +191,7 @@ var (
 
 	nep17trackerTotal = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Subsystem: subsystem,
+			Namespace: namespace,
 			Name:      "nep_17_total_supply",
 			Help:      "NEP-17 total supply of contract",
 		},
