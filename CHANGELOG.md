@@ -3,6 +3,9 @@ Changelog for NeoFS Monitor
 
 ## [Unreleased]
 
+Please notice that "neofs_net_monitor" prefix was changed to "neo_exporter"
+and update accordingly.
+
 ## [0.11.3] - 2024-06-18
 
 ### Fixed

@@ -48,6 +48,7 @@ func New(ctx context.Context, cfg *viper.Viper) (*monitor.Monitor, error) {
 		monitor.RegisterMainChainMetrics()
 		job, err = mainChainJob(cfg, sideNeogoClient, logger)
 	}
+	monitor.SetExporterVersion(Version)
 
 	if err != nil {
 		return nil, err
