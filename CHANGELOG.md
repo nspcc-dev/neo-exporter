@@ -3,8 +3,20 @@ Changelog for NeoFS Monitor
 
 ## [Unreleased]
 
+## [0.12.0] - 2024-06-19
+
 Please notice that "neofs_net_monitor" prefix was changed to "neo_exporter"
 and update accordingly.
+
+### Added
+- Version metric (#143)
+
+### Fixed
+- Panics on RPC reconnection failure (#141)
+
+### Changed
+- "neofs_net_monitor" prefix to "neo_exporter" (#143)
+- Timestamps are no longer produced in logs if not running with TTY (#142)
 
 ## [0.11.3] - 2024-06-18
 
@@ -168,7 +180,8 @@ to establish connection to the RC4 main chain and `NEOFS_NET_MONITOR_MORPH_RPC_E
 `NEOFS_NET_MONITOR_MORPH_RPC_DIAL_TIMEOUT` for the side chain instead.
 `NEOFS_NET_MONITOR_CONTRACTS_PROXY` env is now optional for notary disabled environments.
 
-[Unreleased]: https://github.com/nspcc-dev/neo-exporter/compare/v0.11.3...master
+[Unreleased]: https://github.com/nspcc-dev/neo-exporter/compare/v0.12.0...master
+[0.12.0]: https://github.com/nspcc-dev/neo-exporter/compare/v0.11.3...v0.12.0
 [0.11.3]: https://github.com/nspcc-dev/neo-exporter/compare/v0.11.2...v0.11.3
 [0.11.2]: https://github.com/nspcc-dev/neo-exporter/compare/v0.11.1...v0.11.2
 [0.11.1]: https://github.com/nspcc-dev/neo-exporter/compare/v0.11.0...v0.11.1
