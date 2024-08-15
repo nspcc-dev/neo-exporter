@@ -3,6 +3,9 @@ Changelog for NeoFS Monitor
 
 ## [Unreleased]
 
+### Changed
+- Go 1.21+ is required to build now (#114)
+
 ## [0.12.0] - 2024-06-19
 
 Please notice that "neofs_net_monitor" prefix was changed to "neo_exporter"

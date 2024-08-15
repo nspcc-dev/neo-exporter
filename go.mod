@@ -1,6 +1,6 @@
 module github.com/nspcc-dev/neo-exporter
 
-go 1.20
+go 1.21
 
 require (
 	github.com/google/uuid v1.6.0
