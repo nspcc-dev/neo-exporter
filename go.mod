@@ -9,7 +9,7 @@ require (
 	github.com/nspcc-dev/locode-db v0.6.0
 	github.com/nspcc-dev/neo-go v0.106.3
 	github.com/nspcc-dev/neofs-api-go/v2 v2.14.1-0.20240305074711-35bc78d84dc4
-	github.com/nspcc-dev/neofs-contract v0.19.1
+	github.com/nspcc-dev/neofs-contract v0.20.0
 	github.com/nspcc-dev/neofs-sdk-go v1.0.0-rc.12
 	github.com/prometheus/client_golang v1.19.0
 	github.com/spf13/viper v1.18.2
@@ -43,7 +43,6 @@ require (
 	github.com/multiformats/go-multihash v0.2.3 // indirect
 	github.com/multiformats/go-varint v0.0.7 // indirect
 	github.com/nspcc-dev/go-ordered-json v0.0.0-20240301084351-0246b013f8b2 // indirect
-	github.com/nspcc-dev/neo-go/pkg/interop v0.0.0-20240727093519-1a48f1ce43ec // indirect
 	github.com/nspcc-dev/rfc6979 v0.2.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.1 // indirect
 	github.com/pierrec/lz4 v2.6.1+incompatible // indirect

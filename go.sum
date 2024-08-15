@@ -93,12 +93,10 @@ github.com/nspcc-dev/locode-db v0.6.0 h1:EdRUug+sL0EMLZgucLETD6bnegKjyEZh+D5x4r5
 github.com/nspcc-dev/locode-db v0.6.0/go.mod h1:mJLXdzlcRucr3AFUvf5fJH+rFv1bJuU85e1jtDHDTz8=
 github.com/nspcc-dev/neo-go v0.106.3 h1:HEyhgkjQY+HfBzotMJ12xx2VuOUphkngZ4kEkjvXDtE=
 github.com/nspcc-dev/neo-go v0.106.3/go.mod h1:3vEwJ2ld12N7HRGCaH/l/7EwopplC/+8XdIdPDNmD/M=
-github.com/nspcc-dev/neo-go/pkg/interop v0.0.0-20240727093519-1a48f1ce43ec h1:vDrbVXF2+2uP0RlkZmem3QYATcXCu9BzzGGCNsNcK7Q=
-github.com/nspcc-dev/neo-go/pkg/interop v0.0.0-20240727093519-1a48f1ce43ec/go.mod h1:/vrbWSHc7YS1KSYhVOyyeucXW/e+1DkVBOgnBEXUCeY=
 github.com/nspcc-dev/neofs-api-go/v2 v2.14.1-0.20240305074711-35bc78d84dc4 h1:arN0Ypn+jawZpu1BND7TGRn44InAVIqKygndsx0y2no=
 github.com/nspcc-dev/neofs-api-go/v2 v2.14.1-0.20240305074711-35bc78d84dc4/go.mod h1:7Tm1NKEoUVVIUlkVwFrPh7GG5+Lmta2m7EGr4oVpBd8=
-github.com/nspcc-dev/neofs-contract v0.19.1 h1:U1Uh+MlzfkalO0kRJ2pADZyHrmAOroC6KLFjdWnTNR0=
-github.com/nspcc-dev/neofs-contract v0.19.1/go.mod h1:ZOGouuwuHpgvYkx/LCGufGncIzEUhYEO18LL4cWEbyw=
+github.com/nspcc-dev/neofs-contract v0.20.0 h1:ARE/3mSN+P9qi/10NBsf7QyPiYrvnxeEgYUN13vHRlo=
+github.com/nspcc-dev/neofs-contract v0.20.0/go.mod h1:YxtKYE/5cMNiqwWcQWzeizbB9jizauLni+p8wXxfhsQ=
 github.com/nspcc-dev/neofs-sdk-go v1.0.0-rc.12 h1:mdxtlSU2I4oVZ/7AXTLKyz8uUPbDWikZw4DM8gvrddA=
 github.com/nspcc-dev/neofs-sdk-go v1.0.0-rc.12/go.mod h1:JdsEM1qgNukrWqgOBDChcYp8oY4XUzidcKaxY4hNJvQ=
 github.com/nspcc-dev/rfc6979 v0.2.1 h1:8wWxkamHWFmO790GsewSoKUSJjVnL1fmdRpokU/RgRM=
@@ -161,7 +159,6 @@ github.com/syndtr/goleveldb v1.0.1-0.20210305035536-64b5b1c73954 h1:xQdMZ1WLrgkk
 github.com/syndtr/goleveldb v1.0.1-0.20210305035536-64b5b1c73954/go.mod h1:u2MKkTVTVJWe5D1rCvame8WqhBd88EuIwODJZ1VHCPM=
 github.com/twmb/murmur3 v1.1.8 h1:8Yt9taO/WN3l08xErzjeschgZU2QSrwm1kclYq+0aRg=
 github.com/twmb/murmur3 v1.1.8/go.mod h1:Qq/R7NUyOfr65zD+6Q5IHKsJLwP7exErjN6lyyq3OSQ=
-github.com/urfave/cli v1.22.5 h1:lNq9sAHXK2qfdI8W+GRItjCEkI+2oR4d+MEHy1CKXoU=
 github.com/urfave/cli/v2 v2.27.2 h1:6e0H+AkS+zDckwPCUrZkKX38mRaau4nL2uipkJpbkcI=
 github.com/urfave/cli/v2 v2.27.2/go.mod h1:g0+79LmHHATl7DAcHO99smiR/T7uGLw84w8Y42x+4eM=
 github.com/xrash/smetrics v0.0.0-20240312152122-5f08fbb34913 h1:+qGGcbkzsfDQNPPe9UDgpxAWQrhbbBXOYJFQDq/dtJw=
