@@ -3,7 +3,8 @@ run:
   tests: false
 
 output:
-  format: tab
+  formats:
+    - format: tab
 
 linters-settings:
   exhaustive:
