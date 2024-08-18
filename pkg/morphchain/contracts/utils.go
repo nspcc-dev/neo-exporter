@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	v2netmap "github.com/nspcc-dev/neofs-api-go/v2/netmap"
-	netmapContract "github.com/nspcc-dev/neofs-contract/netmap"
+	"github.com/nspcc-dev/neofs-contract/contracts/netmap/nodestate"
 	rcpnetmap "github.com/nspcc-dev/neofs-contract/rpc/netmap"
 	"github.com/nspcc-dev/neofs-sdk-go/netmap"
 )
@@ -18,11 +18,11 @@ func parseContractNodes(data []*rcpnetmap.NetmapNode) ([]*netmap.NodeInfo, error
 		}
 
 		switch d.State.Int64() {
-		case int64(netmapContract.NodeStateOnline):
+		case int64(nodestate.Online):
 			nodeInfoV2.SetState(v2netmap.Online)
-		case int64(netmapContract.NodeStateOffline):
+		case int64(nodestate.Offline):
 			nodeInfoV2.SetState(v2netmap.Offline)
-		case int64(netmapContract.NodeStateMaintenance):
+		case int64(nodestate.Maintenance):
 			nodeInfoV2.SetState(v2netmap.Maintenance)
 		default:
 			nodeInfoV2.SetState(v2netmap.UnspecifiedState)
