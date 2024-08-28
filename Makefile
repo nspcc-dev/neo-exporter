@@ -2,8 +2,8 @@
 SHELL = bash
 
 REPO ?= $(shell go list -m)
-VERSION ?= $(shell git describe --tags --dirty --match "v*" --always --abbrev=8 2>/dev/null || cat VERSION 2>/dev/null || echo "develop")
-HUB_TAG ?= "$(shell echo ${VERSION} | sed 's/^v//')"
+VERSION ?= $(shell set -o pipefail; git describe --tags --dirty --match "v*" --always --abbrev=8 2>/dev/null | sed 's/^v//' || cat VERSION 2>/dev/null || echo "develop")
+HUB_TAG ?= ${VERSION}
 
 REPO = nspccdev
 APP = neo-exporter
