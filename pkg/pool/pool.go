@@ -103,7 +103,7 @@ func (p *Pool) recheck(ctx context.Context) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	for i := 0; i < len(p.endpoints); i++ {
+	for i := range p.endpoints {
 		var (
 			cl  = p.clients[i]
 			err error
