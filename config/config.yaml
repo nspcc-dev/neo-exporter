@@ -3,7 +3,7 @@ chain:
   # If true, monitor connects to the NeoFS chain, otherwise, to the Neo chain.
   fschain: false
   rpc:
-    dial_timeout: 5s
+    dial_timeout: 60s
     # stores the interval after which a current connection health check is performed.
     health_recheck_interval: 5s
     endpoint:
