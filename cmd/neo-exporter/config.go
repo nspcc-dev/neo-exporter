@@ -33,10 +33,10 @@ const (
 
 func DefaultConfiguration(cfg *viper.Viper) {
 	cfg.SetDefault(prefix+delimiter+cfgNeoRPCEndpoint, "")
-	cfg.SetDefault(prefix+delimiter+cfgNeoRPCDialTimeout, 5*time.Second)
+	cfg.SetDefault(prefix+delimiter+cfgNeoRPCDialTimeout, time.Minute)
 
 	cfg.SetDefault(cfgMetricsEndpoint, ":16512")
-	cfg.SetDefault(cfgMetricsInterval, 15*time.Minute)
+	cfg.SetDefault(cfgMetricsInterval, 15*time.Second)
 
 	cfg.SetDefault(cfgLoggerLevel, "info")
 }
