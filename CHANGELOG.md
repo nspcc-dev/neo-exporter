@@ -3,8 +3,16 @@ Changelog for NeoFS Monitor
 
 ## [Unreleased]
 
+## [0.12.1] - 2024-09-03
+
 ### Changed
-- Go 1.21+ is required to build now (#114)
+- Go 1.22+ is required to build now (#149, #150)
+- Dropped 'v' prefix from version metric (#151)
+- Updated github.com/nspcc-dev/locode-db dependency to 0.7.0 (#150)
+- Updated github.com/nspcc-dev/hrw/v2 dependency to 2.0.3 (#150)
+- Updated github.com/prometheus/client_golang dependency to v1.20.2 (#150)
+- Default dial timeout to one minute (#152)
+- Default metric scraping interval to 15s (#152)
 
 ## [0.12.0] - 2024-06-19
 
@@ -183,7 +191,8 @@ to establish connection to the RC4 main chain and `NEOFS_NET_MONITOR_MORPH_RPC_E
 `NEOFS_NET_MONITOR_MORPH_RPC_DIAL_TIMEOUT` for the side chain instead.
 `NEOFS_NET_MONITOR_CONTRACTS_PROXY` env is now optional for notary disabled environments.
 
-[Unreleased]: https://github.com/nspcc-dev/neo-exporter/compare/v0.12.0...master
+[Unreleased]: https://github.com/nspcc-dev/neo-exporter/compare/v0.12.1...master
+[0.12.1]: https://github.com/nspcc-dev/neo-exporter/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/nspcc-dev/neo-exporter/compare/v0.11.3...v0.12.0
 [0.11.3]: https://github.com/nspcc-dev/neo-exporter/compare/v0.11.2...v0.11.3
 [0.11.2]: https://github.com/nspcc-dev/neo-exporter/compare/v0.11.1...v0.11.2
