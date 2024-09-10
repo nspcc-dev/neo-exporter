@@ -21,9 +21,8 @@ import (
 
 type (
 	Netmap struct {
-		pool           *pool.Pool
-		logger         *zap.Logger
-		notaryDisabled bool
+		pool   *pool.Pool
+		logger *zap.Logger
 
 		contractReader *rpcnetmap.ContractReader
 	}

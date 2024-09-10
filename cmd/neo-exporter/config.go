@@ -11,10 +11,10 @@ import (
 const (
 	delimiter = "."
 
-	// contracts scripthash
+	// contracts scripthash.
 	cfgNeoFSContract = "contracts.neofs"
 
-	// neo rpc node related config values
+	// neo rpc node related config values.
 	prefix = "chain"
 
 	cfgChainFSChain = "chain.fschain"
@@ -23,11 +23,11 @@ const (
 	cfgNeoRPCDialTimeout     = "rpc.dial_timeout"
 	cfgNeoRPCRecheckInterval = "rpc.health_recheck_interval"
 
-	// monitor prometheus expose config values
+	// monitor prometheus expose config values.
 	cfgMetricsEndpoint = "metrics.endpoint"
 	cfgMetricsInterval = "metrics.interval"
 
-	// level of logging
+	// level of logging.
 	cfgLoggerLevel = "logger.level"
 )
 
