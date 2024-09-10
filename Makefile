@@ -36,8 +36,11 @@ clean:
 version:
 	@echo ${VERSION}
 
+.golangci.yml:
+	wget -O $@ https://github.com/nspcc-dev/.github/raw/master/.golangci.yml
+
 # Run linters
-lint:
+lint: .golangci.yml
 	@golangci-lint --timeout=5m run
 
 # Run tests
