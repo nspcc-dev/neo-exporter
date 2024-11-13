@@ -27,6 +27,7 @@ func New(ctx context.Context, cfg *viper.Viper) (*monitor.Monitor, error) {
 		logConf.EncoderConfig.EncodeTime = func(_ time.Time, _ zapcore.PrimitiveArrayEncoder) {}
 	}
 	logConf.Level = WithLevel(cfg.GetString(cfgLoggerLevel))
+	logConf.Sampling = nil
 	logger, err := logConf.Build()
 	if err != nil {
 		return nil, err
