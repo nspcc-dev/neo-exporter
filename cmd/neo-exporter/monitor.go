@@ -6,10 +6,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/nspcc-dev/neo-exporter/pkg/fschain"
+	"github.com/nspcc-dev/neo-exporter/pkg/fschain/contracts"
 	"github.com/nspcc-dev/neo-exporter/pkg/model"
 	"github.com/nspcc-dev/neo-exporter/pkg/monitor"
-	"github.com/nspcc-dev/neo-exporter/pkg/morphchain"
-	"github.com/nspcc-dev/neo-exporter/pkg/morphchain/contracts"
 	"github.com/nspcc-dev/neo-exporter/pkg/pool"
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	rpcnns "github.com/nspcc-dev/neofs-contract/rpc/nns"
@@ -35,14 +35,14 @@ func New(ctx context.Context, cfg *viper.Viper) (*monitor.Monitor, error) {
 
 	zap.ReplaceGlobals(logger)
 
-	sideChainEndpoints := cfg.GetStringSlice(prefix + delimiter + cfgNeoRPCEndpoint)
-	sideChainTimeout := cfg.GetDuration(prefix + delimiter + cfgNeoRPCDialTimeout)
-	sideChainRecheck := cfg.GetDuration(prefix + delimiter + cfgNeoRPCRecheckInterval)
+	fsChainEndpoints := cfg.GetStringSlice(prefix + delimiter + cfgNeoRPCEndpoint)
+	fsChainTimeout := cfg.GetDuration(prefix + delimiter + cfgNeoRPCDialTimeout)
+	fsChainRecheck := cfg.GetDuration(prefix + delimiter + cfgNeoRPCRecheckInterval)
 
 	sideNeogoClient, err := pool.NewPool(ctx, pool.PrmPool{
-		Endpoints:       sideChainEndpoints,
-		DialTimeout:     sideChainTimeout,
-		RecheckInterval: sideChainRecheck,
+		Endpoints:       fsChainEndpoints,
+		DialTimeout:     fsChainTimeout,
+		RecheckInterval: fsChainRecheck,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("can't create side chain neo-go client: %w", err)
@@ -50,8 +50,8 @@ func New(ctx context.Context, cfg *viper.Viper) (*monitor.Monitor, error) {
 
 	var job monitor.Job
 	if cfg.GetBool(cfgChainFSChain) {
-		monitor.RegisterSideChainMetrics()
-		job, err = sideChainJob(cfg, sideNeogoClient, logger)
+		monitor.RegisterFSChainMetrics()
+		job, err = fsChainJob(cfg, sideNeogoClient, logger)
 	} else {
 		monitor.RegisterMainChainMetrics()
 		job, err = mainChainJob(cfg, sideNeogoClient, logger)
@@ -71,7 +71,7 @@ func New(ctx context.Context, cfg *viper.Viper) (*monitor.Monitor, error) {
 }
 
 func mainChainJob(cfg *viper.Viper, neogoClient *pool.Pool, logger *zap.Logger) (*monitor.MainJob, error) {
-	alphabetFetcher := morphchain.NewMainChainAlphabetFetcher(neogoClient)
+	alphabetFetcher := fschain.NewMainChainAlphabetFetcher(neogoClient)
 
 	balanceFetcher, err := monitor.NewNep17BalanceFetcher(neogoClient)
 	if err != nil {
@@ -115,7 +115,7 @@ func mainChainJob(cfg *viper.Viper, neogoClient *pool.Pool, logger *zap.Logger) 
 	}), nil
 }
 
-func sideChainJob(cfg *viper.Viper, neogoClient *pool.Pool, logger *zap.Logger) (*monitor.SideJob, error) {
+func fsChainJob(cfg *viper.Viper, neogoClient *pool.Pool, logger *zap.Logger) (*monitor.FSJob, error) {
 	netmapContract, err := neogoClient.ResolveContract(rpcnns.NameNetmap)
 	if err != nil {
 		return nil, fmt.Errorf("can't read netmap scripthash: %w", err)
@@ -140,7 +140,7 @@ func sideChainJob(cfg *viper.Viper, neogoClient *pool.Pool, logger *zap.Logger) 
 		return nil, fmt.Errorf("can't initialize container fetcher: %w", err)
 	}
 
-	alphabetFetcher := morphchain.NewSideChainAlphabetFetcher(neogoClient)
+	alphabetFetcher := fschain.NewFSChainAlphabetFetcher(neogoClient)
 
 	balanceFetcher, err := monitor.NewNep17BalanceFetcher(neogoClient)
 	if err != nil {
@@ -194,7 +194,7 @@ func sideChainJob(cfg *viper.Viper, neogoClient *pool.Pool, logger *zap.Logger) 
 		return nil, fmt.Errorf("nep17tracker: %w", err)
 	}
 
-	return monitor.NewSideJob(monitor.SideJobArgs{
+	return monitor.NewFSJob(monitor.FSJobArgs{
 		Logger:               logger,
 		Balance:              balance,
 		Proxy:                proxy,

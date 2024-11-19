@@ -34,7 +34,7 @@ type (
 	}
 )
 
-// NewNetmap creates Netmap to interact with 'netmap' contract in morph chain.
+// NewNetmap creates Netmap to interact with 'netmap' contract in FS chain.
 func NewNetmap(p NetmapArgs) (*Netmap, error) {
 	return &Netmap{
 		pool:           p.Pool,
@@ -151,7 +151,7 @@ func processNode(logger *zap.Logger, node *netmap.NodeInfo) (*monitor.Node, erro
 		func(mAddr string) bool {
 			addr, err := multiAddrToIPStringWithoutPort(mAddr)
 			if err != nil {
-				logger.Debug("morphchain", zap.Error(err))
+				logger.Debug("FS chain", zap.Error(err))
 				return false
 			}
 

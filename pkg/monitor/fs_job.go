@@ -12,7 +12,7 @@ import (
 )
 
 type (
-	SideJobArgs struct {
+	FSJobArgs struct {
 		Logger               *zap.Logger
 		Balance              util.Uint160
 		Proxy                *util.Uint160
@@ -27,7 +27,7 @@ type (
 		Nep17tracker         *Nep17tracker
 	}
 
-	SideJob struct {
+	FSJob struct {
 		logger               *zap.Logger
 		nmFetcher            NetmapFetcher
 		irFetcher            InnerRingFetcher
@@ -102,8 +102,8 @@ type (
 	}
 )
 
-func NewSideJob(args SideJobArgs) *SideJob {
-	return &SideJob{
+func NewFSJob(args FSJobArgs) *FSJob {
+	return &FSJob{
 		logger:               args.Logger,
 		nmFetcher:            args.NmFetcher,
 		irFetcher:            args.IRFetcher,
@@ -119,8 +119,8 @@ func NewSideJob(args SideJobArgs) *SideJob {
 	}
 }
 
-func (m *SideJob) Process() {
-	m.logger.Debug("retrieving data from side chain")
+func (m *FSJob) Process() {
+	m.logger.Debug("retrieving data from FS chain")
 
 	netmap, err := m.nmFetcher.FetchNetmap()
 	if err != nil {
@@ -145,13 +145,13 @@ func (m *SideJob) Process() {
 		m.processProxyContract()
 	}
 
-	m.processSideChainSupply()
+	m.processFSChainSupply()
 
 	if alphabet, err := m.alphabetFetcher.FetchAlphabet(); err != nil {
 		m.logger.Warn("can't read NeoFS ALphabet members", zap.Error(err))
 	} else {
 		processAlphabetPublicKeys(alphabet)
-		m.processSideAlphabet(alphabet)
+		m.processFSAlphabet(alphabet)
 	}
 
 	m.processContainersNumber()
@@ -161,13 +161,13 @@ func (m *SideJob) Process() {
 	m.processNep17tracker()
 }
 
-func (m *SideJob) processNep17tracker() {
+func (m *FSJob) processNep17tracker() {
 	if m.nep17tracker != nil {
 		m.nep17tracker.Process(nep17tracker, nep17trackerTotal)
 	}
 }
 
-func (m *SideJob) processNetworkMap(nm NetmapInfo, candidates NetmapCandidatesInfo) {
+func (m *FSJob) processNetworkMap(nm NetmapInfo, candidates NetmapCandidatesInfo) {
 	currentNetmapLen := len(nm.Nodes)
 
 	exportCountries := make(map[nodeLocation]int, currentNetmapLen)
@@ -242,7 +242,7 @@ func (m *SideJob) processNetworkMap(nm NetmapInfo, candidates NetmapCandidatesIn
 	}
 }
 
-func (m *SideJob) logNodes(msg string, nodes []*Node) {
+func (m *FSJob) logNodes(msg string, nodes []*Node) {
 	for _, node := range nodes {
 		fields := []zap.Field{zap.Uint64("id", node.ID), zap.String("address", node.Address),
 			zap.String("public key", node.PublicKey.String()),
@@ -256,7 +256,7 @@ func (m *SideJob) logNodes(msg string, nodes []*Node) {
 	}
 }
 
-func (m *SideJob) processInnerRing(ir keys.PublicKeys) {
+func (m *FSJob) processInnerRing(ir keys.PublicKeys) {
 	exportBalances := make(map[string]float64, len(ir))
 
 	for _, key := range ir {
@@ -280,7 +280,7 @@ func (m *SideJob) processInnerRing(ir keys.PublicKeys) {
 	}
 }
 
-func (m *SideJob) processProxyContract() {
+func (m *FSJob) processProxyContract() {
 	balance, err := m.balanceFetcher.Fetch(gas.Hash, *m.proxy)
 	if err != nil {
 		m.logger.Debug("can't fetch proxy contract balance", zap.Stringer("address", m.proxy), zap.Error(err))
@@ -290,7 +290,7 @@ func (m *SideJob) processProxyContract() {
 	proxyBalance.Set(balance)
 }
 
-func (m *SideJob) processSideAlphabet(alphabet keys.PublicKeys) {
+func (m *FSJob) processFSAlphabet(alphabet keys.PublicKeys) {
 	exportNotaryBalances := make(map[string]float64, len(alphabet))
 
 	for _, key := range alphabet {
@@ -310,17 +310,17 @@ func (m *SideJob) processSideAlphabet(alphabet keys.PublicKeys) {
 	}
 }
 
-func (m *SideJob) processSideChainSupply() {
+func (m *FSJob) processFSChainSupply() {
 	balance, err := m.balanceFetcher.FetchTotalSupply(m.balance)
 	if err != nil {
 		m.logger.Debug("can't fetch balance contract total supply", zap.Stringer("address", m.balance), zap.Error(err))
 		return
 	}
 
-	sideChainSupply.Set(balance)
+	fsChainSupply.Set(balance)
 }
 
-func (m *SideJob) processContainersNumber() {
+func (m *FSJob) processContainersNumber() {
 	total, err := m.cnrFetcher.Total()
 	if err != nil {
 		m.logger.Warn("can't fetch number of available containers", zap.Error(err))
@@ -330,7 +330,7 @@ func (m *SideJob) processContainersNumber() {
 	containersNumber.Set(float64(total))
 }
 
-func (m *SideJob) processChainHeight() uint32 {
+func (m *FSJob) processChainHeight() uint32 {
 	var minHeight uint32
 	heightData := m.heightFetcher.FetchHeight()
 
@@ -345,7 +345,7 @@ func (m *SideJob) processChainHeight() uint32 {
 	return minHeight
 }
 
-func (m *SideJob) processChainState(height uint32) {
+func (m *FSJob) processChainState(height uint32) {
 	if height == 0 {
 		return
 	}

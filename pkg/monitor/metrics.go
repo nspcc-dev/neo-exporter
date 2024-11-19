@@ -129,11 +129,11 @@ var (
 		},
 	)
 
-	sideChainSupply = prometheus.NewGauge(
+	fsChainSupply = prometheus.NewGauge(
 		prometheus.GaugeOpts{
 			Namespace: namespace,
-			Name:      "side_chain_supply",
-			Help:      "Side chain total supply of balance contract",
+			Name:      "fs_chain_supply",
+			Help:      "FS chain total supply of balance contract",
 		},
 	)
 
@@ -201,8 +201,8 @@ var (
 	)
 )
 
-// RegisterSideChainMetrics inits prometheus metrics for side chain. Panics if can't do it.
-func RegisterSideChainMetrics() {
+// RegisterFSChainMetrics inits prometheus metrics for side chain. Panics if can't do it.
+func RegisterFSChainMetrics() {
 	prometheus.MustRegister(binaryVersion)
 	prometheus.MustRegister(locationPresent)
 	prometheus.MustRegister(droppedNodesCount)
@@ -213,7 +213,7 @@ func RegisterSideChainMetrics() {
 	prometheus.MustRegister(innerRingBalances)
 	prometheus.MustRegister(alphabetNotaryBalances)
 	prometheus.MustRegister(proxyBalance)
-	prometheus.MustRegister(sideChainSupply)
+	prometheus.MustRegister(fsChainSupply)
 	prometheus.MustRegister(alphabetPubKeys) // used for both monitors
 	prometheus.MustRegister(containersNumber)
 	prometheus.MustRegister(chainHeight)
