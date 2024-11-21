@@ -3,6 +3,9 @@ Changelog for NeoFS Monitor
 
 ## [Unreleased]
 
+Please notice that "side_chain_supply" metric was renamed to "fs_chain_supply"
+in this release.
+
 ## [0.12.1] - 2024-09-03
 
 ### Changed

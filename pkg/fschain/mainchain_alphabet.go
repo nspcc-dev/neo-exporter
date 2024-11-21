@@ -1,4 +1,4 @@
-package morphchain
+package fschain
 
 import (
 	"fmt"

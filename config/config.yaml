@@ -1,6 +1,6 @@
 # Neo RPC related configuration.
 chain:
-  # If true, monitor connects to the NeoFS chain, otherwise, to the Neo chain.
+  # Set to true when using monitor with FS chain which adds FS-specific metrics, false if using it with any other N3 chain.
   fschain: false
   rpc:
     dial_timeout: 60s
