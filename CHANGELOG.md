@@ -6,6 +6,7 @@ Changelog for NeoFS Monitor
 ### Changed
 - Go 1.23+ is required to build now (#148)
 - Updated github.com/nspcc-dev/neofs-sdk-go v1.0.0-rc.12 => v1.0.0-rc.13 (#159)
+- Updated github.com/nspcc-dev/neofs-contract v0.20.0 => v0.21.0 (#159)
 
 Please notice that "side_chain_supply" metric was renamed to "fs_chain_supply"
 in this release.
