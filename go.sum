@@ -145,8 +145,6 @@ github.com/nspcc-dev/locode-db v0.7.0 h1:vhxxmm75tEq8XERytRiCycEnsT1Rs5TNdlILJhJ
 github.com/nspcc-dev/locode-db v0.7.0/go.mod h1:gWfFoObLObDCbYjl8TkR1ftOEIVm6T22XxN7i5DQ3Yk=
 github.com/nspcc-dev/neo-go v0.108.1 h1:XbtNtDL7O8G1B70WmlPcFXA3fsBGOgXzHxQVfBh6Yv0=
 github.com/nspcc-dev/neo-go v0.108.1/go.mod h1:DlISaevW5zhfzg2KgCxtR/m8wQObPuht03kEXSf0g2w=
-github.com/nspcc-dev/neofs-api-go/v2 v2.14.1-0.20240827150555-5ce597aa14ea h1:mK0EMGLvunXcFyq7fBURS/CsN4MH+4nlYiqn6pTwWAU=
-github.com/nspcc-dev/neofs-api-go/v2 v2.14.1-0.20240827150555-5ce597aa14ea/go.mod h1:YzhD4EZmC9Z/PNyd7ysC7WXgIgURc9uCG1UWDeV027Y=
 github.com/nspcc-dev/neofs-contract v0.21.0 h1:dJkrZr7C8ngMiShwdUl27nbLCGez1KD7W1l7RRXFoN8=
 github.com/nspcc-dev/neofs-contract v0.21.0/go.mod h1:TKR2DJiZCdzq9CPljI101c9S3uK5CsVK5WQrX4C+Y7A=
 github.com/nspcc-dev/neofs-sdk-go v1.0.0-rc.13 h1:q1ne/4d10NuHSqs+fA5XVVBRJ9jSap4cjrsxYzNvYZA=

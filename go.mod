@@ -8,7 +8,6 @@ require (
 	github.com/nspcc-dev/hrw/v2 v2.0.3
 	github.com/nspcc-dev/locode-db v0.7.0
 	github.com/nspcc-dev/neo-go v0.108.1
-	github.com/nspcc-dev/neofs-api-go/v2 v2.14.1-0.20240827150555-5ce597aa14ea
 	github.com/nspcc-dev/neofs-contract v0.21.0
 	github.com/nspcc-dev/neofs-sdk-go v1.0.0-rc.13
 	github.com/prometheus/client_golang v1.20.2

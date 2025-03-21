@@ -3,6 +3,7 @@ package contracts
 import (
 	"crypto/elliptic"
 	"fmt"
+	"net"
 	"net/url"
 
 	"github.com/multiformats/go-multiaddr"
@@ -13,7 +14,6 @@ import (
 	"github.com/nspcc-dev/neo-go/pkg/core/native/noderoles"
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
 	"github.com/nspcc-dev/neo-go/pkg/util"
-	"github.com/nspcc-dev/neofs-api-go/v2/rpc/client"
 	rpcnetmap "github.com/nspcc-dev/neofs-contract/rpc/netmap"
 	"github.com/nspcc-dev/neofs-sdk-go/netmap"
 	"go.uber.org/zap"
@@ -32,6 +32,11 @@ type (
 		NetmapContract util.Uint160
 		Logger         *zap.Logger
 	}
+)
+
+const (
+	grpcScheme    = "grpc"
+	grpcTLSScheme = "grpcs"
 )
 
 // NewNetmap creates Netmap to interact with 'netmap' contract in FS chain.
@@ -192,7 +197,7 @@ func processNode(logger *zap.Logger, node *netmap.NodeInfo) (*monitor.Node, erro
 func multiAddrToIPStringWithoutPort(multiaddress string) (string, error) {
 	var host string
 	if netAddress, err := multiaddr.NewMultiaddr(multiaddress); err != nil {
-		if host, _, err = client.ParseURI(multiaddress); err != nil {
+		if host, _, err = parseURI(multiaddress); err != nil {
 			return "", err
 		}
 	} else if _, host, err = manet.DialArgs(netAddress); err != nil {
@@ -207,4 +212,34 @@ func multiAddrToIPStringWithoutPort(multiaddress string) (string, error) {
 	}
 
 	return URL.Hostname(), nil
+}
+
+// ParseURI parses s as address and returns a host and a flag
+// indicating that TLS is enabled. If multi-address is provided
+// the argument is returned unchanged.
+func parseURI(s string) (string, bool, error) {
+	uri, err := url.ParseRequestURI(s)
+	if err != nil {
+		return s, false, nil
+	}
+
+	// check if passed string was parsed correctly
+	// URIs that do not start with a slash after the scheme are interpreted as:
+	// `scheme:opaque` => if `opaque` is not empty, then it is supposed that URI
+	// is in `host:port` format
+	if uri.Host == "" {
+		uri.Host = uri.Scheme
+		uri.Scheme = grpcScheme // assume GRPC by default
+		if uri.Opaque != "" {
+			uri.Host = net.JoinHostPort(uri.Host, uri.Opaque)
+		}
+	}
+
+	switch uri.Scheme {
+	case grpcTLSScheme, grpcScheme:
+	default:
+		return "", false, fmt.Errorf("unsupported scheme: %s", uri.Scheme)
+	}
+
+	return uri.Host, uri.Scheme == grpcTLSScheme, nil
 }
