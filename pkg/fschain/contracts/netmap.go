@@ -175,7 +175,7 @@ func processNode(logger *zap.Logger, node *netmap.NodeInfo) (*monitor.Node, erro
 	if err != nil {
 		return nil, fmt.Errorf(
 			"can't parse storage node public key <%s>: %w",
-			publicKey.StringCompressed(),
+			string(rawPublicKey),
 			err,
 		)
 	}
