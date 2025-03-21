@@ -1,6 +1,7 @@
 package monitor
 
 import (
+	"math/big"
 	"strconv"
 
 	"github.com/nspcc-dev/locode-db/pkg/locodedb"
@@ -54,7 +55,12 @@ type (
 	}
 
 	NetmapCandidatesInfo struct {
-		Nodes []*Node
+		Nodes []*CandidateNode
+	}
+
+	CandidateNode struct {
+		*Node
+		LastEpoch *big.Int
 	}
 
 	ContainerFetcher interface {
@@ -180,6 +186,8 @@ func (m *FSJob) processNetworkMap(nm NetmapInfo, candidates NetmapCandidatesInfo
 		keyHex := node.PublicKey.StringCompressed()
 		scriptHash := node.PublicKey.GetScriptHash()
 
+		// if node.ID
+
 		balanceGAS, err := m.balanceFetcher.Fetch(gas.Hash, scriptHash)
 		if err != nil {
 			m.logger.Debug("can't fetch GAS balance", zap.String("key", keyHex), zap.Error(err))
@@ -239,6 +247,15 @@ func (m *FSJob) processNetworkMap(nm NetmapInfo, candidates NetmapCandidatesInfo
 	storageNodeNotaryBalances.Reset()
 	for k, v := range exportBalancesNotary {
 		storageNodeNotaryBalances.WithLabelValues(k).Set(v)
+	}
+
+	candidateInfo.Reset()
+	for _, candidate := range candidates.Nodes {
+		if candidate.LastEpoch == nil {
+			continue
+		}
+
+		candidateInfo.WithLabelValues(candidate.Address, "sssss").Set(1)
 	}
 }
 
@@ -374,10 +391,10 @@ func getDiff(nm NetmapInfo, cand NetmapCandidatesInfo) ([]*Node, []*Node) {
 
 	for _, nextEpochNode := range cand.Nodes {
 		if _, exists := diff[nextEpochNode.ID]; exists {
-			diff[nextEpochNode.ID].nextEpoch = nextEpochNode
+			diff[nextEpochNode.ID].nextEpoch = nextEpochNode.Node
 		} else {
 			newCount++
-			diff[nextEpochNode.ID] = &diffNode{nextEpoch: nextEpochNode}
+			diff[nextEpochNode.ID] = &diffNode{nextEpoch: nextEpochNode.Node}
 		}
 	}
 
