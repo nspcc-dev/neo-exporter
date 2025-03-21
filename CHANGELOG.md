@@ -3,6 +3,9 @@ Changelog for NeoFS Monitor
 
 ## [Unreleased]
 
+### Changed
+- Go 1.23+ is required to build now (#148)
+
 Please notice that "side_chain_supply" metric was renamed to "fs_chain_supply"
 in this release.
 
