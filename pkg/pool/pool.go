@@ -2,7 +2,6 @@ package pool
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"sync"
@@ -208,14 +207,16 @@ func (p *Pool) CallAndExpandIterator(contract util.Uint160, method string, maxIt
 // TerminateSession closes the given session, returning an error if anything
 // goes wrong. It's not strictly required to close the session (it'll expire on
 // the server anyway), but it helps to release server resources earlier.
-func (p *Pool) TerminateSession(_ uuid.UUID) error {
-	return errors.New("unsupported")
+func (p *Pool) TerminateSession(sessionID uuid.UUID) error {
+	_, err := p.conn().TerminateSession(sessionID)
+	return err
 }
 
 // TraverseIterator allows to retrieve the next batch of items from the given
 // iterator in the given session (previously returned from Call).
-func (p *Pool) TraverseIterator(_ uuid.UUID, _ *result.Iterator, _ int) ([]stackitem.Item, error) {
-	return nil, errors.New("unsupported")
+func (p *Pool) TraverseIterator(sessionID uuid.UUID, iterator *result.Iterator, num int) ([]stackitem.Item, error) {
+	inv := invoker.New(p.conn(), nil)
+	return inv.TraverseIterator(sessionID, iterator, num)
 }
 
 // GetBlockCount returns the number of blocks in the main chain.
