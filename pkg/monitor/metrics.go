@@ -199,6 +199,17 @@ var (
 			"symbol", "contract",
 		},
 	)
+
+	candidateInfo = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: namespace,
+			Name:      "candidate_info",
+			Help:      "Candidate node info",
+		},
+		[]string{
+			"host", "last_active_epoch",
+		},
+	)
 )
 
 // RegisterFSChainMetrics inits prometheus metrics for side chain. Panics if can't do it.
@@ -220,6 +231,7 @@ func RegisterFSChainMetrics() {
 	prometheus.MustRegister(chainState)
 	prometheus.MustRegister(nep17tracker)      // used for both monitors
 	prometheus.MustRegister(nep17trackerTotal) // used for both monitors
+	prometheus.MustRegister(candidateInfo)     // used for both monitors
 }
 
 // RegisterMainChainMetrics inits prometheus metrics for main chain. Panics if can't do it.

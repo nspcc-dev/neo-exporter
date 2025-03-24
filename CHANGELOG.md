@@ -3,6 +3,9 @@ Changelog for NeoFS Monitor
 
 ## [Unreleased]
 
+### Added
+- Netmap v2 candidate metric (#159)
+
 ### Changed
 - Go 1.23+ is required to build now (#148)
 - Updated github.com/nspcc-dev/neofs-sdk-go v1.0.0-rc.12 => v1.0.0-rc.13 (#159)

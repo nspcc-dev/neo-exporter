@@ -1,6 +1,7 @@
 package monitor
 
 import (
+	"math/big"
 	"strconv"
 
 	"github.com/nspcc-dev/locode-db/pkg/locodedb"
@@ -54,7 +55,12 @@ type (
 	}
 
 	NetmapCandidatesInfo struct {
-		Nodes []*Node
+		Nodes []*CandidateNode
+	}
+
+	CandidateNode struct {
+		*Node
+		LastEpoch *big.Int
 	}
 
 	ContainerFetcher interface {
@@ -240,6 +246,15 @@ func (m *FSJob) processNetworkMap(nm NetmapInfo, candidates NetmapCandidatesInfo
 	for k, v := range exportBalancesNotary {
 		storageNodeNotaryBalances.WithLabelValues(k).Set(v)
 	}
+
+	candidateInfo.Reset()
+	for _, candidate := range candidates.Nodes {
+		if candidate.LastEpoch == nil {
+			continue
+		}
+
+		candidateInfo.WithLabelValues(candidate.Address, strconv.FormatUint(candidate.LastEpoch.Uint64(), 10)).Set(1)
+	}
 }
 
 func (m *FSJob) logNodes(msg string, nodes []*Node) {
@@ -374,10 +389,10 @@ func getDiff(nm NetmapInfo, cand NetmapCandidatesInfo) ([]*Node, []*Node) {
 
 	for _, nextEpochNode := range cand.Nodes {
 		if _, exists := diff[nextEpochNode.ID]; exists {
-			diff[nextEpochNode.ID].nextEpoch = nextEpochNode
+			diff[nextEpochNode.ID].nextEpoch = nextEpochNode.Node
 		} else {
 			newCount++
-			diff[nextEpochNode.ID] = &diffNode{nextEpoch: nextEpochNode}
+			diff[nextEpochNode.ID] = &diffNode{nextEpoch: nextEpochNode.Node}
 		}
 	}
 
