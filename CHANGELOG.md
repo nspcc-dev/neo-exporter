@@ -4,15 +4,24 @@ Changelog for NeoFS Monitor
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Removed
+
+## [0.13.0] - 2025-03-25
+
+### Added
 - Netmap v2 candidate metric (#159)
 
 ### Changed
+- Log sampling is disabled now (#156)
 - Go 1.23+ is required to build now (#148)
 - Updated github.com/nspcc-dev/neofs-sdk-go v1.0.0-rc.12 => v1.0.0-rc.13 (#159)
 - Updated github.com/nspcc-dev/neofs-contract v0.20.0 => v0.21.0 (#159)
 
 ### Removed
-- Package github.com/nspcc-dev/neofs-api-go (#159)
+- github.com/nspcc-dev/neofs-api-go dependency (#159)
 
 Please notice that "side_chain_supply" metric was renamed to "fs_chain_supply"
 in this release.
@@ -205,7 +214,8 @@ to establish connection to the RC4 main chain and `NEOFS_NET_MONITOR_MORPH_RPC_E
 `NEOFS_NET_MONITOR_MORPH_RPC_DIAL_TIMEOUT` for the side chain instead.
 `NEOFS_NET_MONITOR_CONTRACTS_PROXY` env is now optional for notary disabled environments.
 
-[Unreleased]: https://github.com/nspcc-dev/neo-exporter/compare/v0.12.1...master
+[Unreleased]: https://github.com/nspcc-dev/neo-exporter/compare/v0.13.0...master
+[0.13.0]: https://github.com/nspcc-dev/neo-exporter/compare/v0.12.1...v0.13.0
 [0.12.1]: https://github.com/nspcc-dev/neo-exporter/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/nspcc-dev/neo-exporter/compare/v0.11.3...v0.12.0
 [0.11.3]: https://github.com/nspcc-dev/neo-exporter/compare/v0.11.2...v0.11.3
