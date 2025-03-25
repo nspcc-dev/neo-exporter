@@ -20,7 +20,7 @@ func TestGetDiff(t *testing.T) {
 				Nodes: generateNodes(0, 0),
 			},
 			cand: NetmapCandidatesInfo{
-				Nodes: generateNodes(0, 0),
+				Nodes: generateCandidateNodes(0, 0),
 			},
 			wantNew:     0,
 			wantDropped: 0,
@@ -31,7 +31,7 @@ func TestGetDiff(t *testing.T) {
 				Nodes: generateNodes(0, 5),
 			},
 			cand: NetmapCandidatesInfo{
-				Nodes: generateNodes(5, 10),
+				Nodes: generateCandidateNodes(5, 10),
 			},
 			wantNew:     5,
 			wantDropped: 5,
@@ -42,7 +42,7 @@ func TestGetDiff(t *testing.T) {
 				Nodes: generateNodes(0, 5),
 			},
 			cand: NetmapCandidatesInfo{
-				Nodes: generateNodes(3, 6),
+				Nodes: generateCandidateNodes(3, 6),
 			},
 			wantNew:     1,
 			wantDropped: 3,
@@ -73,6 +73,27 @@ func generateNodes(start, finish int) []*Node {
 				ID:        uint64(i),
 				PublicKey: privKey.PublicKey(),
 				Address:   strconv.Itoa(i),
+			},
+		)
+	}
+
+	return nodes
+}
+
+func generateCandidateNodes(start, finish int) []*CandidateNode {
+	nodes := make([]*CandidateNode, 0, finish-start)
+
+	for i := start; i < finish; i++ {
+		privKey, _ := keys.NewPrivateKey()
+
+		nodes = append(
+			nodes,
+			&CandidateNode{
+				Node: &Node{
+					ID:        uint64(i),
+					PublicKey: privKey.PublicKey(),
+					Address:   strconv.Itoa(i),
+				},
 			},
 		)
 	}

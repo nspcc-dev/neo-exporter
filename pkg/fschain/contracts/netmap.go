@@ -2,7 +2,9 @@ package contracts
 
 import (
 	"crypto/elliptic"
+	"encoding/hex"
 	"fmt"
+	"net"
 	"net/url"
 
 	"github.com/multiformats/go-multiaddr"
@@ -13,7 +15,7 @@ import (
 	"github.com/nspcc-dev/neo-go/pkg/core/native/noderoles"
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
 	"github.com/nspcc-dev/neo-go/pkg/util"
-	"github.com/nspcc-dev/neofs-api-go/v2/rpc/client"
+	"github.com/nspcc-dev/neo-go/pkg/vm/stackitem"
 	rpcnetmap "github.com/nspcc-dev/neofs-contract/rpc/netmap"
 	"github.com/nspcc-dev/neofs-sdk-go/netmap"
 	"go.uber.org/zap"
@@ -32,6 +34,15 @@ type (
 		NetmapContract util.Uint160
 		Logger         *zap.Logger
 	}
+)
+
+const (
+	grpcScheme    = "grpc"
+	grpcTLSScheme = "grpcs"
+
+	defaultIteratorPage = 100
+
+	flagNetMapV2 = "UseNodeV2"
 )
 
 // NewNetmap creates Netmap to interact with 'netmap' contract in FS chain.
@@ -73,12 +84,23 @@ func (c *Netmap) FetchNetmap() (monitor.NetmapInfo, error) {
 }
 
 func (c *Netmap) FetchCandidates() (monitor.NetmapCandidatesInfo, error) {
+	flagValue, err := c.contractReader.Config([]byte(flagNetMapV2))
+	if err != nil {
+		return monitor.NetmapCandidatesInfo{}, fmt.Errorf("get netmap config %s value: %w", flagNetMapV2, err)
+	}
+
+	if flagValue != nil {
+		if f, ok := flagValue.([]uint8); ok && len(f) > 0 && f[0] == 1 {
+			return c.fetchCandidatesV2()
+		}
+	}
+
 	apiCandidates, err := c.NetmapCandidates()
 	if err != nil {
 		return monitor.NetmapCandidatesInfo{}, fmt.Errorf("can't fetch netmap candidates: %w", err)
 	}
 
-	candidates := make([]*monitor.Node, 0, len(apiCandidates))
+	candidates := make([]*monitor.CandidateNode, 0, len(apiCandidates))
 
 	for _, apiCandidate := range apiCandidates {
 		candidate, err := processNode(c.logger, apiCandidate)
@@ -86,7 +108,7 @@ func (c *Netmap) FetchCandidates() (monitor.NetmapCandidatesInfo, error) {
 			return monitor.NetmapCandidatesInfo{}, nil
 		}
 
-		candidates = append(candidates, candidate)
+		candidates = append(candidates, &monitor.CandidateNode{Node: candidate})
 	}
 
 	return monitor.NetmapCandidatesInfo{
@@ -170,7 +192,7 @@ func processNode(logger *zap.Logger, node *netmap.NodeInfo) (*monitor.Node, erro
 	if err != nil {
 		return nil, fmt.Errorf(
 			"can't parse storage node public key <%s>: %w",
-			publicKey.StringCompressed(),
+			hex.EncodeToString(rawPublicKey),
 			err,
 		)
 	}
@@ -192,7 +214,7 @@ func processNode(logger *zap.Logger, node *netmap.NodeInfo) (*monitor.Node, erro
 func multiAddrToIPStringWithoutPort(multiaddress string) (string, error) {
 	var host string
 	if netAddress, err := multiaddr.NewMultiaddr(multiaddress); err != nil {
-		if host, _, err = client.ParseURI(multiaddress); err != nil {
+		if host, _, err = parseURI(multiaddress); err != nil {
 			return "", err
 		}
 	} else if _, host, err = manet.DialArgs(netAddress); err != nil {
@@ -207,4 +229,96 @@ func multiAddrToIPStringWithoutPort(multiaddress string) (string, error) {
 	}
 
 	return URL.Hostname(), nil
+}
+
+// ParseURI parses s as address and returns a host and a flag
+// indicating that TLS is enabled. If multi-address is provided
+// the argument is returned unchanged.
+func parseURI(s string) (string, bool, error) {
+	uri, err := url.ParseRequestURI(s)
+	if err != nil {
+		return s, false, nil
+	}
+
+	// check if passed string was parsed correctly
+	// URIs that do not start with a slash after the scheme are interpreted as:
+	// `scheme:opaque` => if `opaque` is not empty, then it is supposed that URI
+	// is in `host:port` format
+	if uri.Host == "" {
+		uri.Host = uri.Scheme
+		uri.Scheme = grpcScheme // assume GRPC by default
+		if uri.Opaque != "" {
+			uri.Host = net.JoinHostPort(uri.Host, uri.Opaque)
+		}
+	}
+
+	switch uri.Scheme {
+	case grpcTLSScheme, grpcScheme:
+	default:
+		return "", false, fmt.Errorf("unsupported scheme: %s", uri.Scheme)
+	}
+
+	return uri.Host, uri.Scheme == grpcTLSScheme, nil
+}
+
+func (c *Netmap) fetchCandidatesV2() (monitor.NetmapCandidatesInfo, error) {
+	sid, iter, err := c.contractReader.ListCandidates()
+	if err != nil {
+		return monitor.NetmapCandidatesInfo{}, fmt.Errorf("can't fetch netmap candidates: %w", err)
+	}
+
+	items, err := c.pool.TraverseIterator(sid, &iter, defaultIteratorPage)
+	if err != nil {
+		return monitor.NetmapCandidatesInfo{}, fmt.Errorf("can't iterate netmap candidates: %w", err)
+	}
+
+	var candidates = make([]*monitor.CandidateNode, 0, len(items))
+	for _, item := range items {
+		candidate, err := c.parsedCandidateV2(item)
+		if err != nil {
+			return monitor.NetmapCandidatesInfo{}, fmt.Errorf("parse candidate v2: %w", err)
+		}
+
+		candidates = append(candidates, &candidate)
+	}
+
+	return monitor.NetmapCandidatesInfo{
+		Nodes: candidates,
+	}, nil
+}
+
+func (c *Netmap) parsedCandidateV2(stack stackitem.Item) (monitor.CandidateNode, error) {
+	var n2 rpcnetmap.NetmapCandidate
+	if err := n2.FromStackItem(stack); err != nil {
+		return monitor.CandidateNode{}, err
+	}
+
+	var ni netmap.NodeInfo
+	ni.SetNetworkEndpoints(n2.Addresses...)
+	ni.SetPublicKey(n2.Key.Bytes())
+
+	for k, v := range n2.Attributes {
+		ni.SetAttribute(k, v)
+	}
+
+	switch {
+	case n2.State.Cmp(rpcnetmap.NodeStateOnline) == 0:
+		ni.SetOnline()
+	case n2.State.Cmp(rpcnetmap.NodeStateMaintenance) == 0:
+		ni.SetMaintenance()
+	default:
+		return monitor.CandidateNode{}, fmt.Errorf("unsupported node state %v", n2.State)
+	}
+
+	candidate, err := processNode(c.logger, &ni)
+	if err != nil {
+		return monitor.CandidateNode{}, nil
+	}
+
+	var cn = monitor.CandidateNode{
+		Node:      candidate,
+		LastEpoch: n2.LastActiveEpoch,
+	}
+
+	return cn, nil
 }
