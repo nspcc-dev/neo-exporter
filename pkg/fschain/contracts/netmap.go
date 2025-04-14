@@ -41,8 +41,6 @@ const (
 	grpcTLSScheme = "grpcs"
 
 	defaultIteratorPage = 100
-
-	flagNetMapV2 = "UseNodeV2"
 )
 
 // NewNetmap creates Netmap to interact with 'netmap' contract in FS chain.
@@ -84,31 +82,24 @@ func (c *Netmap) FetchNetmap() (monitor.NetmapInfo, error) {
 }
 
 func (c *Netmap) FetchCandidates() (monitor.NetmapCandidatesInfo, error) {
-	flagValue, err := c.contractReader.Config([]byte(flagNetMapV2))
-	if err != nil {
-		return monitor.NetmapCandidatesInfo{}, fmt.Errorf("get netmap config %s value: %w", flagNetMapV2, err)
-	}
-
-	if flagValue != nil {
-		if f, ok := flagValue.([]uint8); ok && len(f) > 0 && f[0] == 1 {
-			return c.fetchCandidatesV2()
-		}
-	}
-
-	apiCandidates, err := c.NetmapCandidates()
+	sid, iter, err := c.contractReader.ListCandidates()
 	if err != nil {
 		return monitor.NetmapCandidatesInfo{}, fmt.Errorf("can't fetch netmap candidates: %w", err)
 	}
 
-	candidates := make([]*monitor.CandidateNode, 0, len(apiCandidates))
+	items, err := c.pool.TraverseIterator(sid, &iter, defaultIteratorPage)
+	if err != nil {
+		return monitor.NetmapCandidatesInfo{}, fmt.Errorf("can't iterate netmap candidates: %w", err)
+	}
 
-	for _, apiCandidate := range apiCandidates {
-		candidate, err := processNode(c.logger, apiCandidate)
+	var candidates = make([]*monitor.CandidateNode, 0, len(items))
+	for _, item := range items {
+		candidate, err := c.parsedCandidateV2(item)
 		if err != nil {
-			return monitor.NetmapCandidatesInfo{}, nil
+			return monitor.NetmapCandidatesInfo{}, fmt.Errorf("parse candidate v2: %w", err)
 		}
 
-		candidates = append(candidates, &monitor.CandidateNode{Node: candidate})
+		candidates = append(candidates, &candidate)
 	}
 
 	return monitor.NetmapCandidatesInfo{
@@ -145,25 +136,27 @@ func (c *Netmap) Epoch() (int64, error) {
 }
 
 func (c *Netmap) Netmap() ([]*netmap.NodeInfo, error) {
-	return c.parsedNodes((*rpcnetmap.ContractReader).Netmap)
-}
-
-func (c *Netmap) NetmapCandidates() ([]*netmap.NodeInfo, error) {
-	return c.parsedNodes((*rpcnetmap.ContractReader).NetmapCandidates)
-}
-
-func (c *Netmap) parsedNodes(f func(reader *rpcnetmap.ContractReader) ([]*rpcnetmap.NetmapNode, error)) ([]*netmap.NodeInfo, error) {
-	data, err := f(c.contractReader)
+	sid, iter, err := c.contractReader.ListNodes()
 	if err != nil {
-		return nil, fmt.Errorf("contract reader: %w", err)
+		return nil, fmt.Errorf("can't fetch netmap candidates: %w", err)
 	}
 
-	nodes, err := parseContractNodes(data)
+	items, err := c.pool.TraverseIterator(sid, &iter, defaultIteratorPage)
 	if err != nil {
-		return nil, fmt.Errorf("parseContractNodes: %w", err)
+		return nil, fmt.Errorf("can't iterate netmap candidates: %w", err)
 	}
 
-	return nodes, nil
+	var candidates = make([]*netmap.NodeInfo, 0, len(items))
+	for _, item := range items {
+		candidate, err := c.parseNodeStackItem(item)
+		if err != nil {
+			return nil, fmt.Errorf("parse node v2: %w", err)
+		}
+
+		candidates = append(candidates, &candidate)
+	}
+
+	return candidates, nil
 }
 
 func processNode(logger *zap.Logger, node *netmap.NodeInfo) (*monitor.Node, error) {
@@ -261,32 +254,6 @@ func parseURI(s string) (string, bool, error) {
 	return uri.Host, uri.Scheme == grpcTLSScheme, nil
 }
 
-func (c *Netmap) fetchCandidatesV2() (monitor.NetmapCandidatesInfo, error) {
-	sid, iter, err := c.contractReader.ListCandidates()
-	if err != nil {
-		return monitor.NetmapCandidatesInfo{}, fmt.Errorf("can't fetch netmap candidates: %w", err)
-	}
-
-	items, err := c.pool.TraverseIterator(sid, &iter, defaultIteratorPage)
-	if err != nil {
-		return monitor.NetmapCandidatesInfo{}, fmt.Errorf("can't iterate netmap candidates: %w", err)
-	}
-
-	var candidates = make([]*monitor.CandidateNode, 0, len(items))
-	for _, item := range items {
-		candidate, err := c.parsedCandidateV2(item)
-		if err != nil {
-			return monitor.NetmapCandidatesInfo{}, fmt.Errorf("parse candidate v2: %w", err)
-		}
-
-		candidates = append(candidates, &candidate)
-	}
-
-	return monitor.NetmapCandidatesInfo{
-		Nodes: candidates,
-	}, nil
-}
-
 func (c *Netmap) parsedCandidateV2(stack stackitem.Item) (monitor.CandidateNode, error) {
 	var n2 rpcnetmap.NetmapCandidate
 	if err := n2.FromStackItem(stack); err != nil {
@@ -321,4 +288,29 @@ func (c *Netmap) parsedCandidateV2(stack stackitem.Item) (monitor.CandidateNode,
 	}
 
 	return cn, nil
+}
+
+func (c *Netmap) parseNodeStackItem(stack stackitem.Item) (netmap.NodeInfo, error) {
+	var n2 rpcnetmap.NetmapNode2
+	if err := n2.FromStackItem(stack); err != nil {
+		return netmap.NodeInfo{}, err
+	}
+
+	var ni netmap.NodeInfo
+
+	ni.SetNetworkEndpoints(n2.Addresses...)
+	for k, v := range n2.Attributes {
+		ni.SetAttribute(k, v)
+	}
+	ni.SetPublicKey(n2.Key.Bytes())
+	switch {
+	case n2.State.Cmp(rpcnetmap.NodeStateOnline) == 0:
+		ni.SetOnline()
+	case n2.State.Cmp(rpcnetmap.NodeStateMaintenance) == 0:
+		ni.SetMaintenance()
+	default:
+		return netmap.NodeInfo{}, fmt.Errorf("unsupported node state %v", n2.State)
+	}
+
+	return ni, nil
 }

@@ -8,6 +8,7 @@ Changelog for NeoFS Monitor
 ### Changed
 
 ### Removed
+- V1 netmap logic (#166)
 
 ## [0.13.0] - 2025-03-25
 
