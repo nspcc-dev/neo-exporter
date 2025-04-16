@@ -1,6 +1,7 @@
 module github.com/nspcc-dev/neo-exporter
 
 go 1.23
+toolchain go1.24.1
 
 require (
 	github.com/google/uuid v1.6.0
@@ -14,7 +15,7 @@ require (
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/zap v1.27.0
-	golang.org/x/term v0.27.0
+	golang.org/x/term v0.30.0
 )
 
 require (
@@ -63,11 +64,11 @@ require (
 	github.com/twmb/murmur3 v1.1.8 // indirect
 	go.etcd.io/bbolt v1.3.11 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.31.0 // indirect
+	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/exp v0.0.0-20250210185358-939b2ce775ac // indirect
-	golang.org/x/net v0.32.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/text v0.23.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241202173237-19429a94021a // indirect
 	google.golang.org/grpc v1.70.0 // indirect
 	google.golang.org/protobuf v1.36.5 // indirect
