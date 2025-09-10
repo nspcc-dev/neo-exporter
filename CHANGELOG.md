@@ -6,6 +6,7 @@ Changelog for NeoFS Monitor
 ### Added
 
 ### Changed
+- Go 1.24+ is required to build now (#160)
 
 ### Removed
 
