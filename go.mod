@@ -9,7 +9,7 @@ require (
 	github.com/nspcc-dev/locode-db v0.7.0
 	github.com/nspcc-dev/neo-go v0.108.1
 	github.com/nspcc-dev/neofs-contract v0.21.0
-	github.com/nspcc-dev/neofs-sdk-go v1.0.0-rc.13
+	github.com/nspcc-dev/neofs-sdk-go v1.0.0-rc.14
 	github.com/prometheus/client_golang v1.20.2
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
@@ -65,7 +65,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20250210185358-939b2ce775ac // indirect
-	golang.org/x/net v0.32.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241202173237-19429a94021a // indirect
