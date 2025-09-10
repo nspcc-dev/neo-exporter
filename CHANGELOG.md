@@ -14,6 +14,7 @@ Changelog for NeoFS Monitor
 - github.com/prometheus/client_golang v1.20.2 => v1.23.2 (#160)
 - github.com/spf13/viper v1.19.0 => v1.21.0 (#160)
 - golang.org/x/term v0.34.0 => v0.35.0 (#160)
+- github.com/multiformats/go-multiaddr v0.13.0 => v0.16.1 (#160)
 
 ### Removed
 
