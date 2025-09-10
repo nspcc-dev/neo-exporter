@@ -10,6 +10,7 @@ Changelog for NeoFS Monitor
 - github.com/nspcc-dev/neofs-sdk-go v1.0.0-rc.13 => v1.0.0-rc.14 (#160)
 - github.com/nspcc-dev/locode-db v0.7.0 => v0.8.1 (#160)
 - github.com/nspcc-dev/hrw/v2 v2.0.3 => v2.0.4 (#160)
+- github.com/nspcc-dev/neofs-contract v0.21.0 => v0.23.0 (#160)
 
 ### Removed
 
