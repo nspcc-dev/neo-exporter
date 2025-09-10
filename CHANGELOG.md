@@ -11,6 +11,7 @@ Changelog for NeoFS Monitor
 - github.com/nspcc-dev/locode-db v0.7.0 => v0.8.1 (#160)
 - github.com/nspcc-dev/hrw/v2 v2.0.3 => v2.0.4 (#160)
 - github.com/nspcc-dev/neofs-contract v0.21.0 => v0.23.0 (#160)
+- github.com/prometheus/client_golang v1.20.2 => v1.23.2 (#160)
 
 ### Removed
 
