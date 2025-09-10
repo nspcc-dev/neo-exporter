@@ -6,6 +6,15 @@ Changelog for NeoFS Monitor
 ### Added
 
 ### Changed
+- Go 1.24+ is required to build now (#160)
+- github.com/nspcc-dev/neofs-sdk-go v1.0.0-rc.13 => v1.0.0-rc.14 (#160)
+- github.com/nspcc-dev/locode-db v0.7.0 => v0.8.1 (#160)
+- github.com/nspcc-dev/hrw/v2 v2.0.3 => v2.0.4 (#160)
+- github.com/nspcc-dev/neofs-contract v0.21.0 => v0.23.0 (#160)
+- github.com/prometheus/client_golang v1.20.2 => v1.23.2 (#160)
+- github.com/spf13/viper v1.19.0 => v1.21.0 (#160)
+- golang.org/x/term v0.34.0 => v0.35.0 (#160)
+- github.com/multiformats/go-multiaddr v0.13.0 => v0.16.1 (#160)
 
 ### Removed
 
