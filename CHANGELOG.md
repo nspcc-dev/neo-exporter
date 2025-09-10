@@ -8,6 +8,7 @@ Changelog for NeoFS Monitor
 ### Changed
 - Go 1.24+ is required to build now (#160)
 - github.com/nspcc-dev/neofs-sdk-go v1.0.0-rc.13 => v1.0.0-rc.14 (#160)
+- github.com/nspcc-dev/locode-db v0.7.0 => v0.8.1 (#160)
 
 ### Removed
 
