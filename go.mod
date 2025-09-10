@@ -5,7 +5,7 @@ go 1.24.0
 require (
 	github.com/google/uuid v1.6.0
 	github.com/multiformats/go-multiaddr v0.13.0
-	github.com/nspcc-dev/hrw/v2 v2.0.3
+	github.com/nspcc-dev/hrw/v2 v2.0.4
 	github.com/nspcc-dev/locode-db v0.8.1
 	github.com/nspcc-dev/neo-go v0.108.1
 	github.com/nspcc-dev/neofs-contract v0.21.0
@@ -64,7 +64,7 @@ require (
 	go.etcd.io/bbolt v1.3.11 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.31.0 // indirect
-	golang.org/x/exp v0.0.0-20250210185358-939b2ce775ac // indirect
+	golang.org/x/exp v0.0.0-20250819193227-8b4c13bb791b // indirect
 	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/text v0.29.0 // indirect
