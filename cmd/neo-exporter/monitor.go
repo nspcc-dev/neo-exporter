@@ -38,14 +38,37 @@ func New(ctx context.Context, cfg *viper.Viper) (*monitor.Monitor, error) {
 	fsChainEndpoints := cfg.GetStringSlice(prefix + delimiter + cfgNeoRPCEndpoint)
 	fsChainTimeout := cfg.GetDuration(prefix + delimiter + cfgNeoRPCDialTimeout)
 	fsChainRecheck := cfg.GetDuration(prefix + delimiter + cfgNeoRPCRecheckInterval)
+	sleepTimeout := cfg.GetDuration(prefix + delimiter + cfgNeoRPCPoolConnectionSleepTimeout)
 
-	sideNeogoClient, err := pool.NewPool(ctx, pool.PrmPool{
-		Endpoints:       fsChainEndpoints,
-		DialTimeout:     fsChainTimeout,
-		RecheckInterval: fsChainRecheck,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("can't create side chain neo-go client: %w", err)
+	var (
+		sideNeogoClient *pool.Pool
+	)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+		}
+
+		sideNeogoClient, err = pool.NewPool(ctx, pool.PrmPool{
+			Endpoints:       fsChainEndpoints,
+			DialTimeout:     fsChainTimeout,
+			RecheckInterval: fsChainRecheck,
+		})
+
+		if err != nil {
+			logger.Error(
+				"can't create side chain neo-go client",
+				zap.Error(err),
+				zap.Duration("sleepForSec", sleepTimeout),
+				zap.Strings("endpoints", fsChainEndpoints),
+			)
+			time.Sleep(sleepTimeout)
+			continue
+		}
+
+		break
 	}
 
 	var job monitor.Job

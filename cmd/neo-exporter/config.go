@@ -19,9 +19,10 @@ const (
 
 	cfgChainFSChain = "chain.fschain"
 
-	cfgNeoRPCEndpoint        = "rpc.endpoint"
-	cfgNeoRPCDialTimeout     = "rpc.dial_timeout"
-	cfgNeoRPCRecheckInterval = "rpc.health_recheck_interval"
+	cfgNeoRPCEndpoint                   = "rpc.endpoint"
+	cfgNeoRPCDialTimeout                = "rpc.dial_timeout"
+	cfgNeoRPCRecheckInterval            = "rpc.health_recheck_interval"
+	cfgNeoRPCPoolConnectionSleepTimeout = "rpc.startup_pool_connection_sleep_timeout"
 
 	// monitor prometheus expose config values.
 	cfgMetricsEndpoint = "metrics.endpoint"
@@ -39,6 +40,7 @@ func DefaultConfiguration(cfg *viper.Viper) {
 	cfg.SetDefault(cfgMetricsInterval, 15*time.Second)
 
 	cfg.SetDefault(cfgLoggerLevel, "info")
+	cfg.SetDefault(prefix+delimiter+cfgNeoRPCPoolConnectionSleepTimeout, 3*time.Second)
 }
 
 func WithLevel(level string) zap.AtomicLevel {
