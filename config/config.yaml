@@ -6,6 +6,8 @@ chain:
     dial_timeout: 60s
     # stores the interval after which a current connection health check is performed.
     health_recheck_interval: 5s
+    # sleep timeout between pool connection retries.
+    startup_pool_connection_sleep_timeout: 3s
     endpoint:
       - https://rpc1.t5.n3.nspcc.ru:21331
       - https://rpc2.t5.n3.nspcc.ru:21331

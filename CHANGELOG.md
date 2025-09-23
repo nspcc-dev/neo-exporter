@@ -15,6 +15,7 @@ Changelog for NeoFS Monitor
 - github.com/spf13/viper v1.19.0 => v1.21.0 (#160)
 - golang.org/x/term v0.34.0 => v0.35.0 (#160)
 - github.com/multiformats/go-multiaddr v0.13.0 => v0.16.1 (#160)
+- Don't stop app starting and wait until pool connected (#171)
 
 ### Removed
 
