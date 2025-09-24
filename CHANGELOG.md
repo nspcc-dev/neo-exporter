@@ -6,6 +6,12 @@ Changelog for NeoFS Monitor
 ### Added
 
 ### Changed
+
+### Removed
+
+## [0.14.1] - 2025-09-23
+
+### Changed
 - Go 1.24+ is required to build now (#160)
 - github.com/nspcc-dev/neofs-sdk-go v1.0.0-rc.13 => v1.0.0-rc.14 (#160)
 - github.com/nspcc-dev/locode-db v0.7.0 => v0.8.1 (#160)
@@ -16,8 +22,7 @@ Changelog for NeoFS Monitor
 - golang.org/x/term v0.34.0 => v0.35.0 (#160)
 - github.com/multiformats/go-multiaddr v0.13.0 => v0.16.1 (#160)
 - Don't stop app starting and wait until pool connected (#171)
-
-### Removed
+- Updated NeoGo dependency to 0.113.0 (#175)
 
 ## [0.14.0] - 2025-04-14
 
@@ -229,7 +234,8 @@ to establish connection to the RC4 main chain and `NEOFS_NET_MONITOR_MORPH_RPC_E
 `NEOFS_NET_MONITOR_MORPH_RPC_DIAL_TIMEOUT` for the side chain instead.
 `NEOFS_NET_MONITOR_CONTRACTS_PROXY` env is now optional for notary disabled environments.
 
-[Unreleased]: https://github.com/nspcc-dev/neo-exporter/compare/v0.14.0...master
+[Unreleased]: https://github.com/nspcc-dev/neo-exporter/compare/v0.14.1...master
+[0.14.1]: https://github.com/nspcc-dev/neo-exporter/compare/v0.14.0...v0.14.1
 [0.14.0]: https://github.com/nspcc-dev/neo-exporter/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/nspcc-dev/neo-exporter/compare/v0.12.1...v0.13.0
 [0.12.1]: https://github.com/nspcc-dev/neo-exporter/compare/v0.12.0...v0.12.1
