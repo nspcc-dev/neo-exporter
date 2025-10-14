@@ -210,6 +210,25 @@ var (
 			"host", "last_active_epoch",
 		},
 	)
+
+	storageNodeCapacity = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: namespace,
+			Name:      "sn_capacity",
+			Help:      "Storage node capacity (GB)",
+		},
+		[]string{
+			"host", "key",
+		},
+	)
+
+	storageNodeTotalCapacity = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Namespace: namespace,
+			Name:      "sn_capacity_total",
+			Help:      "Storage nodes total capacity (GB)",
+		},
+	)
 )
 
 // RegisterFSChainMetrics inits prometheus metrics for side chain. Panics if can't do it.
@@ -232,6 +251,8 @@ func RegisterFSChainMetrics() {
 	prometheus.MustRegister(nep17tracker)      // used for both monitors
 	prometheus.MustRegister(nep17trackerTotal) // used for both monitors
 	prometheus.MustRegister(candidateInfo)     // used for both monitors
+	prometheus.MustRegister(storageNodeCapacity)
+	prometheus.MustRegister(storageNodeTotalCapacity)
 }
 
 // RegisterMainChainMetrics inits prometheus metrics for main chain. Panics if can't do it.

@@ -191,6 +191,7 @@ func processNode(logger *zap.Logger, node *netmap.NodeInfo) (*monitor.Node, erro
 		PublicKey:  publicKey,
 		Attributes: maps.Collect(node.Attributes()),
 		Locode:     node.LOCODE(),
+		Capacity:   node.Capacity(),
 	}, nil
 }
 

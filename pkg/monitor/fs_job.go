@@ -91,6 +91,7 @@ type (
 		PublicKey  *keys.PublicKey
 		Attributes map[string]string
 		Locode     string
+		Capacity   uint64
 	}
 
 	NetmapInfo struct {
@@ -181,6 +182,7 @@ func (m *FSJob) processNetworkMap(nm NetmapInfo, candidates NetmapCandidatesInfo
 	exportBalancesNotary := make(map[string]float64, currentNetmapLen)
 
 	newNodes, droppedNodes := getDiff(nm, candidates)
+	var totalCapacity float64
 
 	for _, node := range nm.Nodes {
 		keyHex := node.PublicKey.StringCompressed()
@@ -219,7 +221,17 @@ func (m *FSJob) processNetworkMap(nm NetmapInfo, candidates NetmapCandidatesInfo
 		} else {
 			exportBalancesNotary[keyHex] = balanceNotary
 		}
+
+		capacity := float64(node.Capacity)
+		totalCapacity += capacity
+
+		storageNodeCapacity.With(prometheus.Labels{
+			"host": node.Address,
+			"key":  keyHex,
+		}).Set(capacity)
 	}
+
+	storageNodeTotalCapacity.Set(totalCapacity)
 
 	m.logNodes("new node", newNodes)
 	m.logNodes("dropped node", droppedNodes)
