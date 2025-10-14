@@ -8,6 +8,7 @@ Changelog for NeoFS Monitor
 
 ### Changed
 - github.com/nspcc-dev/neofs-sdk-go v1.0.0-rc.14 => v1.0.0-rc.15.0.20251014091731-abf7dc3b4b64 (#177)
+- github.com/nspcc-dev/neofs-contract v0.23.0 => v0.24.0
 
 ### Removed
 
