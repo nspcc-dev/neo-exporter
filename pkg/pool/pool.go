@@ -169,6 +169,12 @@ func (p *Pool) nextInvoker() (*invoker.Invoker, error) {
 	return p.invokerConn(), nil
 }
 
+// GetIteratorInvoker returns invoker. It should be used with the contract iterator.
+// We must iterate with the specific node that handled reader request.
+func (p *Pool) GetIteratorInvoker() (*invoker.Invoker, error) {
+	return p.nextInvoker()
+}
+
 // GetContractStateByID queries contract information, according to the contract ID.
 func (p *Pool) GetContractStateByID(id int32) (*state.Contract, error) {
 	conn, _, err := p.nextConnection()

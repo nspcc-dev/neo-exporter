@@ -156,6 +156,40 @@ var (
 		},
 	)
 
+	containersSize = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Namespace: namespace,
+			Name:      "containers_size",
+			Help:      "Total size of available containers",
+		},
+	)
+
+	containersObjects = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Namespace: namespace,
+			Name:      "containers_objects",
+			Help:      "Total number of objects in available containers",
+		},
+	)
+
+	containerSize = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: namespace,
+			Name:      "container_size",
+			Help:      "Size of container",
+		},
+		[]string{"container"},
+	)
+
+	containerObjects = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: namespace,
+			Name:      "container_objects",
+			Help:      "Number of objects in the container",
+		},
+		[]string{"container"},
+	)
+
 	chainHeight = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: namespace,
@@ -246,6 +280,10 @@ func RegisterFSChainMetrics() {
 	prometheus.MustRegister(fsChainSupply)
 	prometheus.MustRegister(alphabetPubKeys) // used for both monitors
 	prometheus.MustRegister(containersNumber)
+	prometheus.MustRegister(containersSize)
+	prometheus.MustRegister(containersObjects)
+	prometheus.MustRegister(containerSize)
+	prometheus.MustRegister(containerObjects)
 	prometheus.MustRegister(chainHeight)
 	prometheus.MustRegister(chainState)
 	prometheus.MustRegister(nep17tracker)      // used for both monitors

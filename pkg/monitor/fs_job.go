@@ -8,6 +8,7 @@ import (
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
 	"github.com/nspcc-dev/neo-go/pkg/rpcclient/gas"
 	"github.com/nspcc-dev/neo-go/pkg/util"
+	cid "github.com/nspcc-dev/neofs-sdk-go/container/id"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 )
@@ -65,6 +66,7 @@ type (
 
 	ContainerFetcher interface {
 		Total() (int64, error)
+		NodeReportSummaries() ([]ContainerInfo, error)
 	}
 
 	HeightFetcher interface {
@@ -97,6 +99,12 @@ type (
 	NetmapInfo struct {
 		Epoch uint64
 		Nodes []*Node
+	}
+
+	ContainerInfo struct {
+		ID              cid.ID
+		Size            uint64
+		NumberOfObjects uint64
 	}
 
 	NetmapFetcher interface {
@@ -162,6 +170,7 @@ func (m *FSJob) Process() {
 	}
 
 	m.processContainersNumber()
+	m.processContainersSizeAndObjects()
 
 	minHeight := m.processChainHeight()
 	m.processChainState(minHeight)
@@ -355,6 +364,40 @@ func (m *FSJob) processContainersNumber() {
 	}
 
 	containersNumber.Set(float64(total))
+}
+
+func (m *FSJob) processContainersSizeAndObjects() {
+	containersInfo, err := m.cnrFetcher.NodeReportSummaries()
+	if err != nil {
+		m.logger.Warn("can't fetch report summaries", zap.Error(err))
+		return
+	}
+
+	var (
+		size    uint64
+		objects uint64
+	)
+
+	containerSize.Reset()
+	containerObjects.Reset()
+
+	for _, info := range containersInfo {
+		cnr := info.ID.String()
+
+		size += info.Size
+		objects += info.NumberOfObjects
+
+		containerSize.With(prometheus.Labels{
+			"container": cnr,
+		}).Set(float64(info.Size))
+
+		containerObjects.With(prometheus.Labels{
+			"container": cnr,
+		}).Set(float64(info.NumberOfObjects))
+	}
+
+	containersSize.Set(float64(size))
+	containersObjects.Set(float64(objects))
 }
 
 func (m *FSJob) processChainHeight() uint32 {
