@@ -4,6 +4,7 @@ import (
 	"crypto/elliptic"
 	"encoding/hex"
 	"fmt"
+	"maps"
 	"net"
 	"net/url"
 
@@ -162,22 +163,16 @@ func (c *Netmap) Netmap() ([]*netmap.NodeInfo, error) {
 func processNode(logger *zap.Logger, node *netmap.NodeInfo) (*monitor.Node, error) {
 	var address string
 
-	node.IterateNetworkEndpoints(
-		func(mAddr string) bool {
-			addr, err := multiAddrToIPStringWithoutPort(mAddr)
-			if err != nil {
-				logger.Debug("FS chain", zap.Error(err))
-				return false
-			}
+	for mAddr := range node.NetworkEndpoints() {
+		addr, err := multiAddrToIPStringWithoutPort(mAddr)
+		if err != nil {
+			logger.Debug("FS chain", zap.Error(err))
+			continue
+		}
 
-			// TODO: define if monitor should show
-			//  all addresses of the node or only
-			//  one of them: #17.
-			address = addr
-
-			return true
-		},
-	)
+		address = addr
+		break
+	}
 
 	rawPublicKey := node.PublicKey()
 
@@ -190,17 +185,13 @@ func processNode(logger *zap.Logger, node *netmap.NodeInfo) (*monitor.Node, erro
 		)
 	}
 
-	attrs := make(map[string]string, node.NumberOfAttributes())
-	node.IterateAttributes(func(key, value string) {
-		attrs[key] = value
-	})
-
 	return &monitor.Node{
 		ID:         hrw.Hash(node.PublicKey()),
 		Address:    address,
 		PublicKey:  publicKey,
-		Attributes: attrs,
+		Attributes: maps.Collect(node.Attributes()),
 		Locode:     node.LOCODE(),
+		Capacity:   node.Capacity(),
 	}, nil
 }
 
