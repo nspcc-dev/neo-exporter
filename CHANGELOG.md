@@ -4,14 +4,20 @@ Changelog for NeoFS Monitor
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Removed
+
+## [0.15.0] - 2025-10-15
+
+### Added
 - Node capacity and overall cluster size metric (#177)
 - Total and per-container object counts and sizes (#176)
 
 ### Changed
 - github.com/nspcc-dev/neofs-sdk-go v1.0.0-rc.14 => v1.0.0-rc.15.0.20251014091731-abf7dc3b4b64 (#177)
 - github.com/nspcc-dev/neofs-contract v0.23.0 => v0.24.0
-
-### Removed
 
 ## [0.14.1] - 2025-09-23
 
@@ -238,7 +244,8 @@ to establish connection to the RC4 main chain and `NEOFS_NET_MONITOR_MORPH_RPC_E
 `NEOFS_NET_MONITOR_MORPH_RPC_DIAL_TIMEOUT` for the side chain instead.
 `NEOFS_NET_MONITOR_CONTRACTS_PROXY` env is now optional for notary disabled environments.
 
-[Unreleased]: https://github.com/nspcc-dev/neo-exporter/compare/v0.14.1...master
+[Unreleased]: https://github.com/nspcc-dev/neo-exporter/compare/v0.15.0...master
+[0.15.0]: https://github.com/nspcc-dev/neo-exporter/compare/v0.14.1...v0.15.0
 [0.14.1]: https://github.com/nspcc-dev/neo-exporter/compare/v0.14.0...v0.14.1
 [0.14.0]: https://github.com/nspcc-dev/neo-exporter/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/nspcc-dev/neo-exporter/compare/v0.12.1...v0.13.0
