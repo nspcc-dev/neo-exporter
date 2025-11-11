@@ -9,6 +9,9 @@ Changelog for NeoFS Monitor
 
 ### Removed
 
+### Fixed
+- Failure to start if any of specified endpoints is not responding (#181)
+
 ## [0.15.0] - 2025-10-15
 
 ### Added
