@@ -10,6 +10,10 @@ Changelog for NeoFS Monitor
 ### Removed
 
 ### Fixed
+
+## [0.15.1] - 2025-11-11
+
+### Fixed
 - Failure to start if any of specified endpoints is not responding (#181)
 
 ## [0.15.0] - 2025-10-15
@@ -247,7 +251,8 @@ to establish connection to the RC4 main chain and `NEOFS_NET_MONITOR_MORPH_RPC_E
 `NEOFS_NET_MONITOR_MORPH_RPC_DIAL_TIMEOUT` for the side chain instead.
 `NEOFS_NET_MONITOR_CONTRACTS_PROXY` env is now optional for notary disabled environments.
 
-[Unreleased]: https://github.com/nspcc-dev/neo-exporter/compare/v0.15.0...master
+[Unreleased]: https://github.com/nspcc-dev/neo-exporter/compare/v0.15.1...master
+[0.15.1]: https://github.com/nspcc-dev/neo-exporter/compare/v0.15.0...v0.15.1
 [0.15.0]: https://github.com/nspcc-dev/neo-exporter/compare/v0.14.1...v0.15.0
 [0.14.1]: https://github.com/nspcc-dev/neo-exporter/compare/v0.14.0...v0.14.1
 [0.14.0]: https://github.com/nspcc-dev/neo-exporter/compare/v0.13.0...v0.14.0
