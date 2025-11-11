@@ -84,15 +84,24 @@ func NewPool(ctx context.Context, prm PrmPool) (*Pool, error) {
 }
 
 func (p *Pool) dial(ctx context.Context) error {
-	opts := rpcclient.Options{DialTimeout: p.opts.DialTimeout}
+	var (
+		opts             = rpcclient.Options{DialTimeout: p.opts.DialTimeout}
+		hasHealthyClient bool
+	)
 
 	for i, ep := range p.endpoints {
 		neoClient, err := neoGoClient(ctx, ep, opts)
 		if err != nil {
-			return err
+			log.Printf("endpoint %s is not healthy: %s", ep, err)
+			continue
 		}
 
+		hasHealthyClient = true
 		p.clients[i] = neoClient
+	}
+
+	if !hasHealthyClient {
+		return fmt.Errorf("no healthy endpoints found")
 	}
 
 	return nil
