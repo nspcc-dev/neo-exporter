@@ -33,7 +33,7 @@ on:
 jobs:
   build_cli:
     name: Build CLI
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         os: [ linux, darwin ]
@@ -76,7 +76,7 @@ jobs:
   build_image:
     needs: build_cli
     name: Build Docker image
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
