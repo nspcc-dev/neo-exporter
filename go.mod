@@ -1,20 +1,20 @@
 module github.com/nspcc-dev/neo-exporter
 
-go 1.24.0
+go 1.25
 
 require (
 	github.com/google/uuid v1.6.0
 	github.com/multiformats/go-multiaddr v0.16.1
 	github.com/nspcc-dev/hrw/v2 v2.0.4
-	github.com/nspcc-dev/locode-db v0.8.1
-	github.com/nspcc-dev/neo-go v0.113.0
-	github.com/nspcc-dev/neofs-contract v0.24.0
-	github.com/nspcc-dev/neofs-sdk-go v1.0.0-rc.15.0.20251014091731-abf7dc3b4b64
+	github.com/nspcc-dev/locode-db v0.8.2
+	github.com/nspcc-dev/neo-go v0.117.0
+	github.com/nspcc-dev/neofs-contract v0.26.1
+	github.com/nspcc-dev/neofs-sdk-go v1.0.0-rc.17
 	github.com/prometheus/client_golang v1.23.2
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
-	go.uber.org/zap v1.27.0
-	golang.org/x/term v0.37.0
+	go.uber.org/zap v1.27.1
+	golang.org/x/term v0.40.0
 )
 
 require (
@@ -65,7 +65,7 @@ require (
 	golang.org/x/crypto v0.45.0 // indirect
 	golang.org/x/exp v0.0.0-20250911091902-df9299821621 // indirect
 	golang.org/x/net v0.47.0 // indirect
-	golang.org/x/sys v0.38.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/text v0.31.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250922171735-9219d122eba9 // indirect
 	google.golang.org/grpc v1.75.1 // indirect
