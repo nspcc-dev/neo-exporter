@@ -6,7 +6,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/multiformats/go-multiaddr v0.16.1
 	github.com/nspcc-dev/hrw/v2 v2.0.4
-	github.com/nspcc-dev/locode-db v0.8.1
+	github.com/nspcc-dev/locode-db v0.8.2
 	github.com/nspcc-dev/neo-go v0.117.0
 	github.com/nspcc-dev/neofs-contract v0.26.1
 	github.com/nspcc-dev/neofs-sdk-go v1.0.0-rc.17
