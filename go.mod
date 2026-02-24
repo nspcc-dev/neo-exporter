@@ -7,9 +7,9 @@ require (
 	github.com/multiformats/go-multiaddr v0.16.1
 	github.com/nspcc-dev/hrw/v2 v2.0.4
 	github.com/nspcc-dev/locode-db v0.8.1
-	github.com/nspcc-dev/neo-go v0.113.0
+	github.com/nspcc-dev/neo-go v0.116.0
 	github.com/nspcc-dev/neofs-contract v0.24.0
-	github.com/nspcc-dev/neofs-sdk-go v1.0.0-rc.15.0.20251014091731-abf7dc3b4b64
+	github.com/nspcc-dev/neofs-sdk-go v1.0.0-rc.17
 	github.com/prometheus/client_golang v1.23.2
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
