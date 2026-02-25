@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -40,6 +41,10 @@ func main() {
 
 	neofsMonitor, err := New(ctx, cfg)
 	if err != nil {
+		if errors.Is(err, context.Canceled) {
+			os.Exit(0)
+		}
+
 		log.Printf("can't initialize netmap monitor: %s", err.Error())
 		os.Exit(1)
 	}
