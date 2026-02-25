@@ -6,11 +6,25 @@ Changelog for NeoFS Monitor
 ### Added
 
 ### Changed
-- Go 1.25+ is required to build now (#172)
 
 ### Removed
 
 ### Fixed
+
+## [0.15.2] - 2026-02-25
+
+### Changed
+- Go 1.25+ is required to build now (#172)
+- Updated golang.org/x/crypto dependency from 0.42.0 to 0.45.0 (#184)
+- Updated NeoFS SDK dependency to RC17 (#188)
+- Updated github.com/nspcc-dev/neofs-contract dependency to v0.26.1 (#188)
+- Updated NeoGo dependency to 0.117.0 (#188)
+- Updated github.com/nspcc-dev/locode-db dependency to v0.8.2 (#188)
+- Updated go.uber.org/zap dependency to v1.27.1 (#188)
+- Updated golang.org/x/term to v0.40.0 (#188)
+
+### Fixed
+- Return code on graceful shutdown of uninited process (#189)
 
 ## [0.15.1] - 2025-11-11
 
@@ -252,7 +266,8 @@ to establish connection to the RC4 main chain and `NEOFS_NET_MONITOR_MORPH_RPC_E
 `NEOFS_NET_MONITOR_MORPH_RPC_DIAL_TIMEOUT` for the side chain instead.
 `NEOFS_NET_MONITOR_CONTRACTS_PROXY` env is now optional for notary disabled environments.
 
-[Unreleased]: https://github.com/nspcc-dev/neo-exporter/compare/v0.15.1...master
+[Unreleased]: https://github.com/nspcc-dev/neo-exporter/compare/v0.15.2...master
+[0.15.2]: https://github.com/nspcc-dev/neo-exporter/compare/v0.15.1...v0.15.2
 [0.15.1]: https://github.com/nspcc-dev/neo-exporter/compare/v0.15.0...v0.15.1
 [0.15.0]: https://github.com/nspcc-dev/neo-exporter/compare/v0.14.1...v0.15.0
 [0.14.1]: https://github.com/nspcc-dev/neo-exporter/compare/v0.14.0...v0.14.1
