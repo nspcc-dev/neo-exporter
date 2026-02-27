@@ -10,7 +10,7 @@ APP = neo-exporter
 BINARY = ./bin/${APP}
 SRC = ./cmd/${APP}/
 
-.PHONY: bin image up up-testnet up-devenv down down-testnet down-devenv clean lint test cover
+.PHONY: bin image up up-testnet up-devenv down down-testnet down-devenv clean lint test cover modernize
 
 bin:
 	@echo "Build neo-exporter binary"
@@ -42,6 +42,11 @@ version:
 # Run linters
 lint: .golangci.yml
 	@golangci-lint --timeout=5m run
+
+# Prettify code
+modernize:
+	@echo "Processing modernize check"
+	@go run golang.org/x/tools/go/analysis/passes/modernize/cmd/modernize@latest -fix ./...
 
 # Run tests
 test:
