@@ -47,6 +47,8 @@ type PrmPool struct {
 // defaultRecheckInterval stores the interval after which a connection health check is performed.
 const defaultRecheckInterval = 5 * time.Second
 
+var newNeoGoClient = neoGoClient
+
 // NewPool creates connection pool using parameters.
 func NewPool(ctx context.Context, prm PrmPool) (*Pool, error) {
 	recheck := prm.RecheckInterval
@@ -90,7 +92,7 @@ func (p *Pool) dial(ctx context.Context) error {
 	)
 
 	for i, ep := range p.endpoints {
-		neoClient, err := neoGoClient(ctx, ep, opts)
+		neoClient, err := newNeoGoClient(ctx, ep, opts)
 		if err != nil {
 			log.Printf("endpoint %s is not healthy: %s", ep, err)
 			continue
@@ -121,7 +123,7 @@ func (p *Pool) recheck(ctx context.Context) {
 			_, err = cl.GetBlockCount()
 		}
 		if cl == nil || err != nil {
-			p.clients[i], err = neoGoClient(ctx, p.endpoints[i], p.opts)
+			p.clients[i], err = newNeoGoClient(ctx, p.endpoints[i], p.opts)
 			if err != nil {
 				log.Printf("reconnect to Neo node %s failed: %v", p.endpoints[i], err)
 			}
@@ -133,7 +135,7 @@ func (p *Pool) recheck(ctx context.Context) {
 
 func (p *Pool) isCurrentHealthy() bool {
 	if (time.Now().UTC().UnixNano() - atomic.LoadInt64(&p.lastHealthyTimestamp)) < p.recheckInterval.Nanoseconds() {
-		return true
+		return p.conn() != nil
 	}
 
 	conn := p.conn()
@@ -283,7 +285,7 @@ func (p *Pool) establishNewConnection() error {
 
 	for i := p.next; i < p.next+len(p.endpoints); i++ {
 		index := i % len(p.endpoints)
-		if p.clients[p.current], err = neoGoClient(p.ctx, p.endpoints[index], p.opts); err == nil {
+		if p.clients[index], err = newNeoGoClient(p.ctx, p.endpoints[index], p.opts); err == nil {
 			p.current = index % len(p.endpoints)
 			p.next = (index + 1) % len(p.endpoints)
 			return nil
