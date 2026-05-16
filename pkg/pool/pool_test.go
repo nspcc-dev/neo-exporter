@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestPoolIsCurrentHealthyWithRecentTimestampAndNilClient(t *testing.T) {
+func TestIsCurrentHealthyReturnsFalseWhenClientIsNil(t *testing.T) {
 	p := &Pool{
 		recheckInterval: time.Second,
 		clients:         make([]*rpcclient.Client, 1),
@@ -22,7 +22,7 @@ func TestPoolIsCurrentHealthyWithRecentTimestampAndNilClient(t *testing.T) {
 	require.False(t, p.isCurrentHealthy())
 }
 
-func TestPoolEstablishNewConnectionUsesHealthyEndpointIndex(t *testing.T) {
+func TestEstablishNewConnectionAssignsClientToCorrectIndex(t *testing.T) {
 	oldNeoGoClient := newNeoGoClient
 	t.Cleanup(func() {
 		newNeoGoClient = oldNeoGoClient
