@@ -134,13 +134,13 @@ func (p *Pool) recheck(ctx context.Context) {
 }
 
 func (p *Pool) isCurrentHealthy() bool {
-	if (time.Now().UTC().UnixNano() - atomic.LoadInt64(&p.lastHealthyTimestamp)) < p.recheckInterval.Nanoseconds() {
-		return p.conn() != nil
-	}
-
 	conn := p.conn()
 	if conn == nil {
 		return false
+	}
+
+	if (time.Now().UTC().UnixNano() - atomic.LoadInt64(&p.lastHealthyTimestamp)) < p.recheckInterval.Nanoseconds() {
+		return true
 	}
 
 	if _, err := conn.GetBlockCount(); err == nil {
