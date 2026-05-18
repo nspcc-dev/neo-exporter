@@ -30,7 +30,7 @@ type Pool struct {
 	clients []*rpcclient.Client
 	opts    rpcclient.Options
 
-	lastHealthyTimestamp int64
+	lastHealthyTimestamp atomic.Int64
 	recheckInterval      time.Duration
 
 	current, next int
@@ -139,12 +139,12 @@ func (p *Pool) isCurrentHealthy() bool {
 		return false
 	}
 
-	if (time.Now().UTC().UnixNano() - atomic.LoadInt64(&p.lastHealthyTimestamp)) < p.recheckInterval.Nanoseconds() {
+	if (time.Now().UTC().UnixNano() - p.lastHealthyTimestamp.Load()) < p.recheckInterval.Nanoseconds() {
 		return true
 	}
 
 	if _, err := conn.GetBlockCount(); err == nil {
-		atomic.StoreInt64(&p.lastHealthyTimestamp, time.Now().UTC().UnixNano())
+		p.lastHealthyTimestamp.Store(time.Now().UTC().UnixNano())
 		return true
 	}
 
