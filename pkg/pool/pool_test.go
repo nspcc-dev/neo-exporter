@@ -3,7 +3,6 @@ package pool
 import (
 	"context"
 	"errors"
-	"sync/atomic"
 	"testing"
 	"time"
 
@@ -17,7 +16,7 @@ func TestIsCurrentHealthyReturnsFalseWhenClientIsNil(t *testing.T) {
 		clients:         make([]*rpcclient.Client, 1),
 	}
 
-	atomic.StoreInt64(&p.lastHealthyTimestamp, time.Now().UTC().UnixNano())
+	p.lastHealthyTimestamp.Store(time.Now().UTC().UnixNano())
 
 	require.False(t, p.isCurrentHealthy())
 }
