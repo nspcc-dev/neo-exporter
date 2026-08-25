@@ -6,6 +6,12 @@ Changelog for NeoFS Monitor
 ### Added
 
 ### Changed
+- Go 1.26+ is required to build now (#187)
+- Updated NeoFS SDK dependency to RC21 (#187)
+- Updated NeoGo dependency to 0.122.0 (#187)
+- Updated locode dependency to 0.9.0 (#187)
+- Updated github.com/prometheus/client_golang to v1.24.1 (#187)
+- Updated go.uber.org/zap to 1.28.0 (#187)
 
 ### Removed
 
