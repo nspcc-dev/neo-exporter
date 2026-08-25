@@ -7,6 +7,7 @@ Changelog for NeoFS Monitor
 
 ### Changed
 - Go 1.26+ is required to build now (#187)
+- Updated NeoFS SDK dependency to RC21 (#187)
 
 ### Removed
 
