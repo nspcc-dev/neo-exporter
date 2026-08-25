@@ -11,6 +11,7 @@ Changelog for NeoFS Monitor
 - Updated NeoGo dependency to 0.122.0 (#187)
 - Updated locode dependency to 0.9.0 (#187)
 - Updated github.com/prometheus/client_golang to v1.24.1 (#187)
+- Updated go.uber.org/zap to 1.28.0 (#187)
 
 ### Removed
 
