@@ -10,6 +10,7 @@ Changelog for NeoFS Monitor
 - Updated NeoFS SDK dependency to RC21 (#187)
 - Updated NeoGo dependency to 0.122.0 (#187)
 - Updated locode dependency to 0.9.0 (#187)
+- Updated github.com/prometheus/client_golang to v1.24.1 (#187)
 
 ### Removed
 
