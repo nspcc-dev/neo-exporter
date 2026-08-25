@@ -9,6 +9,7 @@ Changelog for NeoFS Monitor
 - Go 1.26+ is required to build now (#187)
 - Updated NeoFS SDK dependency to RC21 (#187)
 - Updated NeoGo dependency to 0.122.0 (#187)
+- Updated locode dependency to 0.9.0 (#187)
 
 ### Removed
 
