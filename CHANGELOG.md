@@ -6,6 +6,7 @@ Changelog for NeoFS Monitor
 ### Added
 
 ### Changed
+- Updated NeoFS SDK dependency to RC23 (#209)
 
 ### Removed
 
