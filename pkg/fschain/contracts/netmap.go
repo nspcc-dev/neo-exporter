@@ -8,8 +8,6 @@ import (
 	"net"
 	"net/url"
 
-	"github.com/multiformats/go-multiaddr"
-	manet "github.com/multiformats/go-multiaddr/net"
 	"github.com/nspcc-dev/hrw/v2"
 	"github.com/nspcc-dev/neo-exporter/pkg/monitor"
 	"github.com/nspcc-dev/neo-exporter/pkg/pool"
@@ -163,8 +161,8 @@ func (c *Netmap) Netmap() ([]*netmap.NodeInfo, error) {
 func processNode(logger *zap.Logger, node *netmap.NodeInfo) (*monitor.Node, error) {
 	var address string
 
-	for mAddr := range node.NetworkEndpoints() {
-		addr, err := multiAddrToIPStringWithoutPort(mAddr)
+	for endpoint := range node.NetworkEndpoints() {
+		addr, err := endpointHost(endpoint)
 		if err != nil {
 			logger.Debug("FS chain", zap.Error(err))
 			continue
@@ -195,13 +193,9 @@ func processNode(logger *zap.Logger, node *netmap.NodeInfo) (*monitor.Node, erro
 	}, nil
 }
 
-func multiAddrToIPStringWithoutPort(multiaddress string) (string, error) {
-	var host string
-	if netAddress, err := multiaddr.NewMultiaddr(multiaddress); err != nil {
-		if host, _, err = parseURI(multiaddress); err != nil {
-			return "", err
-		}
-	} else if _, host, err = manet.DialArgs(netAddress); err != nil {
+func endpointHost(endpoint string) (string, error) {
+	host, _, err := parseURI(endpoint)
+	if err != nil {
 		return "", err
 	}
 
@@ -212,12 +206,16 @@ func multiAddrToIPStringWithoutPort(multiaddress string) (string, error) {
 		return "", err
 	}
 
+	if URL.Hostname() == "" {
+		return "", fmt.Errorf("no host in network endpoint %q", endpoint)
+	}
+
 	return URL.Hostname(), nil
 }
 
 // ParseURI parses s as address and returns a host and a flag
-// indicating that TLS is enabled. If multi-address is provided
-// the argument is returned unchanged.
+// indicating that TLS is enabled. If s can't be parsed as URI (e.g. it's
+// an IP:port pair), it is returned unchanged.
 func parseURI(s string) (string, bool, error) {
 	uri, err := url.ParseRequestURI(s)
 	if err != nil {
