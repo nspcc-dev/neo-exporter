@@ -7,6 +7,7 @@ Changelog for NeoFS Monitor
 
 ### Changed
 - Updated NeoFS SDK dependency to RC23 (#209)
+- Updated github.com/nspcc-dev/neofs-contract dependency to v0.27.0 (#209)
 
 ### Removed
 
