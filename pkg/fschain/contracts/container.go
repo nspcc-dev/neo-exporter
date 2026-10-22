@@ -27,7 +27,7 @@ func NewContainer(p *pool.Pool, contractHash util.Uint160) (*Container, error) {
 }
 
 func (c *Container) Total() (int64, error) {
-	amount, err := c.contractReader.Count()
+	amount, err := c.contractReader.TotalSupply()
 	if err != nil {
 		return 0, fmt.Errorf("count: %w", err)
 	}
