@@ -57,6 +57,15 @@ func (c *Netmap) FetchNetmap() (monitor.NetmapInfo, error) {
 		return monitor.NetmapInfo{}, fmt.Errorf("can't fetch epoch number: %w", err)
 	}
 
+	// Older contracts don't have versioned network map.
+	var version float64
+	v, err := c.contractReader.NetworkMapVersion()
+	if err != nil {
+		c.logger.Warn("can't fetch network map version", zap.Error(err))
+	} else {
+		version = float64(v.Int64())
+	}
+
 	apiNodes, err := c.Netmap()
 	if err != nil {
 		return monitor.NetmapInfo{}, fmt.Errorf("can't fetch network map: %w", err)
@@ -75,8 +84,9 @@ func (c *Netmap) FetchNetmap() (monitor.NetmapInfo, error) {
 	}
 
 	return monitor.NetmapInfo{
-		Epoch: uint64(epoch),
-		Nodes: nodes,
+		Epoch:   uint64(epoch),
+		Version: version,
+		Nodes:   nodes,
 	}, nil
 }
 

@@ -58,6 +58,14 @@ var (
 		},
 	)
 
+	netmapVersion = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Namespace: namespace,
+			Name:      "netmap_version",
+			Help:      "Network map version of NeoFS network",
+		},
+	)
+
 	innerRingBalances = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: namespace,
@@ -272,6 +280,7 @@ func RegisterFSChainMetrics() {
 	prometheus.MustRegister(droppedNodesCount)
 	prometheus.MustRegister(newNodesCount)
 	prometheus.MustRegister(epochNumber)
+	prometheus.MustRegister(netmapVersion)
 	prometheus.MustRegister(storageNodeGASBalances)
 	prometheus.MustRegister(storageNodeNotaryBalances)
 	prometheus.MustRegister(innerRingBalances)
