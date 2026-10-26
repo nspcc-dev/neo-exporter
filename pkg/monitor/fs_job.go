@@ -97,8 +97,9 @@ type (
 	}
 
 	NetmapInfo struct {
-		Epoch uint64
-		Nodes []*Node
+		Epoch   uint64
+		Version float64
+		Nodes   []*Node
 	}
 
 	ContainerInfo struct {
@@ -246,6 +247,7 @@ func (m *FSJob) processNetworkMap(nm NetmapInfo, candidates NetmapCandidatesInfo
 	m.logNodes("dropped node", droppedNodes)
 
 	epochNumber.Set(float64(nm.Epoch))
+	netmapVersion.Set(nm.Version)
 	droppedNodesCount.Set(float64(len(droppedNodes)))
 	newNodesCount.Set(float64(len(newNodes)))
 
