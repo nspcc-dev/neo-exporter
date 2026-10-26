@@ -5,6 +5,7 @@ Changelog for NeoFS Monitor
 
 ### Added
 - `neo_exporter_netmap_version` metric with network map version (#211)
+- NeoFS network settings metrics (#213)
 
 ### Changed
 - Updated NeoFS SDK dependency to RC23 (#209)

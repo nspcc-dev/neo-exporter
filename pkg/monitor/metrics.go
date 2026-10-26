@@ -66,6 +66,54 @@ var (
 		},
 	)
 
+	basicIncomeRate = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Namespace: namespace,
+			Name:      "basic_income_rate",
+			Help:      "Basic income rate of NeoFS network as set in network config",
+		},
+	)
+
+	containerFee = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Namespace: namespace,
+			Name:      "container_fee",
+			Help:      "Container creation fee of NeoFS network as set in network config",
+		},
+	)
+
+	containerAliasFee = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Namespace: namespace,
+			Name:      "container_alias_fee",
+			Help:      "Container alias (NNS name) registration fee of NeoFS network as set in network config",
+		},
+	)
+
+	epochDuration = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Namespace: namespace,
+			Name:      "epoch_duration",
+			Help:      "Epoch duration of NeoFS network as set in network config",
+		},
+	)
+
+	maxObjectSize = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Namespace: namespace,
+			Name:      "max_object_size",
+			Help:      "Maximum object size of NeoFS network as set in network config",
+		},
+	)
+
+	withdrawFee = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Namespace: namespace,
+			Name:      "withdraw_fee",
+			Help:      "Withdrawal fee of NeoFS network as set in network config",
+		},
+	)
+
 	innerRingBalances = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: namespace,
@@ -300,6 +348,12 @@ func RegisterFSChainMetrics() {
 	prometheus.MustRegister(candidateInfo)     // used for both monitors
 	prometheus.MustRegister(storageNodeCapacity)
 	prometheus.MustRegister(storageNodeTotalCapacity)
+	prometheus.MustRegister(basicIncomeRate)
+	prometheus.MustRegister(containerFee)
+	prometheus.MustRegister(containerAliasFee)
+	prometheus.MustRegister(epochDuration)
+	prometheus.MustRegister(maxObjectSize)
+	prometheus.MustRegister(withdrawFee)
 }
 
 // RegisterMainChainMetrics inits prometheus metrics for main chain. Panics if can't do it.

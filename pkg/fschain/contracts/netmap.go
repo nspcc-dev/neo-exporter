@@ -13,6 +13,7 @@ import (
 	"github.com/nspcc-dev/neo-exporter/pkg/pool"
 	"github.com/nspcc-dev/neo-go/pkg/core/native/noderoles"
 	"github.com/nspcc-dev/neo-go/pkg/crypto/keys"
+	"github.com/nspcc-dev/neo-go/pkg/encoding/bigint"
 	"github.com/nspcc-dev/neo-go/pkg/util"
 	"github.com/nspcc-dev/neo-go/pkg/vm/stackitem"
 	rpcnetmap "github.com/nspcc-dev/neofs-contract/rpc/netmap"
@@ -40,6 +41,13 @@ const (
 	grpcTLSScheme = "grpcs"
 
 	defaultIteratorPage = 100
+
+	configBasicIncomeRate   = "BasicIncomeRate"
+	configContainerFee      = "ContainerFee"
+	configContainerAliasFee = "ContainerAliasFee"
+	configEpochDuration     = "EpochDuration"
+	configMaxObjectSize     = "MaxObjectSize"
+	configWithdrawFee       = "WithdrawFee"
 )
 
 // NewNetmap creates Netmap to interact with 'netmap' contract in FS chain.
@@ -142,6 +150,38 @@ func (c *Netmap) Epoch() (int64, error) {
 	}
 
 	return e.Int64(), nil
+}
+
+// FetchNetworkSettings reads NeoFS network configuration from the netmap contract.
+func (c *Netmap) FetchNetworkSettings() (monitor.NetworkSettings, error) {
+	records, err := c.contractReader.ListConfig()
+	if err != nil {
+		return monitor.NetworkSettings{}, fmt.Errorf("can't fetch network config: %w", err)
+	}
+
+	var settings monitor.NetworkSettings
+	for _, rec := range records {
+		switch string(rec.Key) {
+		case configBasicIncomeRate:
+			settings.BasicIncomeRate = configValue(rec.Value)
+		case configContainerFee:
+			settings.ContainerFee = configValue(rec.Value)
+		case configContainerAliasFee:
+			settings.ContainerAliasFee = configValue(rec.Value)
+		case configEpochDuration:
+			settings.EpochDuration = configValue(rec.Value)
+		case configMaxObjectSize:
+			settings.MaxObjectSize = configValue(rec.Value)
+		case configWithdrawFee:
+			settings.WithdrawFee = configValue(rec.Value)
+		}
+	}
+
+	return settings, nil
+}
+
+func configValue(v []byte) float64 {
+	return float64(bigint.FromBytes(v).Int64())
 }
 
 func (c *Netmap) Netmap() ([]*netmap.NodeInfo, error) {
