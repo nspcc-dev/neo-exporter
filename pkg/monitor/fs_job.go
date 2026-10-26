@@ -108,9 +108,20 @@ type (
 		NumberOfObjects uint64
 	}
 
+	// NetworkSettings contains NeoFS network configuration values.
+	NetworkSettings struct {
+		BasicIncomeRate   float64
+		ContainerFee      float64
+		ContainerAliasFee float64
+		EpochDuration     float64
+		MaxObjectSize     float64
+		WithdrawFee       float64
+	}
+
 	NetmapFetcher interface {
 		FetchNetmap() (NetmapInfo, error)
 		FetchCandidates() (NetmapCandidatesInfo, error)
+		FetchNetworkSettings() (NetworkSettings, error)
 	}
 
 	InnerRingFetcher interface {
@@ -148,6 +159,12 @@ func (m *FSJob) Process() {
 		} else {
 			m.processNetworkMap(netmap, candidatesNetmap)
 		}
+	}
+
+	if settings, err := m.nmFetcher.FetchNetworkSettings(); err != nil {
+		m.logger.Warn("can't read NeoFS network settings", zap.Error(err))
+	} else {
+		processNetworkSettings(settings)
 	}
 
 	innerRing, err := m.irFetcher.FetchInnerRingKeys()
@@ -278,6 +295,15 @@ func (m *FSJob) processNetworkMap(nm NetmapInfo, candidates NetmapCandidatesInfo
 
 		candidateInfo.WithLabelValues(candidate.Address, strconv.FormatUint(candidate.LastEpoch.Uint64(), 10)).Set(1)
 	}
+}
+
+func processNetworkSettings(s NetworkSettings) {
+	basicIncomeRate.Set(s.BasicIncomeRate)
+	containerFee.Set(s.ContainerFee)
+	containerAliasFee.Set(s.ContainerAliasFee)
+	epochDuration.Set(s.EpochDuration)
+	maxObjectSize.Set(s.MaxObjectSize)
+	withdrawFee.Set(s.WithdrawFee)
 }
 
 func (m *FSJob) logNodes(msg string, nodes []*Node) {
