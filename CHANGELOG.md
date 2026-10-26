@@ -4,16 +4,28 @@ Changelog for NeoFS Monitor
 ## [Unreleased]
 
 ### Added
-- `neo_exporter_netmap_version` metric with network map version (#211)
-- NeoFS network settings metrics (#213)
 
 ### Changed
-- Updated NeoFS SDK dependency to RC23 (#209)
-- Updated github.com/nspcc-dev/neofs-contract dependency to v0.27.0 (#209)
 
 ### Removed
 
 ### Fixed
+
+## [0.16.0] - 2026-10-26
+
+### Added
+- `neo_exporter_netmap_version` metric with network map version (#211)
+- NeoFS network settings metrics (#213)
+
+### Changed
+- Updated NeoFS SDK dependency to RC23 (#207, #209)
+- Updated github.com/nspcc-dev/neofs-contract dependency to v0.28.0 (#209, #216)
+
+### Removed
+- Multiaddress support (#210)
+
+### Fixed
+- Using deprecated contracts API (#212)
 
 ## [0.15.4] - 2026-08-25
 
@@ -293,7 +305,8 @@ to establish connection to the RC4 main chain and `NEOFS_NET_MONITOR_MORPH_RPC_E
 `NEOFS_NET_MONITOR_MORPH_RPC_DIAL_TIMEOUT` for the side chain instead.
 `NEOFS_NET_MONITOR_CONTRACTS_PROXY` env is now optional for notary disabled environments.
 
-[Unreleased]: https://github.com/nspcc-dev/neo-exporter/compare/v0.15.4...master
+[Unreleased]: https://github.com/nspcc-dev/neo-exporter/compare/v0.16.0...master
+[0.16.0]: https://github.com/nspcc-dev/neo-exporter/compare/v0.15.4...v0.16.0
 [0.15.4]: https://github.com/nspcc-dev/neo-exporter/compare/v0.15.3...v0.15.4
 [0.15.3]: https://github.com/nspcc-dev/neo-exporter/compare/v0.15.2...v0.15.3
 [0.15.2]: https://github.com/nspcc-dev/neo-exporter/compare/v0.15.1...v0.15.2
